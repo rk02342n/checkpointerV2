@@ -1,0 +1,87 @@
+import { createFileRoute } from '@tanstack/react-router'
+// import { api } from '@/lib/api'; //hono-client error
+import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+export const Route = createFileRoute('/expenses')({
+  component: Expenses,
+})
+
+type Expense = {
+    id: number,
+    title: string,
+    amount: number,
+}
+
+async function getAllExpenses() {
+  // await new Promise((r) => setTimeout(r, 2000)) // fake delay to test skeleton
+  const res = await fetch("api/expenses")
+  // client will let us do this instead - helps make everything typesafe
+  // const res = await api.expenses.$get() // not working because of error caused by hono client
+  if(!res.ok){
+    throw new Error("Server error");
+  }
+  const data = await res.json()
+  return data
+}
+
+function Expenses() {
+  // Queries
+  const { isPending, error, data, isFetching } = useQuery({ queryKey: ['get-all-expenses'], queryFn: getAllExpenses }) // look at what query returns here - react query / tanstack query
+
+  if (error) return 'An error has occurred: ' + error.message
+
+  return(
+    <div className='p-2 max-w-3xl m-auto'>
+    <Table>
+      <TableCaption>A list of all your expenses.</TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[100px]">ID</TableHead>
+          <TableHead>Title</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+      {isPending ?
+        Array(3).fill(0).map((_, i) => (
+          <TableRow key={i}>
+              <TableCell><Skeleton className='h-4' /></TableCell>
+              <TableCell><Skeleton className='h-4' /></TableCell>
+              <TableCell><Skeleton className='h-4' /></TableCell>
+            </TableRow>
+        ))
+      : 
+        data?.expenses.map((expense: Expense) => (
+          <TableRow key={expense.id}>
+            <TableCell className="font-medium">{expense.id}</TableCell>
+            <TableCell>{expense.title}</TableCell>
+            <TableCell className="text-right">{expense.amount}</TableCell>
+          </TableRow>
+        ))
+      }
+      </TableBody>
+
+
+      { // Totals - should be requested from
+      /* <TableFooter>
+        <TableRow>
+          <TableCell colSpan={2}>Total</TableCell>
+          <TableCell className="text-right">$2,500.00</TableCell>
+        </TableRow>
+      </TableFooter> */}
+    </Table>
+    </div>
+  )
+}
+
