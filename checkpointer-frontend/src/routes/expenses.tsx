@@ -2,6 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 // import { api } from '@/lib/api'; //hono-client error
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton"
+import { PageContainer } from '@/components/PageContainer';
+import { Section } from '@/components/section';
 import {
   Table,
   TableBody,
@@ -42,10 +44,10 @@ function Expenses() {
   if (error) return 'An error has occurred: ' + error.message
 
   return(
-    <div className='p-2 max-w-3xl m-auto'>
-    <Table>
-      <TableCaption>A list of all your expenses.</TableCaption>
-      <TableHeader>
+    <div className='flex flex-col'>
+    <Table className="gap-8 items-start p-10">
+      <TableCaption className='m-4'>A list of all your expenses.</TableCaption>
+      <TableHeader className='font-serif font-bold'>
         <TableRow>
           <TableHead className="w-[100px]">ID</TableHead>
           <TableHead>Title</TableHead>
@@ -71,15 +73,6 @@ function Expenses() {
         ))
       }
       </TableBody>
-
-
-      { // Totals - should be requested from
-      /* <TableFooter>
-        <TableRow>
-          <TableCell colSpan={2}>Total</TableCell>
-          <TableCell className="text-right">$2,500.00</TableCell>
-        </TableRow>
-      </TableFooter> */}
     </Table>
     </div>
   )

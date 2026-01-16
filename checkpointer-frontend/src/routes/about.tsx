@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/about')({
@@ -5,5 +6,5 @@ export const Route = createFileRoute('/about')({
 })
 
 function RouteComponent() {
-  return <div>Hello "/about"!</div>
+  return <Button className="bg-yellow-200 p-10 border-4 border-red-500">Hello "/about"!</Button>
 }
