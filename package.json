@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "bun": "^1.3.6",
+    "flyctl": "^1.2.6",
+    "hono": "^4.11.4",
+    "zod": "^4.3.5"
+  },
+  "name": "checkpointerv2",
+  "module": "server/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun server/index.ts",
+    "dev": "bun --watch server/index.ts"
+  },
+  "private": true,
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
