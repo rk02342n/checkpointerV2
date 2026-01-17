@@ -1,6 +1,12 @@
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
+import type { QueryClient } from '@tanstack/react-query'
+import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 
-export const Route = createRootRoute({
+interface MyRouterContext {
+  // The ReturnType of your useAuth hook or the value of your AuthContext
+  queryClient: QueryClient
+}
+
+export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootComponent,
 })
 
@@ -37,6 +43,13 @@ function NavBar() {
         className: 'font-bold',
       }}>
         Create Expense
+    </Link>
+    <Link
+      to="/profile"
+      activeProps={{
+        className: 'font-bold',
+      }}>
+        Profile
     </Link>
   </div>
   )

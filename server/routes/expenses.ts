@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import z from 'zod'
 import { zValidator } from '@hono/zod-validator'
-
+import { getUser } from "../kinde"; // pass in getUser as middle function to make the route authenticated
 
 
 const expenseSchema = z.object({
@@ -27,22 +27,25 @@ const fakeExpenses: Expense[] = [
 ]
 
 export const expensesRoute = new Hono()
-.get("/", (c) => {
+.get("/", getUser, (c) => {
+    const user = c.var.user // we can grab the user like this
     return c.json({ expenses: fakeExpenses })
 })
-.post("/", zValidator("json", createPostSchema), async c => { // zValidator middleware validation function
+.post("/", zValidator("json", createPostSchema), getUser, async c => { // zValidator middleware validation function
     const data = await c.req.valid("json");
     const expense = createPostSchema.parse(data)
     fakeExpenses.push({...expense, id: fakeExpenses.length + 1});
     c.status(201)
     return c.json(expense);
 })
-.get("/total-spent", c => {
+.get("/total-spent", getUser, async c => {
     // Calculate the total amount from all expenses
+    // add a fake delay to test loading feature in frontend - needs to make function async for it
+    await new Promise((r) => setTimeout(r, 2000))
     const total = fakeExpenses.reduce((sum, expense) => sum + expense.amount, 0);
     return c.json({ total });
 })
-.get("/:id{[0-9]+}", c => {  // regex makes sure we get a number as a request
+.get("/:id{[0-9]+}", getUser, c => {  // regex makes sure we get a number as a request
     const id = Number.parseInt(c.req.param('id'))
     const expense = fakeExpenses.find(expense => expense.id === id)
     if (!expense){
@@ -50,7 +53,7 @@ export const expensesRoute = new Hono()
     }
     return c.json({expense})
 })
-.delete("/:id{[0-9]+}", c => {  // regex makes sure we get a number as a request
+.delete("/:id{[0-9]+}", getUser, c => {  // regex makes sure we get a number as a request
     const id = Number.parseInt(c.req.param('id'))
     const index = fakeExpenses.findIndex(expense => expense.id === id)
     if (index === -1){

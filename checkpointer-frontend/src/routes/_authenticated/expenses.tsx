@@ -2,20 +2,17 @@ import { createFileRoute } from '@tanstack/react-router'
 // import { api } from '@/lib/api'; //hono-client error
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from "@/components/ui/skeleton"
-import { PageContainer } from '@/components/PageContainer';
-import { Section } from '@/components/section';
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
 
-export const Route = createFileRoute('/expenses')({
+export const Route = createFileRoute('/_authenticated/expenses')({
   component: Expenses,
 })
 
@@ -55,7 +52,7 @@ function Expenses() {
         </TableRow>
       </TableHeader>
       <TableBody>
-      {isPending ?
+      {isPending || isFetching ?
         Array(3).fill(0).map((_, i) => (
           <TableRow key={i}>
               <TableCell><Skeleton className='h-4' /></TableCell>

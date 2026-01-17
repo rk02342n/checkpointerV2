@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query'
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_authenticated/')({
   component: Index,
 })
 
@@ -41,7 +41,7 @@ function Index() {
         </CardDescription>
         <CardAction>
           {/* <CardContent className='text-black'>{totalSpent}</CardContent> */}
-          <CardContent className='text-black'>{isPending ? "Loading..." : data.total}</CardContent>
+          <CardContent className='text-black'>{isPending || isFetching ? "Loading..." : data.total}</CardContent>
         </CardAction>
       </CardHeader>
     </Card>
