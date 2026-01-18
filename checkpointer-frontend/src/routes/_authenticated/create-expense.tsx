@@ -14,11 +14,12 @@ function CreateExpense() {
   const form = useForm({
     defaultValues: {
       title: '',
-      amount: 0,
+      amount: '',
     },
     onSubmit: async ({ value }) => {
       // Do something with form data
       // await new Promise((r) => setTimeout(r, 2000)) // fake delay to test skeleton
+      // const res = await api.expenses.$post({json: value});
       const res = await fetch("/api/expenses", {
         method: "POST",
         headers: {
@@ -32,7 +33,6 @@ function CreateExpense() {
       navigate({to: '/expenses'});
     },
   })
-
 
   return (<div className='m-auto p-4'>
     <h2 className="text-xl font-semibold tracking-tight p-4 text-center">Create expense</h2>
@@ -77,7 +77,7 @@ function CreateExpense() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   type='number'
-                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
                 <>
                   {field.state.meta.isTouched && !field.state.meta.isValid ? (

@@ -28,7 +28,7 @@ async function getAllExpenses() {
   // client will let us do this instead - helps make everything typesafe
   // const res = await api.expenses.$get() // not working because of error caused by hono client
   if(!res.ok){
-    throw new Error("Server error");
+    throw new Error("Ummmm Server error");
   }
   const data = await res.json()
   return data
