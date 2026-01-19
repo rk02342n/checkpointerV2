@@ -40,7 +40,6 @@ function Index() {
           The total amount you've spent
         </CardDescription>
         <CardAction>
-          {/* <CardContent className='text-black'>{totalSpent}</CardContent> */}
           <CardContent className='text-black'>{isPending ? "Loading..." : data.total}</CardContent>
         </CardAction>
       </CardHeader>

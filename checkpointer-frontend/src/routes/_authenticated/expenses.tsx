@@ -28,12 +28,11 @@ type Expense = {
 }
 
 function Expenses() {
-  // Queries
+  // Tanstack Query server-state management
   const { isPending, error, data } = useQuery
-  (getAllExpensesQueryOptions) // look at what query returns here - react query / tanstack query
-
-  const {data: loadingCreateExpense} = useQuery(loadingCreateExpenseQueryOptions);
-
+    (getAllExpensesQueryOptions)
+  const {data: loadingCreateExpense} = useQuery
+    (loadingCreateExpenseQueryOptions);
 
   if (error) return 'An error has occurred: ' + error.message
 
@@ -54,9 +53,9 @@ function Expenses() {
       {loadingCreateExpense?.expense && <TableRow>
         <TableCell><Skeleton className='h-4' /></TableCell>
         <TableCell>{loadingCreateExpense?.expense.title}</TableCell>
-        <TableCell className="text-left">{loadingCreateExpense?.expense.amount}</TableCell>
+        <TableCell className="text-right">{loadingCreateExpense?.expense.amount}</TableCell>
         <TableCell className='text-center'>{loadingCreateExpense?.expense.date.split("T")[0]}</TableCell>
-        <TableCell><Skeleton className='h-4' /></TableCell>
+        <TableCell className="text-right"><Skeleton className='h-4' /></TableCell>
       </TableRow>}
       {isPending ?
         Array(3).fill(0).map((_, i) => (

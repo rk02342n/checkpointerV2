@@ -33,7 +33,6 @@ function Profile() {
       <p>{data.user.given_name} {data.user.family_name}</p>
       <div>
       <Button asChild className='my-4'><a href='/api/logout'>Logout</a></Button>
-    
   </div>
   </div>
 )

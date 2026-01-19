@@ -141,7 +141,7 @@ function CreateExpense() {
                 <Calendar
                   mode="single"
                   required
-                  className="max-w-xs border rounded-md outline-none"
+                  className="rounded-lg border [--cell-size:2.75rem] md:[--cell-size:3rem]"
                   selected={field.state.value ? new Date(field.state.value) : undefined}
                   onSelect={(date) =>
                     field.handleChange(date ? date.toISOString() : '')
