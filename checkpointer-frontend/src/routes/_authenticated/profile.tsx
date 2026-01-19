@@ -8,20 +8,33 @@ export const Route = createFileRoute('/_authenticated/profile')({
 
 // import { api } from '@/lib/api'; //hono-client error
 
-function Profile() {
-  const { isPending, error, data, isFetching } = useQuery(userQueryOptions); // look at what query returns here - react query / tanstack query
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
+import { Button } from '@/components/ui/button'
 
-  if(isPending || isFetching) return("Loading ...");
+
+
+function Profile() {
+  const { isPending, error, data } = useQuery(userQueryOptions); // look at what query returns here - react query / tanstack query
+
+  if(isPending) return("Loading ...");
   if(error) return("Not logged in...");
 
   return (
-    <div>
-      <div className=""><h2>Hello {data.user.family_name}</h2></div>
+    <div className="flex flex-col items-center gap-4 m-auto justify-center">
+      <div><h2>Hello {data.user.given_name}</h2></div>
+      <Avatar>
+        <AvatarImage src={'https://en.wikipedia.org/wiki/SpongeBob_SquarePants_%28character%29#/media/File:SpongeBob_SquarePants_character.png'} alt={data.user.given_name} />
+        <AvatarFallback>{data.user.given_name}</AvatarFallback>
+      </Avatar>
+      <p>{data.user.given_name} {data.user.family_name}</p>
       <div>
-    <a href='/api/logout'>Logout</a>
+      <Button asChild className='my-4'><a href='/api/logout'>Logout</a></Button>
+    
   </div>
   </div>
 )
-  
 }
-

@@ -28,7 +28,7 @@ async function getTotalSpent() {
 
 function Index() {
     // Queries
-  const { isPending, error, data, isFetching } = useQuery({ queryKey: ['get-total-spent'], queryFn: getTotalSpent }) // look at what query returns here - react query / tanstack query
+  const { isPending, error, data } = useQuery({ queryKey: ['get-total-spent'], queryFn: getTotalSpent }) // look at what query returns here - react query / tanstack query
 
   if (error) return 'An error has occurred: ' + error.message
   return (
@@ -41,7 +41,7 @@ function Index() {
         </CardDescription>
         <CardAction>
           {/* <CardContent className='text-black'>{totalSpent}</CardContent> */}
-          <CardContent className='text-black'>{isPending || isFetching ? "Loading..." : data.total}</CardContent>
+          <CardContent className='text-black'>{isPending ? "Loading..." : data.total}</CardContent>
         </CardAction>
       </CardHeader>
     </Card>

@@ -1,26 +1,17 @@
 import { Hono } from "hono";
-import z from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { getUser } from "../kinde"; // pass in getUser as middle function to make the route authenticated
 import { db } from "../db";
-import { expensesTable } from "../db/schema/expenses";
+import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { eq, desc, sum, and } from "drizzle-orm";
 
-const expenseSchema = z.object({
-    id: z.number().int().positive().min(1),
-    title: z.string().min(3).max(100),
-    amount: z.string(),
-})
+import { createExpenseSchema } from "../sharedTypes";
 
 // type Expense = {
 //     id: number,
 //     title: string,
 //     amount: number,
 // }
-
-type Expense = z.infer<typeof expenseSchema> // we already have a zod schema validator which we can use to create the type
-
-const createPostSchema = expenseSchema.omit({id: true}) // makes a zod schema for post becuase we do not need an id in the request
 
 // const fakeExpenses: Expense[] = [
 //     {id: 1, title: "Groceries", amount: "50"},
@@ -38,14 +29,19 @@ export const expensesRoute = new Hono()
     .orderBy(desc(expensesTable.createdAt))
     return c.json({ expenses: expenses })
 })
-.post("/", zValidator("json", createPostSchema), getUser, async c => { // zValidator middleware validation function
+.post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function
     const user = c.var.user
-    const data = await c.req.valid("json");
-    const expense = createPostSchema.parse(data)
-    const result = await db.insert(expensesTable).values({
+    const expense = await c.req.valid("json");
+    const validatedExpense = expensesInsertSchema.parse({
         ...expense,
         userId: user.id,
-    }).returning()
+    })
+
+    const result = await db
+    .insert(expensesTable)
+    .values(validatedExpense)
+    .returning()
+    .then(res => res[0]);
     // fakeExpenses.push({...expense, id: fakeExpenses.length + 1});
     c.status(201)
     return c.json(result);

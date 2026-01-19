@@ -6,16 +6,19 @@ import { Button } from '@/components/ui/button'
 const Login = () => {
     return (
 
-        <div className='flex flex-col m-8'><h2>You have to log in sir!</h2>
-          <Button className='p-4 m-8 max-w-20 justify-start' onClick={() => { window.location.href = '/api/login' }}>
-            Login
+        <div className='flex flex-col max-w-xl gap-4 m-auto'><h2 className='text-center'>You have to log in sir!</h2>
+          <Button asChild >
+            <a href="/api/login">Login</a>
+          </Button>
+          <Button asChild >
+            <a href="/api/register">Register</a>
           </Button>
         </div>
     )
 }
 
 const Component = () => {
-    const { user } = Route.useRouteContext() ;
+    const { user } = Route.useRouteContext();
     if (!user) {
       return <Login />
     }
