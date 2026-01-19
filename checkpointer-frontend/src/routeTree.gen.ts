@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCreateExpenseRouteImport } from './routes/_authenticated/create-expense'
+import { Route as AuthenticatedCheckpointRouteImport } from './routes/_authenticated/checkpoint'
 
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
@@ -46,9 +47,15 @@ const AuthenticatedCreateExpenseRoute =
     path: '/create-expense',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCheckpointRoute = AuthenticatedCheckpointRouteImport.update({
+  id: '/checkpoint',
+  path: '/checkpoint',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
+  '/checkpoint': typeof AuthenticatedCheckpointRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -56,6 +63,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/about': typeof AboutRoute
+  '/checkpoint': typeof AuthenticatedCheckpointRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -65,6 +73,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
+  '/_authenticated/checkpoint': typeof AuthenticatedCheckpointRoute
   '/_authenticated/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -72,13 +81,26 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/about' | '/create-expense' | '/expenses' | '/profile' | '/'
+  fullPaths:
+    | '/about'
+    | '/checkpoint'
+    | '/create-expense'
+    | '/expenses'
+    | '/profile'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/about' | '/create-expense' | '/expenses' | '/profile' | '/'
+  to:
+    | '/about'
+    | '/checkpoint'
+    | '/create-expense'
+    | '/expenses'
+    | '/profile'
+    | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/about'
+    | '/_authenticated/checkpoint'
     | '/_authenticated/create-expense'
     | '/_authenticated/expenses'
     | '/_authenticated/profile'
@@ -134,10 +156,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateExpenseRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/checkpoint': {
+      id: '/_authenticated/checkpoint'
+      path: '/checkpoint'
+      fullPath: '/checkpoint'
+      preLoaderRoute: typeof AuthenticatedCheckpointRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedCheckpointRoute: typeof AuthenticatedCheckpointRoute
   AuthenticatedCreateExpenseRoute: typeof AuthenticatedCreateExpenseRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -145,6 +175,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedCheckpointRoute: AuthenticatedCheckpointRoute,
   AuthenticatedCreateExpenseRoute: AuthenticatedCreateExpenseRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
