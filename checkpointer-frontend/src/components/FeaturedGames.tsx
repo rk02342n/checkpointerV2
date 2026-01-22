@@ -68,7 +68,7 @@ export function FeaturedGames({
       <br/>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-10 w-full">
-        {(items.slice(2,10)).map((game: FeaturedGame) => {
+        {(items.slice(2, limit + 2)).map((game: FeaturedGame) => {
           const rating = formatRating(game.igdbRating)
           const year = formatYear(game.releaseDate)
 

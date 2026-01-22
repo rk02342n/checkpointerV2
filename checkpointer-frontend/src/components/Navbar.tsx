@@ -13,9 +13,8 @@ interface NavbarProps {
   logModalTrigger?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ logModalTrigger }) => {
+const Navbar: React.FC<NavbarProps> = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [activeGame, setActiveGame] = useState<boolean>(false);
     
     const navigate = useNavigate();
     const [showLogModal, setShowLogModal] = useState<boolean>(false);
@@ -48,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ logModalTrigger }) => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <div 
           className="flex items-center gap-2 cursor-pointer group" 
-          onClick={() => { navigate({to: `/checkpoint`}); setActiveGame(false); }}
+          onClick={() => { navigate({to: `/checkpoint`});}}
         >
           <Gamepad2 className="w-8 h-8 text-black group-hover:text-orange-400 transition-colors" />
           <span className="text-xl font-black text-black tracking-tighter hidden md:block">CHECKPOINTER</span>
@@ -109,7 +108,7 @@ const Navbar: React.FC<NavbarProps> = ({ logModalTrigger }) => {
         <div className="flex items-center gap-4 md:gap-6">
           <button 
             className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-zinc-500 active:text-fuchsia-800"
-            onClick={() => { navigate({to: `/profile`}); setActiveGame(false); }}
+            onClick={() => { navigate({to: `/profile`});}}
           >
             <User className="w-4 h-4" />
             <span>Profile</span>

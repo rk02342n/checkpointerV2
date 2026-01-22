@@ -45,8 +45,12 @@ export const Poster: React.FC<PosterProps> = ({
       {/* Hover Overlay */}
       <div className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 backdrop-blur-[2px]">
         <Eye className="w-6 h-6 text-white mb-1" />
-        <span className="text-white font-bold text-center text-xs">{game.title}</span>
-        <span className="text-white/70 text-[10px]">{game.year}</span>
+        {showTitle && 
+          <span className="text-white font-bold text-center text-xs">{game.title}</span>
+        }
+        {showTitle && 
+          <span className="text-white/70 text-[10px]">{game.year}</span>
+        }
       </div>
     </div>
   );

@@ -1,10 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
-import { Gamepad2, Heart, User } from "lucide-react"
-
-import { Poster } from "@/components/Poster"
-import RecentReviews from "../RecentReviews"
-import OldLogModal from "@/components/LogModal"
+import { Heart } from "lucide-react"
 import { FeaturedGames } from "@/components/FeaturedGames"
 import { Button } from "@/components/ui/button"
 import { getAllGamesQueryOptions } from "@/lib/gameQuery"
@@ -59,10 +55,8 @@ export default function Checkpointer() {
   const [view, setView] = useState<'home' | 'profile' | 'game'>('home'); // home, profile, game
   
   // State initialization with Mock data as fallback
-  const { data, isPending, error} = useQuery(getAllGamesQueryOptions)
+  const { data, isPending} = useQuery(getAllGamesQueryOptions)
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
-  const [watchlist, setWatchlist] = useState([3, 8]);
-  const [favorites, setFavorites] = useState([1, 10, 16, 12]);
   
   const navigate = useNavigate();
 
@@ -73,14 +67,6 @@ export default function Checkpointer() {
         // Try fetching reviews
         const reviewsRes = await fetch(`/reviews`);
         if (reviewsRes.ok) setReviews(await reviewsRes.json());
-
-        // Try fetching user profile
-        const userRes = await fetch(`/user`);
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          setWatchlist(userData.watchlist);
-          setFavorites(userData.favorites);
-        }
       } catch (err) {
         console.log("Server not running, using mock data.");
       }
@@ -138,7 +124,7 @@ export default function Checkpointer() {
         {isPending ? (
           <div>Loading games...</div>
         ) : (
-          <FeaturedGames games={data.games} />
+          <FeaturedGames games={data.games} limit={8} />
         )}
       </section>
     </div>
@@ -147,62 +133,6 @@ export default function Checkpointer() {
   const ProfileView = () => {
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-10 max-w-full">
-        {/* Profile Header */}
-        <div className="flex flex-col w-full md:flex-row items-center gap-8 pb-8 border-b border-zinc-100">
-
-            {/* profile picture */}
-          <div className="w-32 h-32 rounded-full bg-linear-to-tr from-green-400 to-blue-600 p-1 shrink-0">
-            <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center overflow-hidden">
-               <User className="w-16 h-16 text-zinc-700" />
-            </div>
-          </div>
-          
-          <div className="text-center md:text-left space-y-4 flex-1">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-black">PlayerOne</h1>
-                <p className="text-zinc-800 text-sm">Joined December 2023</p>
-              </div>
-              <button className="px-4 py-2 bg-transparent border border-zinc-800 text-black rounded hover:bg-zinc-800 hover:text-blue-600 transition-colors text-xs font-bold uppercase tracking-wider">
-                Edit Profile
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-center md:justify-start gap-8">
-              <div className="text-center md:text-left">
-                <span className="block text-xl font-bold text-black">{reviews.length}</span>
-                <span className="text-xs text-zinc-500 uppercase tracking-wider">Games</span>
-              </div>
-              <div className="text-center md:text-left">
-                <span className="block text-xl font-bold text-black">2023</span>
-                <span className="text-xs text-zinc-500 uppercase tracking-wider">This Year</span>
-              </div>
-              <div className="text-center md:text-left">
-                <span className="block text-xl font-bold text-black">{watchlist.length}</span>
-                <span className="text-xs text-zinc-500 uppercase tracking-wider">Watchlist</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Favorites */}
-        <section>
-          <h2 className="text-black text-sm font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-4">Favorite Games</h2>
-          {favorites.length > 0 ? (
-            <div className="flex gap-4 overflow-x-auto pb-4">
-              {favorites.map(id => {
-                 const game = data.games.find((g: Game) => g.id === id);
-                 if (!game) return null;
-                 return <Poster key={id} game={game} size="md" onClick={handleGameClick} />;
-              })}
-            </div>
-          ) : (
-             <div className="h-32 bg-indigo-400/10 border border-dashed border-zinc-800 rounded-lg flex items-center justify-center text-zinc-600">
-                Select your top 4 games
-             </div>
-          )}
-        </section>
-
         {/* Recent Activity */}
         <section className="grid md:grid-cols-4 gap-8">
            <div className="md:col-span-3">
@@ -233,16 +163,6 @@ export default function Checkpointer() {
              </div>
            </div>
 
-           <div>
-              <h2 className="text-zinc-300 text-sm font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-4">Watchlist</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {watchlist.map(id => {
-                   const game = data.games.find((g : Game) => g.id === id);
-                   if (!game) return null;
-                   return <Poster key={id} game={game} size="sm" onClick={handleGameClick} />;
-                })}
-              </div>
-           </div>
         </section>
       </div>
     );

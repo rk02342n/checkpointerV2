@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Heart, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-
 
 type Game = {
   id: number

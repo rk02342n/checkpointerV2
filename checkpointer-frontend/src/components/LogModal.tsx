@@ -40,7 +40,6 @@ const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
         { id: 16, name: "Persona 5 Royal", releaseDate: '2020', dev: "Atlus", coverUrl: "JRPG"},
     ];
     
-    const [assignedRating, setAssignedRating] = useState<number>(0);
     const [activeGame, setActiveGame] = useState<Game | undefined>();
     const [isGameActive, setIsGameActive] = useState<boolean>(false);
     const [filteredGames, setFilteredGames] = useState<Game[]>(games || []);
@@ -103,7 +102,6 @@ const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
     };
 
     const handleRatingChange = (rating: number): void => {
-        setAssignedRating(rating);
         setReview({
             ...review,
             rating: rating,
