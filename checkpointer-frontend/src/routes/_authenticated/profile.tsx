@@ -27,12 +27,17 @@ function Profile() {
     <div className="flex flex-col items-center gap-4 m-auto justify-center">
       <div><h2>Hello {data.user.given_name}</h2></div>
       <Avatar>
-        <AvatarImage src={'https://en.wikipedia.org/wiki/SpongeBob_SquarePants_%28character%29#/media/File:SpongeBob_SquarePants_character.png'} alt={data.user.given_name} />
-        <AvatarFallback>{data.user.given_name}</AvatarFallback>
+        <AvatarImage
+          src={'https://en.wikipedia.org/wiki/SpongeBob_SquarePants_%28character%29#/media/File:SpongeBob_SquarePants_character.png'}
+          alt={data.user.given_name}
+          />
+        <AvatarFallback>
+          {data.user.given_name}
+        </AvatarFallback>
       </Avatar>
       <p>{data.user.given_name} {data.user.family_name}</p>
       <div>
-      <Button asChild className='my-4'><a href='/api/logout'>Logout</a></Button>
+      <Button asChild className='my-4 bg-yellow-400 hover:outline-4 outline-black hover:bg-yellow-400'><a href='/api/logout'>Logout</a></Button>
   </div>
   </div>
 )

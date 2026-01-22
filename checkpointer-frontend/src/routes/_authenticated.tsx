@@ -7,10 +7,10 @@ const Login = () => {
     return (
 
         <div className='flex flex-col max-w-xl gap-4 m-auto'><h2 className='text-center'>You have to log in sir!</h2>
-          <Button asChild >
+          <Button asChild className='bg-amber-400'>
             <a href="/api/login">Login</a>
           </Button>
-          <Button asChild >
+          <Button asChild className='bg-amber-400'>
             <a href="/api/register">Register</a>
           </Button>
         </div>

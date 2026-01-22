@@ -41,7 +41,7 @@ export const getAllExpensesQueryOptions = queryOptions({
   queryKey: ['get-all-expenses'], 
   queryFn: getAllExpenses,
   staleTime: 1000 * 60 * 5
-}) 
+})
 
 export async function createExpense({value} : {value: CreateExpense}){ 
   // await new Promise((r) => setTimeout(r, 3000))
@@ -80,4 +80,3 @@ export async function deleteExpense({id}: {id: number}) {
   const data = await res.json();
   return data;
 }
-

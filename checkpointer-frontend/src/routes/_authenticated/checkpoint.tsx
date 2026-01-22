@@ -4,6 +4,12 @@ import { Gamepad2, Heart, User } from "lucide-react"
 
 import { Poster } from "@/components/Poster"
 import RecentReviews from "../RecentReviews"
+import OldLogModal from "@/components/LogModal"
+import { FeaturedGames } from "@/components/FeaturedGames"
+import { Button } from "@/components/ui/button"
+import { getAllGamesQueryOptions } from "@/lib/gameQuery"
+import { useQuery } from "@tanstack/react-query"
+import Navbar from "@/components/Navbar"
 
 type Game = {
   id: number
@@ -39,25 +45,6 @@ function StarRating({ rating }: { rating: number }) {
 
 // --- MAIN APP ---
 
-const MOCK_GAMES: Game[] = [
-  { id: 1, title: "Elden Ring", year: 2022, dev: "FromSoftware", genre: "RPG", color: "from-amber-700 to-yellow-900" },
-  { id: 2, title: "Baldur's Gate 3", year: 2023, dev: "Larian", genre: "RPG", color: "from-red-900 to-purple-900" },
-  { id: 3, title: "Hollow Knight", year: 2017, dev: "Team Cherry", genre: "Metroidvania", color: "from-slate-700 to-slate-900" },
-  { id: 4, title: "Breath of the Wild", year: 2017, dev: "Nintendo", genre: "Adventure", color: "from-sky-400 to-emerald-400" },
-  { id: 5, title: "Cyberpunk 2077", year: 2020, dev: "CDPR", genre: "RPG", color: "from-yellow-400 to-yellow-600 text-black" },
-  { id: 6, title: "God of War", year: 2018, dev: "Santa Monica", genre: "Action", color: "from-blue-800 to-slate-800" },
-  { id: 7, title: "Hades", year: 2020, dev: "Supergiant", genre: "Roguelike", color: "from-red-600 to-orange-600" },
-  { id: 8, title: "Stardew Valley", year: 2016, dev: "ConcernedApe", genre: "Sim", color: "from-green-500 to-emerald-700" },
-  { id: 9, title: "The Last of Us Part II", year: 2020, dev: "Naughty Dog", genre: "Action", color: "from-stone-800 to-stone-950" },
-  { id: 10, title: "Disco Elysium", year: 2019, dev: "ZA/UM", genre: "RPG", color: "from-orange-200 to-orange-400 text-black" },
-  { id: 11, title: "Outer Wilds", year: 2019, dev: "Mobius", genre: "Adventure", color: "from-indigo-900 to-purple-900" },
-  { id: 12, title: "Celeste", year: 2018, dev: "EXOK", genre: "Platformer", color: "from-pink-500 to-purple-600" },
-  { id: 13, title: "Portal 2", year: 2011, dev: "Valve", genre: "Puzzle", color: "from-cyan-600 to-blue-700" },
-  { id: 14, title: "Bloodborne", year: 2015, dev: "FromSoftware", genre: "RPG", color: "from-neutral-900 to-neutral-950" },
-  { id: 15, title: "Minecraft", year: 2011, dev: "Mojang", genre: "Sandbox", color: "from-green-600 to-green-800" },
-  { id: 16, title: "Persona 5 Royal", year: 2020, dev: "Atlus", genre: "JRPG", color: "from-red-600 to-red-800" },
-];
-
 export const MOCK_REVIEWS: Review[] = [
   { id: 101, gameId: 1, userId: 'user', rating: 5, text: "A masterpiece of open world design.", date: "2023-10-15", liked: true },
   { id: 102, gameId: 7, userId: 'user', rating: 4.5, text: "Just one more run...", date: "2023-11-02", liked: false },
@@ -72,7 +59,7 @@ export default function Checkpointer() {
   const [view, setView] = useState<'home' | 'profile' | 'game'>('home'); // home, profile, game
   
   // State initialization with Mock data as fallback
-  const [games, setGames] = useState<Game[]>(MOCK_GAMES);
+  const { data, isPending, error} = useQuery(getAllGamesQueryOptions)
   const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
   const [watchlist, setWatchlist] = useState([3, 8]);
   const [favorites, setFavorites] = useState([1, 10, 16, 12]);
@@ -83,10 +70,6 @@ export default function Checkpointer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Try fetching games
-        const gamesRes = await fetch(`/games`);
-        if (gamesRes.ok) setGames(await gamesRes.json());
-
         // Try fetching reviews
         const reviewsRes = await fetch(`/reviews`);
         if (reviewsRes.ok) setReviews(await reviewsRes.json());
@@ -117,31 +100,46 @@ export default function Checkpointer() {
   const HomeView = () => (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 justify-center">
       {/* Hero Section */}
-      <div className="relative rounded-2xl bg-amber-300 hover:bg-blue-300 border-2 transition-colors duration-500 border-black shadow-2xl">
-      {/* <div className="relative rounded-2xl bg-amber-300 hover:bg-blue-300 border-2 transition-colors duration-500 border-black shadow-2xl
-      bg-[linear-gradient(135deg,rgba(255,255,255,.15),rgba(100,0,0,.15)),repeating-radial-gradient(circle_at_0_0,rgba(255,255,255,.08),rgba(255,255,255,.08)_10px,transparent_10px,transparent_20px)]"> */}
-
+      <div
+        // className={`
+        //   relative rounded-2xl border-2 border-black shadow-2xl
+        //   bg-rose-300 hover:bg-blue-300
+        //   transition-colors duration-500
+        //   filter-[contrast(170%)_brightness(1000%)]
+        //   [background:linear-gradient(43deg,rgba(0,0,255,1),rgba(0,0,0,0)),url(/assets/noise.svg)]
+        // `}
+        className={
+          `bg-lime-400 rounded-xl`
+        }
+      >
         <div className="relative z-20 p-8 md:p-12 flex flex-col md:flex-row gap-8 items-end md:items-center">
           <div className="flex-1 space-y-4 items-center justify-center">
-            <h1 className="text-4xl md:text-6xl font-black text-black/30 tracking-tighter uppercase">
-              Welcome to <span className="text-black">Checkpointer.</span>
-            </h1>
+            <h2 className="text-4xl md:text-6xl font-black text-accent-foreground tracking-tighter uppercase">
+              Welcome to <span className="text-black uppercase">Checkpointer</span>
+            </h2>
             <p className="text-lg md:text-lg font-semibold text-black">
-              Track and log games for yourself, and others.
+              Track and log games as you play
             </p>
-            <button 
+            <Button
+              variant='pop'
               onClick={() => {}}
-              className="text-black font-bold py-3 px-8 shadow-lg shadow-green-900/20 bg-white outline-2 outline-black hover:outline-4 hover:rounded-full active:text-xs"
+              className="text-black text-center font-bold py-3 px-8 outline-black outline-2 hover:outline-4 hover:rounded-full active:text-xs"
             >
               Start Logging
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Recent Reviews Feed */}
-      <section className="grid md:grid-cols-3 gap-8">
-        <RecentReviews />
+      <section className="flex flex-row items-center justify-between">
+        {/* <OldLogModal isOpen={true} onClose={()=>{}} /> */}
+        {/* <RecentReviews /> */}
+        {isPending ? (
+          <div>Loading games...</div>
+        ) : (
+          <FeaturedGames games={data.games} />
+        )}
       </section>
     </div>
   );
@@ -193,7 +191,7 @@ export default function Checkpointer() {
           {favorites.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-4">
               {favorites.map(id => {
-                 const game = games.find(g => g.id === id);
+                 const game = data.games.find((g: Game) => g.id === id);
                  if (!game) return null;
                  return <Poster key={id} game={game} size="md" onClick={handleGameClick} />;
               })}
@@ -211,7 +209,7 @@ export default function Checkpointer() {
              <h2 className="text-zinc-300 text-sm font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-4">Recent Diary</h2>
              <div className="space-y-4">
                 {reviews.map(review => {
-                  const game = games.find(g => g.id === review.gameId);
+                  const game = data.games.find((g : Game) => g.id === review.gameId);
                   if (!game) return null;
                   return (
                     <div key={review.id} className="flex gap-4 py-4 border-b border-zinc-800/50 last:border-0">
@@ -239,7 +237,7 @@ export default function Checkpointer() {
               <h2 className="text-zinc-300 text-sm font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-4">Watchlist</h2>
               <div className="grid grid-cols-2 gap-2">
                 {watchlist.map(id => {
-                   const game = games.find(g => g.id === id);
+                   const game = data.games.find((g : Game) => g.id === id);
                    if (!game) return null;
                    return <Poster key={id} game={game} size="sm" onClick={handleGameClick} />;
                 })}
@@ -251,35 +249,19 @@ export default function Checkpointer() {
   };
 
   return (
-    <div className="min-w-full overflow-x-hidden text-black font-sans selection:bg-green-500/30 outline-black rounded-xl">
+    <div className="min-w-full overflow-x-hidden text-black selection:bg-green-500/30 outline-black rounded-xl">
       
       {/* --- NAVBAR --- */}
     {/* <Navbar logModalTrigger={showLogModal}/> */}
+    <Navbar/>
 
       {/* --- CONTENT --- */}
-      <main className="container w-screen mx-auto px-4 py-8 min-h-[calc(100vh-64px)]  bg-orange-200 border-2 border-black rounded-xl">
+      <main className="container w-screen mx-auto my-4 px-4 py-8 min-h-[calc(100vh-64px)] bg-orange-300 border-2 border-black rounded-xl"
+      >
         {view === 'home' && <HomeView />}
         {/* {view === 'game' && navigate(`/game/${activeGame.id}`)} */}
         {view === 'profile' && <ProfileView />}
       </main>
-
-      {/* --- FOOTER --- */}
-      <footer className="border-t border-zinc-800 bg-zinc-950 py-12 mt-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Gamepad2 className="w-6 h-6 text-zinc-600" />
-            <span className="font-bold text-zinc-500">Checkpointer © 2026</span>
-          </div>
-          <div className="flex gap-6 text-sm text-zinc-500">
-            <a href="#" className="hover:text-white transition-colors">About</a>
-            <a href="#" className="hover:text-white transition-colors">News</a>
-            <a href="#" className="hover:text-white transition-colors">Pro</a>
-            <a href="#" className="hover:text-white transition-colors">Apps</a>
-            <a href="#" className="hover:text-white transition-colors">API</a>
-          </div>
-        </div>
-      </footer>
-      
       {/* Global Styles for nicer scrollbar */}
       <style>{`
         ::-webkit-scrollbar { width: 8px; }

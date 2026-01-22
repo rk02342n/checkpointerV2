@@ -16,13 +16,13 @@ function NavBar() {
   return (
     <div className='flex justify-between p-6 items-center'>
       <Link
-        to="/"
+        to="/checkpoint"
         activeProps={{
-          className: 'font-bold',
+          className: 'font-bold text-4xl',
         }}
         activeOptions={{ exact: true }}
       >
-        <h1 className='font-mono'> Checkpointer V2</h1>
+        <h1 className='text-xl font-bold font-serif'>Checkpointer V2</h1>
       </Link>
       <div className="flex gap-8 text-lg text-left">
       <Link
@@ -34,18 +34,11 @@ function NavBar() {
         About
       </Link>
       <Link
-        to="/expenses"
-        activeProps={{
-          className: 'font-bold',
-        }}>
-          Expenses
-      </Link>
-      <Link
         to="/create-expense"
         activeProps={{
           className: 'font-bold',
         }}>
-          Create Expense
+          Create Post
       </Link>
       <Link
         to="/profile"
@@ -53,13 +46,6 @@ function NavBar() {
           className: 'font-bold',
         }}>
           Profile
-      </Link>
-      <Link
-        to="/checkpoint"
-        activeProps={{
-          className: 'font-bold',
-        }}>
-          Checkpointer
       </Link>
     </div>
   </div>

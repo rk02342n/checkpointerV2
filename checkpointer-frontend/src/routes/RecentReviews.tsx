@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Heart, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+
 
 type Game = {
   id: number
@@ -112,9 +114,10 @@ const RecentReviews = () => {
               const game = games.find((g) => g.id === review.gameId);
               if (!game) return null;
               return (
-                <div key={review.id} className="bg-indigo-300 hover:bg-amber-300 border-black border-2 p-4 rounded-xl flex gap-4 hover:border-zinc-700 transition-colors">
+                <div key={review.id} className="bg-blue-400 hover:bg-red-400 border-black border-2 p-4 rounded-xl flex gap-4 hover:border-zinc-700 transition-colors">
                   <div className="shrink-0">
                     <Poster game={game} size="sm" onClick={handleGameClick} className='w-30 h-30' />
+                    {/* <GameCard size="md"/> */}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-baseline gap-2 mb-1">
