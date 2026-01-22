@@ -1,0 +1,1 @@
+ALTER TABLE "games" ADD COLUMN "igdb_rating" numeric(3, 2) DEFAULT '0';

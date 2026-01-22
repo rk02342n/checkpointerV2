@@ -3,12 +3,17 @@ import { logger } from 'hono/logger'
 import { expensesRoute } from './routes/expenses'
 import { serveStatic } from 'hono/bun'
 import { authRoute } from './routes/auth'
+import { gamesRoute } from './routes/games'
 
 const app = new Hono()
 
 app.use('*', logger())
 
-const apiRoutes = app.basePath("/api").route("/expenses", expensesRoute).route("/", authRoute)
+const apiRoutes = app
+  .basePath("/api")
+  .route("/expenses", expensesRoute)
+  .route("/", authRoute)
+  .route("/games", gamesRoute);
 
 app.use('*', serveStatic({ root: './checkpointer-frontend/dist' }))  // change path accordingly to point to dist folder in frontend
 app.get('*', serveStatic({ path: './checkpointer-frontend/dist/index.html' })) // change path accordingly

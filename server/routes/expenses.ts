@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { getUser } from "../kinde"; // pass in getUser as middle function to make the route authenticated
+import { getUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { eq, desc, sum, and } from "drizzle-orm";
