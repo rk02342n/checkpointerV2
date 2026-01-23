@@ -5,6 +5,7 @@ export interface Game {
   name: string;
   coverUrl: string | null;
   releaseDate: string | Date | null;
+  igdbRating?: string | null;
 }
 
 export async function getAllGames() {
@@ -49,3 +50,23 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
       staleTime: 1000 * 30, // Cache for 30 seconds
     });
   }
+
+  export async function getGameById(id: string) {
+    // await new Promise((r) => setTimeout(r, 4000)) // to test skeleton TBD
+    const res = await fetch(`/api/games/${id}`)
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error("Game not found");
+      }
+      throw new Error("Server error");
+    }
+    const data = await res.json()
+    return data
+  }
+  
+  export const getGameByIdQueryOptions = (id: string) => queryOptions({
+    queryKey: ['get-game', id], 
+    queryFn: () => getGameById(id),
+    staleTime: 1000 * 60 * 5,
+    enabled: !!id // Only run query if id exists
+  })

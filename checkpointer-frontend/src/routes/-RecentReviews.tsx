@@ -15,7 +15,7 @@ type Review = {
   id: number
   gameId: number
   userId: string
-  rating: number
+  rating: string
   text: string
   date: string
   liked: boolean

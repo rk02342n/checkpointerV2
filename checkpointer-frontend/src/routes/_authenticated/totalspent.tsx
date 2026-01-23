@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query'
 
-export const Route = createFileRoute('/_authenticated/')({
+export const Route = createFileRoute('/_authenticated/totalspent')({
   component: Index,
 })
 

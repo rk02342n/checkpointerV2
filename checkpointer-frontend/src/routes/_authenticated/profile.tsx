@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { userQueryOptions } from '@/lib/api'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
+import { getReviewsByGameIdQueryOptions } from '@/lib/reviewsQuery'
 
 export const Route = createFileRoute('/_authenticated/profile')({
   component: Profile,
@@ -23,12 +24,19 @@ function Profile() {
   if(isPending) return("Loading ...");
   if(error) return("Not logged in...");
 
+  const { isPending: isUserPending, error: err, data: dbUserData } = useQuery(dbUserQueryOptions); 
+  
+
+
   return (
     <div className="flex flex-col items-center gap-4 m-auto justify-center">
       <div><h2>Hello {data.user.given_name}</h2></div>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+      {isUserPending ? <h1>user pending...</h1> :
+      <pre>{JSON.stringify(dbUserData, null, 2)}</pre>}
       <Avatar>
         <AvatarImage
-          src={'https://en.wikipedia.org/wiki/SpongeBob_SquarePants_%28character%29#/media/File:SpongeBob_SquarePants_character.png'}
+          src={data.user.picture}
           alt={data.user.given_name}
           />
         <AvatarFallback>

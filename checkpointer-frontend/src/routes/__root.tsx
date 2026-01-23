@@ -16,7 +16,7 @@ function NavBar() {
   return (
     <div className='flex justify-between p-6 items-center'>
       <Link
-        to="/checkpoint"
+        to="/"
         activeProps={{
           className: 'font-bold text-4xl',
         }}

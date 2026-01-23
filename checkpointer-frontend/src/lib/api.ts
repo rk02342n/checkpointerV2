@@ -16,10 +16,24 @@ async function getCurrentUser() {
     const data = await res.json()
     return data
   }
+async function getDbUser() {
+    const res = await fetch("api/user/account")
+    // const res = await api.me.$get() // not working because of error caused by hono client
+    if(!res.ok){
+      throw new Error("Server error");
+    }
+    const data = await res.json()
+    return data
+  }
 
 export const userQueryOptions = queryOptions({
     queryKey: ['get-current-user'],
     queryFn: getCurrentUser,
+    staleTime: Infinity // Tells react when the cache data is stale - specifically the user profile so it doesn't load each time user goes to the profile tab
+  })
+  export const dbUserQueryOptions = queryOptions({
+    queryKey: ['get-db-user'],
+    queryFn: getDbUser,
     staleTime: Infinity // Tells react when the cache data is stale - specifically the user profile so it doesn't load each time user goes to the profile tab
   })
 
@@ -44,7 +58,7 @@ export const getAllExpensesQueryOptions = queryOptions({
 })
 
 export async function createExpense({value} : {value: CreateExpense}){ 
-  // await new Promise((r) => setTimeout(r, 3000))
+  await new Promise((r) => setTimeout(r, 3000))
   const res = await fetch("/api/expenses", {
     method: "POST",
     headers: {

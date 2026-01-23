@@ -1,21 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Heart } from "lucide-react"
 import { FeaturedGames } from "@/components/FeaturedGames"
 import { Button } from "@/components/ui/button"
-import { getAllGamesQueryOptions } from "@/lib/gameQuery"
+import { getAllGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { useQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
-
-type Game = {
-  id: number
-  title: string
-  year: number
-  dev?: string
-  genre?: string
-  color?: string
-  cover_image?: string
-}
 
 type Review = {
   id: number
@@ -47,7 +37,7 @@ export const MOCK_REVIEWS: Review[] = [
   { id: 103, gameId: 12, userId: 'user', rating: 5, text: "Emotional damage.", date: "2023-11-20", liked: true },
 ];
 
-export const Route = createFileRoute("/_authenticated/checkpoint")({
+export const Route = createFileRoute("/")({
   component: Checkpointer,
 })
 
@@ -61,24 +51,11 @@ export default function Checkpointer() {
   const navigate = useNavigate();
 
   // Fetch Data from Node Server
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Try fetching reviews
-        const reviewsRes = await fetch(`/reviews`);
-        if (reviewsRes.ok) setReviews(await reviewsRes.json());
-      } catch (err) {
-        console.log("Server not running, using mock data.");
-      }
-    };
-    fetchData();
-  }, []);
 
   // Handlers
   const handleGameClick = (game: Game) => {
-    setView('game');
     window.scrollTo(0, 0);
-    navigate({ to: `/game/${game.id}` });
+    navigate({ to: `/games/${game.id}` });
   };
 
   // --- SUB-VIEWS ---
@@ -89,19 +66,23 @@ export default function Checkpointer() {
       <div
         // className={`
         //   relative rounded-2xl border-2 border-black shadow-2xl
-        //   bg-rose-300 hover:bg-blue-300
-        //   transition-colors duration-500
+        //   bg-sky-300 hover:bg-black
+        //   transition-colors duration-200
         //   filter-[contrast(170%)_brightness(1000%)]
-        //   [background:linear-gradient(43deg,rgba(0,0,255,1),rgba(0,0,0,0)),url(/assets/noise.svg)]
+        //   [background:linear-gradient(43deg,rgba(185,0,25,1),rgba(100,100,0,0)),url(assets/noise.svg)]
         // `}
-        className={
-          `bg-lime-400 rounded-xl`
-        }
+        className={`
+          relative rounded-2xl border-2 border-black shadow-2xl
+          bg-sky-300 hover:bg-rose-400
+          transition-colors duration-200
+          filter-[contrast(170%)_brightness(1000%)]
+          [background:linear-gradient(43deg,rgba(0,0,255,1),rgba(100,100,0,0)),url(assets/noise.svg)]
+        `}
       >
         <div className="relative z-20 p-8 md:p-12 flex flex-col md:flex-row gap-8 items-end md:items-center">
           <div className="flex-1 space-y-4 items-center justify-center">
-            <h2 className="text-4xl md:text-6xl font-black text-accent-foreground tracking-tighter uppercase">
-              Welcome to <span className="text-black uppercase">Checkpointer</span>
+            <h2 className="text-4xl md:text-5xl font-black font-serif text-accent-foreground tracking-tighter uppercase text-right">
+              Welcome to  <span className="text-black uppercase">Checkpointer</span>
             </h2>
             <p className="text-lg md:text-lg font-semibold text-black">
               Track and log games as you play
@@ -118,13 +99,20 @@ export default function Checkpointer() {
       </div>
 
       {/* Recent Reviews Feed */}
-      <section className="flex flex-row items-center justify-between">
+      <section
+        className="
+          flex flex-row items-center justify-between
+          px-4 py-6 rounded-xl border-black border-2
+          bg-[rgb(78,195,90)]
+          
+        "
+      >
         {/* <OldLogModal isOpen={true} onClose={()=>{}} /> */}
         {/* <RecentReviews /> */}
         {isPending ? (
           <div>Loading games...</div>
         ) : (
-          <FeaturedGames games={data.games} limit={8} />
+          <FeaturedGames games={data.games} limit={8} onGameClick={handleGameClick} />
         )}
       </section>
     </div>
@@ -176,7 +164,7 @@ export default function Checkpointer() {
     <Navbar/>
 
       {/* --- CONTENT --- */}
-      <main className="container w-screen mx-auto my-4 px-4 py-8 min-h-[calc(100vh-64px)] bg-orange-300 border-2 border-black rounded-xl"
+      <main className="container w-screen mx-auto my-4 px-4 py-8 min-h-[calc(100vh-64px)] bg-[rgb(255,220,159)] border-2 border-black rounded-xl"
       >
         {view === 'home' && <HomeView />}
         {/* {view === 'game' && navigate(`/game/${activeGame.id}`)} */}

@@ -22,7 +22,7 @@ const sizeClasses: Record<NonNullable<GameCardProps["size"]>, string> = {
 export function GameCard({ size = "md", game}: GameCardProps) {
   return (
     <Card className={`relative mx-auto w-full pt-0${sizeClasses[size]}`}>
-      <div className="absolute inset-0 z-30 aspect-video bg-black/35" />
+      <div className="absolute inset-0 z-30 aspect-video bg-black/35"/>
       <img
         src={game.coverUrl!}
         alt={game.name}

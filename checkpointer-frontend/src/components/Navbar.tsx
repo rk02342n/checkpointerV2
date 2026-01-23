@@ -30,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     const games: Game[] = data?.games || [];
 
     const handleGameClick = (id: string | number): void => {
-        navigate({to: `/game/${id}`});
+        navigate({to: `/games/${id}`});
         setSearchQuery('');
     }
 
@@ -42,15 +42,14 @@ const Navbar: React.FC<NavbarProps> = () => {
     }
 
     return(
-      <nav className="sticky top-0 z-40 bg-red-200 backdrop-blur-md border-2 border-black rounded-xl mb-4 mx-4 mt-2">
-      
+      <nav className="sticky top-0 z-40 bg-red-400 backdrop-blur-md border-2 border-black rounded-xl mb-4 mx-4 mt-2">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <div 
           className="flex items-center gap-2 cursor-pointer group" 
-          onClick={() => { navigate({to: `/checkpoint`});}}
+          onClick={() => { navigate({to: `/`});}}
         >
-          <Gamepad2 className="w-8 h-8 text-black group-hover:text-orange-400 transition-colors" />
-          <span className="text-xl font-black text-black tracking-tighter hidden md:block">CHECKPOINTER</span>
+          <Gamepad2 className="w-8 h-8 text-black group-hover:text-amber-100 transition-colors stroke-1" />
+          <span className="text-xl font-black text-black tracking-tighter hidden md:block font-serif">Checkpointer</span>
         </div>
 
         {/* Search Component and Logic */}
@@ -60,7 +59,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             placeholder="Search games..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-black text-black rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent text-sm"
+            className="w-full bg-white border border-black text-black rounded-full py-2 pl-10 pr-4 focus:outline-black focus:outline-2 text-sm"
           />
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-black" />
           {/* Search Dropdown */}
@@ -107,14 +106,14 @@ const Navbar: React.FC<NavbarProps> = () => {
 
         <div className="flex items-center gap-4 md:gap-6">
           <button 
-            className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-zinc-500 active:text-fuchsia-800"
+            className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white active:text-green-600"
             onClick={() => { navigate({to: `/profile`});}}
           >
             <User className="w-4 h-4" />
             <span>Profile</span>
           </button>
           <Button
-            className="flex items-center gap-2 bg-white hover:bg-green-500 text-black border-black border-2 px-4 py-2 rounded font-bold transition-colors text-sm active:text-xs"
+            className="flex items-center gap-2 bg-white hover:bg-green-500 text-black border-black border-2 px-4 py-2 rounded font-bold transition-colors text-sm active:text-white"
             onClick={() => setShowLogModal(true)}
           >
             <Plus className="w-4 h-4" />

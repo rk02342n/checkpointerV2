@@ -121,7 +121,7 @@ const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
                                 autoFocus
                                 type="text" 
                                 placeholder="Search games..." 
-                                className="w-full bg-white border-2 rounded-full p-2 mb-4 text-black border-black placeholder-zinc-500 focus:border-4"
+                                className="w-full bg-white border-2 rounded-full py-2 px-4 mb-4 text-black border-black placeholder-zinc-500 focus:border-4"
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value.toLowerCase());
                                 }}
@@ -204,15 +204,15 @@ const LogModal: React.FC<LogModalProps> = ({ isOpen, onClose }) => {
                                     Save
                                 </button>
                             </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="pop">Cancel</Button>
+                                </DialogClose>
+                                <Button variant="pop" type="submit" className= "hover:bg-black hover:text-white">Save changes</Button>
+                            </DialogFooter>
                         </div>
                     </>
                 )}
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="pop">Cancel</Button>
-                    </DialogClose>
-                    <Button type="submit">Save changes</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
