@@ -25,3 +25,7 @@ export const gamesInsertSchema = createInsertSchema(gamesTable, {
 });
 
 export const gamesSelectSchema = createSelectSchema(gamesTable);
+
+export const gameParamsSchema = z.object({
+  id: z.uuid()
+});

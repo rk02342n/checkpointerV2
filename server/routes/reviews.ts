@@ -1,37 +1,65 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { getUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
+import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
-import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema } from "../db/schema/reviews";
+import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema, createReviewSchema } from "../db/schema/reviews";
 import { eq, desc, sum, and } from "drizzle-orm";
 
 import { createExpenseSchema } from "../sharedTypes";
 
-export const gamesRoute = new Hono()
-.get("/", getUser, async (c) => {
-    const reviews = await db.select()
-    .from(reviewsTable)
-    .limit(20) // for pagination
-    .orderBy(desc(reviewsTable.createdAt))
-    return c.json({ reviews: reviews })
+export const reviewsRoute = new Hono()
+// GET /reviews - Get all reviews (with optional filtering)
+.get('/', getAuthUser, async (c) => {
+    try {
+      const gameId = c.req.query('gameId');
+      const userId = c.req.query('userId');
+  
+      const conditions = [];
+      
+      if (gameId) {
+        conditions.push(eq(reviewsTable.gameId, gameId));
+      }
+      
+      if (userId) {
+        conditions.push(eq(reviewsTable.userId, userId));
+      }
+  
+      let reviews;
+      
+      if (conditions.length > 0) {
+        reviews = await db
+          .select()
+          .from(reviewsTable)
+          .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+          .orderBy(desc(reviewsTable.createdAt));
+      } else {
+        reviews = await db
+          .select()
+          .from(reviewsTable)
+          .orderBy(desc(reviewsTable.createdAt));
+      }
+  
+      return c.json(reviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      return c.json({ error: 'Failed to fetch reviews' }, 500);
+    }
+  })
+.post("/", zValidator("json", createReviewSchema), getAuthUser, async c => {
+    // const user = c.var.user // we need to get dbUserId, not kindeId - for now UI is passing it in in body
+    const review = await c.req.valid("json");
+    const validatedReview = reviewsInsertSchema.parse({
+        ...review
+    })
+    const result = await db
+    .insert(reviewsTable)
+    .values(validatedReview)
+    .returning()
+    .then(res => res[0]);
+    c.status(201)
+    return c.json(result);
 })
-// .post("/", zValidator("json", reviewsInsertSchema), getUser, async c => { // zValidator middleware validation function
-//     const user = c.var.user
-//     const expense = await c.req.valid("json");
-//     const validatedExpense = expensesInsertSchema.parse({
-//         ...expense,
-//         userId: user.id,
-//     })
-
-//     const result = await db
-//     .insert(expensesTable)
-//     .values(validatedExpense)
-//     .returning()
-//     .then(res => res[0]);
-//     c.status(201)
-//     return c.json(result);
-// })
 // .get("/total-spent", getUser, async c => {
 //     // add a fake delay to test loading feature in frontend - needs to make function async for it
 //     // await new Promise((r) => setTimeout(r, 2000))

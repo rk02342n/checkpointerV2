@@ -34,7 +34,7 @@ import {
   
   let store: Record<string, unknown> = {};
   
-  // Storing session details in cookies - not memory
+  // Storing session details in cookies
   export const sessionManager = (c: Context): SessionManager => ({
     async getSessionItem(key: string) {
       const result = getCookie(c, key);
@@ -68,7 +68,7 @@ import {
     };
   };
   
-  export const getUser = createMiddleware<Env>(async (c, next) => {
+  export const getAuthUser = createMiddleware<Env>(async (c, next) => {
     try {
       const manager = sessionManager(c);
       const isAuthenticated = await kindeClient.isAuthenticated(manager);

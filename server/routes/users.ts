@@ -4,50 +4,28 @@ import { getAuthUser } from "../kinde"; // pass in getUser as middleware functio
 import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { gamesTable, gamesInsertSchema, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
+import { usersTable } from "../db/schema/users";
 import { eq, desc, sum, and, ilike, or } from "drizzle-orm";
 
-import { createExpenseSchema } from "../sharedTypes";
+export const usersRoute = new Hono()
 
-export const gamesRoute = new Hono()
-
-.get("/", async (c) => {
-  const games = await db
+.get("/account", getAuthUser, async c => {
+    // regex makes sure we get a number as a request
+    // const id = Number.parseInt(c.req.param('id'))
+    const authUser = c.var.user
+    // const kindeid = 'kp_c71a3c8c7b11484e9b8f9009b690cd4d'
+    const account = await db
     .select()
-    .from(gamesTable)
-    .orderBy(desc(gamesTable.igdbRating))
-    .limit(40);
-  return c.json({ games });
+    .from(usersTable)
+    .where(and(eq(usersTable.kindeId, authUser.id)))
+    // .where(and(eq(usersTable.kindeId, kindeid)))
+    .limit(1)
+    .then(res => res[0])
+     if (!account){
+        return c.notFound();
+    }
+    return c.json({ account })
 })
-
-// Search games
-.get("/search", async (c) => {
-  const searchQuery = c.req.query("q");
-  if (!searchQuery || searchQuery.trim().length === 0) {
-    return c.json({ games: [] }); // or return an error
-  }
-  
-  const searchTerm = `%${searchQuery.trim()}%`;
-  const games = await db
-    .select()
-    .from(gamesTable)
-    .where(ilike(gamesTable.name, searchTerm))
-    .limit(20)
-    .orderBy(desc(gamesTable.igdbRating));
-  return c.json({ games });
-})
-.get("/:id", zValidator('param', gameParamsSchema), async c => {  // regex makes sure we get a number as a request
-  const id = c.req.param('id');
-  const game = await db
-    .select()
-    .from(gamesTable)
-    .where(eq(gamesTable.id, id))
-    .then(res => res[0]);
-  if (!game) {
-    return c.json({ error: 'Game not found' }, 404)
-  }
-  return c.json({ game });
-})
-
 // .post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function
 //     const user = c.var.user
 //     const expense = await c.req.valid("json");

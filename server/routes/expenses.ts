@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { getUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
+import { getAuthUser } from "../kinde"; // pass in getAuthUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { eq, desc, sum, and } from "drizzle-orm";
@@ -20,7 +20,7 @@ import { createExpenseSchema } from "../sharedTypes";
 // ]
 
 export const expensesRoute = new Hono()
-.get("/", getUser, async (c) => {
+.get("/", getAuthUser, async (c) => {
     const user = c.var.user // we can grab the user like this
     const expenses = await db.select()
     .from(expensesTable)
@@ -29,7 +29,7 @@ export const expensesRoute = new Hono()
     .orderBy(desc(expensesTable.createdAt))
     return c.json({ expenses: expenses })
 })
-.post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function
+.post("/", zValidator("json", createExpenseSchema), getAuthUser, async c => { // zValidator middleware validation function
     const user = c.var.user
     const expense = await c.req.valid("json");
     const validatedExpense = expensesInsertSchema.parse({
@@ -46,7 +46,7 @@ export const expensesRoute = new Hono()
     c.status(201)
     return c.json(result);
 })
-.get("/total-spent", getUser, async c => {
+.get("/total-spent", getAuthUser, async c => {
     // Calculate the total amount from all expenses
     // add a fake delay to test loading feature in frontend - needs to make function async for it
     // await new Promise((r) => setTimeout(r, 2000))
@@ -59,7 +59,7 @@ export const expensesRoute = new Hono()
         .then(res => res[0]) // db commands always return an array sowe have to convert it into just the first element
     return c.json(result);
 })
-.get("/:id{[0-9]+}", getUser, async c => {  // regex makes sure we get a number as a request
+.get("/:id{[0-9]+}", getAuthUser, async c => {  // regex makes sure we get a number as a request
     // const id = Number.parseInt(c.req.param('id'))
     // const expense = fakeExpenses.find(expense => expense.id === id)
 
@@ -77,7 +77,7 @@ export const expensesRoute = new Hono()
     return c.json({ expense })
 
 })
-.delete("/:id{[0-9]+}", getUser, async c => {  // regex makes sure we get a number as a request
+.delete("/:id{[0-9]+}", getAuthUser, async c => {  // regex makes sure we get a number as a request
     const id = Number.parseInt(c.req.param('id'))
     const user = c.var.user // we can grab the user like this
 

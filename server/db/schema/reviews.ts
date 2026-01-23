@@ -22,8 +22,22 @@ export const reviewsTable = pgTable("reviews", {
 ]);
 
 export const reviewsInsertSchema = createInsertSchema(reviewsTable, {
-  rating: z.number().min(0).max(5),
-  reviewText: z.string().max(5000).optional()
+  rating: z.string().regex(/^[0-5](\.[0-9])?$/, "Rating must be between 0-5 with optional decimal").optional(),
+  reviewText: z.string().max(5000, "Review text must be less than 5000 characters").optional()
 });
 
+export const createReviewSchema = reviewsInsertSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CreateReview = z.infer<typeof createReviewSchema>;
+
 export const reviewsSelectSchema = createSelectSchema(reviewsTable);
+
+// Export individual field validators for forms
+export const reviewFieldValidators = {
+  rating: z.string().regex(/^[0-5](\.[0-9])?$/, "Rating must be between 0-5 with optional decimal").optional(),
+  reviewText: z.string().max(5000, "Review text must be less than 5000 characters").optional()
+};
