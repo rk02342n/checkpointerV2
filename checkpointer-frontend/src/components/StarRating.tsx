@@ -19,7 +19,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
   const [hover, setHover] = useState<number>(0);
   const [currentRating, setCurrentRating] = useState<number>(rating);
   
-  const stars = [1, 2, 3, 4, 5];
+  const totalStars = 5;
   
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -29,16 +29,20 @@ export const StarRating: React.FC<StarRatingProps> = ({
   
   const sizeClass = sizeClasses[size];
 
-  const handleClick = (star: number) => {
+  const handleClick = (star: number, isHalf: boolean) => {
     if (interactive) {
-      setCurrentRating(star);
-      onValueChange?.(star);
+      const newRating = isHalf ? star - 0.5 : star;
+      setCurrentRating(newRating);
+      onValueChange?.(newRating);
     }
   };
 
-  const handleMouseEnter = (star: number) => {
+  const handleMouseMove = (star: number, e: React.MouseEvent<HTMLButtonElement>) => {
     if (interactive) {
-      setHover(star);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const isLeftHalf = x < rect.width / 2;
+      setHover(isLeftHalf ? star - 0.5 : star);
     }
   };
 
@@ -48,32 +52,57 @@ export const StarRating: React.FC<StarRatingProps> = ({
     }
   };
 
+  const getStarFill = (starIndex: number, displayRating: number) => {
+    if (displayRating >= starIndex) {
+      return 'full'; // Full star
+    } else if (displayRating >= starIndex - 0.5) {
+      return 'half'; // Half star
+    }
+    return 'empty'; // Empty star
+  };
+
   return (
     <div className={`flex gap-1 ${className}`}>
-      {stars.map((star) => {
+      {Array.from({ length: totalStars }, (_, i) => i + 1).map((star) => {
         const displayRating = interactive ? (hover || currentRating) : rating;
-        const isFilled = displayRating >= star;
+        const fillType = getStarFill(star, displayRating);
         
         return (
           <button
             key={star}
             type="button"
             disabled={!interactive}
-            className={`bg-transparent border-0 p-0 ${
+            className={`relative bg-transparent border-0 p-0 ${
               interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'
             }`}
-            onClick={() => handleClick(star)}
-            onMouseEnter={() => handleMouseEnter(star)}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const isLeftHalf = x < rect.width / 2;
+              handleClick(star, isLeftHalf);
+            }}
+            onMouseMove={(e) => handleMouseMove(star, e)}
             onMouseLeave={handleMouseLeave}
             aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
           >
-            <Star
-              className={`${sizeClass} transition-colors ${
-                isFilled 
-                  ? 'fill-amber-400 text-black' 
-                  : 'fill-white text-black'
-              }`}
-            />
+            {fillType === 'half' ? (
+              <div className="relative">
+                {/* Empty star background */}
+                <Star className={`${sizeClass} fill-white text-black transition-colors`} />
+                {/* Half star overlay */}
+                <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%' }}>
+                  <Star className={`${sizeClass} fill-amber-400 text-black transition-colors`} />
+                </div>
+              </div>
+            ) : (
+              <Star
+                className={`${sizeClass} transition-colors ${
+                  fillType === 'full'
+                    ? 'fill-amber-400 text-black' 
+                    : 'fill-white text-black'
+                }`}
+              />
+            )}
           </button>
         );
       })}

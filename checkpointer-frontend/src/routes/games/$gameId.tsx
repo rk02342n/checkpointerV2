@@ -20,17 +20,8 @@ export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
 })
 
-// const gameReviews = [
-//     { id: 101, gameId: 1, userId: 'user', rating: 5, text: "A masterpiece of open world design.", date: "2023-10-15", liked: true },
-//     { id: 102, gameId: 7, userId: 'user', rating: 4.5, text: "Just one more run...", date: "2023-11-02", liked: false },
-//     { id: 103, gameId: 12, userId: 'user', rating: 5, text: "Emotional damage.", date: "2023-11-20", liked: true },
-// ];
-
 function GameView () {
     const { gameId } = Route.useParams()
-    // const { data, isPending, error } = useQuery(getGameByIdQueryOptions(gameId))
-    // const { isPending: isReviewsPending, error: err, data: gameReviews } = useQuery(getReviewsByGameIdQueryOptions(gameId));
-
     const { isPending, error, data } = useQuery
     (getGameByIdQueryOptions(gameId))
 
@@ -57,7 +48,6 @@ const queryClient = useQueryClient();
       rating: '',
       reviewText: '',
       gameId: gameId,
-      userId: 'a12b9208-be6d-449f-ad9f-4122d41d107f'
     },
     onSubmit: async ({ value }) => {
       const existingGameReviews = await queryClient.ensureQueryData(
@@ -170,11 +160,13 @@ const queryClient = useQueryClient();
                                     }
                                     {!isPending && !reviewsLoading && gameReviews?.length > 0 ? 
                                         <div className="space-y-4">
-                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string }) => (
+                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string }) => (
                                                 <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
-                                                        <span className="text-sm font-bold text-black">You</span>
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
+                                                            <span className="text-sm font-bold text-black">{r.userId}</span>
+                                                        </div>
                                                         <StarRating rating={r.rating} />
                                                     </div>
                                                     <p className="text-black text-sm font-sans p-2">"{r.reviewText}"</p>
@@ -186,7 +178,6 @@ const queryClient = useQueryClient();
                                     }
                                 </div>
                             </div>
-                            {/* <div className="flex w-full h-80 bg-green-400"></div> */}
                         </div>
                         
                     </div>}
@@ -195,7 +186,7 @@ const queryClient = useQueryClient();
 
             {/* Backdrop */}
             <div className=" container flex h-84 gap-4 relative overflow-hidden mask-image-b items-end justify-end mt-8">
-                <div className={`absolute inset-0 bg-indigo-400 hover:bg-indigo-600 hover:text-white opacity-100 w-2/3 rounded-xl border-2 border-black overflow-y-scroll`}>
+                <div className={`absolute inset-0 bg-indigo-600 text-white opacity-100 w-2/3 rounded-xl border-2 border-black overflow-y-scroll`}>
                  <div className='m-auto p-4 max-w-lg'>
              {isPending ? <h2>no</h2> : <h2 className="text-md tracking-tight p-4 text-left">Write a review for  <span className="font-bold">{data.game?.name}</span></h2>}
              <form
@@ -215,15 +206,13 @@ const queryClient = useQueryClient();
                       <>
                         <div className='flex flex-col gap-2'>
                         <Label htmlFor={field.name}>Rating</Label>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          type='number'
-                          onChange={(e) => field.handleChange((e.target.value))}
-                          className="bg-white border-2 border-black text-black"
-                        />
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <StarRating
+                            interactive 
+                            rating={Number(field.state.value) || 0}
+                            onValueChange={(rating) => field.handleChange(rating.toString())}
+                          />
                         </div>
                         <>
                           {field.state.meta.isTouched && !field.state.meta.isValid ? (
@@ -252,13 +241,6 @@ const queryClient = useQueryClient();
                       <>
                       <div className='flex flex-col gap-2'>
                       <Label htmlFor={field.name}>Review</Label>
-                        {/* <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                        /> */}
                         <Textarea
                             id={field.name}
                             name={field.name}
@@ -326,7 +308,7 @@ const queryClient = useQueryClient();
                         ))}
                     </div>
 
-                    {isPending ? <h1>PENDINGH</h1> : <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
+                    {isPending ? <h1>PENDINGG</h1> : <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
                         <div className="text-3xl font-bold text-black mb-1">
                             {gameReviews?.length > 0 ? avgRating.toFixed(1) : "4.2"}
                         </div>

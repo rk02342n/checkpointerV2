@@ -1,5 +1,5 @@
 import { Gamepad2, Search, User, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -15,7 +15,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
-    
+    const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const [showLogModal, setShowLogModal] = useState<boolean>(false);
     
@@ -57,9 +57,10 @@ const Navbar: React.FC<NavbarProps> = () => {
           <Input 
             type="text"
             placeholder="Search games..."
+            ref={inputRef}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-black text-black rounded-full py-2 pl-10 pr-4 focus:outline-black focus:outline-2 text-sm"
+            className="w-full bg-white border border-black text-black rounded-full py-2 pl-10 pr-4 focus:outline-black focus:outline-4 text-sm"
           />
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-black" />
           {/* Search Dropdown */}
@@ -114,7 +115,8 @@ const Navbar: React.FC<NavbarProps> = () => {
           </button>
           <Button
             className="flex items-center gap-2 bg-white hover:bg-green-500 text-black border-black border-2 px-4 py-2 rounded font-bold transition-colors text-sm active:text-white"
-            onClick={() => setShowLogModal(true)}
+            // onClick={() => setShowLogModal(true)}
+            onClick={() => inputRef?.current?.focus()}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden md:inline">Log Game</span>

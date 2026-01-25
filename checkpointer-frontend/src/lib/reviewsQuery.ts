@@ -2,7 +2,7 @@ import { mutationOptions, queryOptions, QueryClient } from "@tanstack/react-quer
 import { type CreateReview } from "../../../server/db/schema/reviews";
 
   export async function getReviewByGameAndUser(gameId: string, userId: string) {
-    const res = await fetch(`/api/reviews?gameId=${gameId}&userId=${userId}`)
+    const res = await fetch(`/api/reviews/game/${gameId}/user/${userId}`)
     if (!res.ok) {
       throw new Error("Failed to fetch review");
     }
@@ -18,7 +18,7 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
   })
 
   export async function getReviewsByGameId(gameId: string) {
-    const res = await fetch(`/api/reviews?gameId=${gameId}`)
+    const res = await fetch(`/api/reviews/game/${gameId}`)
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
     }
@@ -34,7 +34,7 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
   })
   
   export async function getReviewsByUserId(userId: string) {
-    const res = await fetch(`/api/reviews?userId=${userId}`)
+    const res = await fetch(`/api/reviews/user/${userId}`)
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
     }
