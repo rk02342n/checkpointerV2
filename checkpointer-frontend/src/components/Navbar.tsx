@@ -115,7 +115,6 @@ const Navbar: React.FC<NavbarProps> = () => {
           </button>
           <Button
             className="flex items-center gap-2 bg-white hover:bg-green-500 text-black border-black border-2 px-4 py-2 rounded font-bold transition-colors text-sm active:text-white"
-            // onClick={() => setShowLogModal(true)}
             onClick={() => inputRef?.current?.focus()}
           >
             <Plus className="w-4 h-4" />

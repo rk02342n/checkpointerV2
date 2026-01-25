@@ -5,6 +5,7 @@ import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema, createReviewSchema } from "../db/schema/reviews";
 import { eq, desc, sum, and } from "drizzle-orm";
+import { usersTable } from "../db/schema/users";
 
 import { createExpenseSchema } from "../sharedTypes";
 
@@ -14,13 +15,24 @@ export const reviewsRoute = new Hono()
 // Public: all reviews for a game
 .get('/game/:gameId', async (c) => {
   const gameId = c.req.param('gameId');
-  
+
   const reviews = await db
-    .select()
+    .select({
+      id: reviewsTable.id,
+      userId: reviewsTable.userId,
+      gameId: reviewsTable.gameId,
+      rating: reviewsTable.rating,
+      reviewText: reviewsTable.reviewText,
+      createdAt: reviewsTable.createdAt,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      avatarUrl: usersTable.avatarUrl,
+    })
     .from(reviewsTable)
+    .leftJoin(usersTable, eq(reviewsTable.userId, usersTable.id))
     .where(eq(reviewsTable.gameId, gameId))
     .orderBy(desc(reviewsTable.createdAt));
-  
+
   return c.json(reviews);
 })
 
@@ -44,13 +56,24 @@ export const reviewsRoute = new Hono()
 // Protected: all reviews by a user
 .get('/user/:userId', getAuthUser, async (c) => {
   const userId = c.req.param('userId');
-  
+
   const reviews = await db
-    .select()
+    .select({
+      id: reviewsTable.id,
+      userId: reviewsTable.userId,
+      gameId: reviewsTable.gameId,
+      rating: reviewsTable.rating,
+      reviewText: reviewsTable.reviewText,
+      createdAt: reviewsTable.createdAt,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      avatarUrl: usersTable.avatarUrl,
+    })
     .from(reviewsTable)
+    .leftJoin(usersTable, eq(reviewsTable.userId, usersTable.id))
     .where(eq(reviewsTable.userId, userId))
     .orderBy(desc(reviewsTable.createdAt));
-  
+
   return c.json(reviews);
 })
 .post("/", zValidator("json", createReviewSchema), getAuthUser, async c => {

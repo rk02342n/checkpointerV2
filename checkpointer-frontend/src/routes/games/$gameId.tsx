@@ -6,7 +6,8 @@ import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getGameByIdQueryOptions } from "@/lib/gameQuery";
-import { getReviewsByGameIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
+import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,7 +29,10 @@ function GameView () {
     const {data: gameReviews = [], isPending: reviewsLoading} = useQuery
     (getReviewsByGameIdQueryOptions(gameId));
 
-      const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
+    const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
+
+    // Get the current user's database ID for optimistic updates on profile page
+    const { data: dbUserData } = useQuery(dbUserQueryOptions);
 
   if (error) return 'An error has occurred: ' + error.message
 
@@ -59,10 +63,26 @@ const queryClient = useQueryClient();
       queryClient.setQueryData(loadingCreateReviewQueryOptions.queryKey, {review: value})
       try{
         const newReview = await createReview({ value });
+
+        // Update game reviews cache (existing behavior)
         queryClient.setQueryData(
-        getReviewsByGameIdQueryOptions(gameId as string).queryKey,
-        [newReview, ...(existingGameReviews || [])].slice(0, 4)
-        ); // update local cache to include new review that was just created
+          getReviewsByGameIdQueryOptions(gameId as string).queryKey,
+          [newReview, ...(existingGameReviews || [])].slice(0, 4)
+        );
+
+        // Also update user's reviews cache for profile page optimistic update
+        const dbUserId = dbUserData?.account?.id;
+        if (dbUserId) {
+          const existingUserReviews = queryClient.getQueryData(
+            getReviewsByUserIdQueryOptions(dbUserId).queryKey
+          ) as Array<unknown> | undefined;
+
+          queryClient.setQueryData(
+            getReviewsByUserIdQueryOptions(dbUserId).queryKey,
+            [newReview, ...(existingUserReviews || [])]
+          );
+        }
+
         // success state
         toast.dismiss();
         toast.success(`Review has been added: ID: ${newReview.id}`)
@@ -160,12 +180,16 @@ const queryClient = useQueryClient();
                                     }
                                     {!isPending && !reviewsLoading && gameReviews?.length > 0 ? 
                                         <div className="space-y-4">
-                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string }) => (
+                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => (
                                                 <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
-                                                            <span className="text-sm font-bold text-black">{r.userId}</span>
+                                                            {r.avatarUrl ? (
+                                                                <img src={r.avatarUrl} alt={r.username || 'User'} className="w-6 h-6 rounded-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
+                                                            )}
+                                                            <span className="text-sm font-bold text-black">{r.username || 'Anonymous'}</span>
                                                         </div>
                                                         <StarRating rating={r.rating} />
                                                     </div>
