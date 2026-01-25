@@ -28,11 +28,13 @@ export const reviewsInsertSchema = createInsertSchema(reviewsTable, {
 
 export const createReviewSchema = reviewsInsertSchema.omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type CreateReview = z.infer<typeof createReviewSchema>;
+// A type for inserting a review **without** userId from the client side
+export type CreateReview = Omit<z.infer<typeof createReviewSchema>, "userId">;
 
 export const reviewsSelectSchema = createSelectSchema(reviewsTable);
 

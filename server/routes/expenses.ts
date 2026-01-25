@@ -7,18 +7,6 @@ import { eq, desc, sum, and } from "drizzle-orm";
 
 import { createExpenseSchema } from "../sharedTypes";
 
-// type Expense = {
-//     id: number,
-//     title: string,
-//     amount: number,
-// }
-
-// const fakeExpenses: Expense[] = [
-//     {id: 1, title: "Groceries", amount: "50"},
-//     {id: 2, title: "Utilities", amount: "100"},
-//     {id: 3, title: "Rent", amount: "1500"}
-// ]
-
 export const expensesRoute = new Hono()
 .get("/", getAuthUser, async (c) => {
     const user = c.var.user // we can grab the user like this

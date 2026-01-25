@@ -10,47 +10,55 @@ import { createExpenseSchema } from "../sharedTypes";
 
 export const reviewsRoute = new Hono()
 // GET /reviews - Get all reviews (with optional filtering)
-.get('/', getAuthUser, async (c) => {
-    try {
-      const gameId = c.req.query('gameId');
-      const userId = c.req.query('userId');
+// Public endpoint for game reviews
+// Public: all reviews for a game
+.get('/game/:gameId', async (c) => {
+  const gameId = c.req.param('gameId');
   
-      const conditions = [];
-      
-      if (gameId) {
-        conditions.push(eq(reviewsTable.gameId, gameId));
-      }
-      
-      if (userId) {
-        conditions.push(eq(reviewsTable.userId, userId));
-      }
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(eq(reviewsTable.gameId, gameId))
+    .orderBy(desc(reviewsTable.createdAt));
   
-      let reviews;
-      
-      if (conditions.length > 0) {
-        reviews = await db
-          .select()
-          .from(reviewsTable)
-          .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-          .orderBy(desc(reviewsTable.createdAt));
-      } else {
-        reviews = await db
-          .select()
-          .from(reviewsTable)
-          .orderBy(desc(reviewsTable.createdAt));
-      }
+  return c.json(reviews);
+})
+
+// Protected: specific user's review for a game
+.get('/game/:gameId/user/:userId', getAuthUser, async (c) => {
+  const gameId = c.req.param('gameId');
+  const userId = c.req.param('userId');
   
-      return c.json(reviews);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      return c.json({ error: 'Failed to fetch reviews' }, 500);
-    }
-  })
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(and(
+      eq(reviewsTable.gameId, gameId),
+      eq(reviewsTable.userId, userId)
+    ))
+    .orderBy(desc(reviewsTable.createdAt));
+  
+  return c.json(reviews);
+})
+
+// Protected: all reviews by a user
+.get('/user/:userId', getAuthUser, async (c) => {
+  const userId = c.req.param('userId');
+  
+  const reviews = await db
+    .select()
+    .from(reviewsTable)
+    .where(eq(reviewsTable.userId, userId))
+    .orderBy(desc(reviewsTable.createdAt));
+  
+  return c.json(reviews);
+})
 .post("/", zValidator("json", createReviewSchema), getAuthUser, async c => {
-    // const user = c.var.user // we need to get dbUserId, not kindeId - for now UI is passing it in in body
+    const user = c.var.dbUser
     const review = await c.req.valid("json");
     const validatedReview = reviewsInsertSchema.parse({
-        ...review
+        ...review,
+        userId: user.id,
     })
     const result = await db
     .insert(reviewsTable)
