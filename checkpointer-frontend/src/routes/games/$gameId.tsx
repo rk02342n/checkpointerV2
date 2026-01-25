@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
 import { Eye, Clock, Heart } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
@@ -9,7 +8,6 @@ import { getGameByIdQueryOptions } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -36,17 +34,17 @@ function GameView () {
 
   if (error) return 'An error has occurred: ' + error.message
 
-    const [watchlist, setWatchlist] = useState<number[]>([217, 8]);
-    const [favorites, setFavorites] = useState<number[]>([1, 10, 16, 12, 217]);
+    // const [watchlist, setWatchlist] = useState<number[]>([217, 8]);
+    // const [favorites, setFavorites] = useState<number[]>([1, 10, 16, 12, 217]);
     const activeGame = { id: 1, name: "Elden Ring", releaseDate: '2022', coverUrl: "FromSoftware"}
 
     const avgRating = 2.5;
-    const isWatchlisted = activeGame ? watchlist.includes(activeGame.id) : false;
-    const isFavorited = activeGame ? favorites.includes(activeGame.id) : false;
+    // const isWatchlisted = activeGame ? watchlist.includes(activeGame.id) : false;
+    // const isFavorited = activeGame ? favorites.includes(activeGame.id) : false;
 
 
 const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const form = useForm({
     defaultValues: {
       rating: '',
@@ -116,7 +114,7 @@ const queryClient = useQueryClient();
 
                             <button 
                                 onClick={() => {}}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-indigo-500 active:text-amber-500 active:bg-indigo-800 ${isWatchlisted ? 'text-blue-400' : 'text-black'}`}
+                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-indigo-500 active:text-amber-500 active:bg-indigo-800`}
                             >
                                 <Clock className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Watch</span>
@@ -124,7 +122,7 @@ const queryClient = useQueryClient();
 
                             <button 
                                 onClick={() => {}}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-red-500 active:text-red-500 active:bg-red-800 ${isFavorited ? 'text-red-500' : 'text-black'}`}
+                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-red-500 active:text-red-500 active:bg-red-800`}
                             >
                                 <Heart className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Like</span>
@@ -189,7 +187,7 @@ const queryClient = useQueryClient();
                                                             ) : (
                                                                 <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
                                                             )}
-                                                            <span className="text-sm font-bold text-black">{r.username || 'Anonymous'}</span>
+                                                            <span className="text-sm font-bold text-black">{r.username || 'You'}</span>
                                                         </div>
                                                         <StarRating rating={r.rating} />
                                                     </div>

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdQueryOptions } from '@/lib/reviewsQuery'
 import { getGameByIdQueryOptions, type Game } from '@/lib/gameQuery'
-import { Gamepad2, Calendar, User as UserIcon } from 'lucide-react'
+import { Gamepad2, Calendar } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/profile')({
   component: Profile,
@@ -156,7 +156,7 @@ function Profile() {
             {/* Avatar */}
             <Avatar className="w-24 h-24 border-4 border-black">
               <AvatarImage
-                src={user.picture}
+                // src={user.picture}
                 alt={user.given_name}
               />
               <AvatarFallback className="bg-lime-400 text-black text-2xl font-bold">

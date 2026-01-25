@@ -81,9 +81,9 @@ const RecentReviews = () => {
   ];
   
   const reviews: Review[] = [
-    { id: 101, gameId: 1, userId: 'user', rating: 5, text: "A masterpiece of open world design.", date: "2023-10-15", liked: true },
-    { id: 102, gameId: 7, userId: 'user', rating: 4.5, text: "Just one more run...", date: "2023-11-02", liked: false },
-    { id: 103, gameId: 12, userId: 'user', rating: 5, text: "Emotional damage.", date: "2023-11-20", liked: true },
+    { id: 101, gameId: 1, userId: 'user', rating: '5', text: "A masterpiece of open world design.", date: "2023-10-15", liked: true },
+    { id: 102, gameId: 7, userId: 'user', rating: '4.5', text: "Just one more run...", date: "2023-11-02", liked: false },
+    { id: 103, gameId: 12, userId: 'user', rating: '5', text: "Emotional damage.", date: "2023-11-20", liked: true },
   ];
   
     const [ recentReviews, setRecentReviews ] = useState<Review[]>([]);
@@ -123,7 +123,7 @@ const RecentReviews = () => {
                       <span className="text-black text-xs">{game.year}</span>
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      <StarRating rating={review.rating} />
+                      <StarRating rating={Number(review.rating)} />
                       {review.liked && <Heart className="w-3 h-3 text-red-500 fill-red-500" />}
                     </div>
                     <p className="text-black text-sm italic font-serif text-start">"{review.text}"</p>
