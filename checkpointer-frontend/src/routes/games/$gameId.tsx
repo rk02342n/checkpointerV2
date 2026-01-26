@@ -3,9 +3,9 @@ import { Poster } from "@/components/Poster";
 import { Eye, Clock, Heart } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
-import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
+import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions, toggleReviewLike, type GameReview } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
@@ -36,6 +36,60 @@ function GameView () {
     (getReviewsByGameIdQueryOptions(gameId));
 
     const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
+
+    // Like mutation with optimistic updates
+    const likeMutation = useMutation({
+      mutationFn: toggleReviewLike,
+      onMutate: async (reviewId: string) => {
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({ queryKey: getReviewsByGameIdQueryOptions(gameId).queryKey });
+
+        // Snapshot the previous value
+        const previousReviews = queryClient.getQueryData<GameReview[]>(
+          getReviewsByGameIdQueryOptions(gameId).queryKey
+        );
+
+        // Optimistically update the reviews (keep order stable until next reload)
+        if (previousReviews) {
+          const updatedReviews = previousReviews.map((review) => {
+            if (review.id === reviewId) {
+              const currentLikeCount = Number(review.likeCount);
+              return {
+                ...review,
+                userLiked: !review.userLiked,
+                likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
+              };
+            }
+            return review;
+          });
+
+          queryClient.setQueryData(
+            getReviewsByGameIdQueryOptions(gameId).queryKey,
+            updatedReviews
+          );
+        }
+
+        return { previousReviews };
+      },
+      onError: (err, _reviewId, context) => {
+        // Rollback on error
+        if (context?.previousReviews) {
+          queryClient.setQueryData(
+            getReviewsByGameIdQueryOptions(gameId).queryKey,
+            context.previousReviews
+          );
+        }
+        toast.error(err instanceof Error ? err.message : "Failed to update like");
+      },
+    });
+
+    const handleLikeClick = (reviewId: string) => {
+      if (!dbUserData?.account) {
+        toast.error("Please log in to like reviews");
+        return;
+      }
+      likeMutation.mutate(reviewId);
+    };
 
     // Get the current user's database ID for optimistic updates on profile page
     const { data: dbUserData } = useQuery(dbUserQueryOptions);
@@ -204,7 +258,7 @@ const queryClient = useQueryClient();
                                         <ReviewsSkeleton />
                                     ) : gameReviews?.length > 0 ? (
                                         <div className="space-y-4">
-                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => {
+                                            {gameReviews?.slice(0,4).map((r: GameReview) => {
                                                 const initials = r.username
                                                     ? r.username.slice(0, 2).toUpperCase()
                                                     : r.displayName
@@ -223,9 +277,23 @@ const queryClient = useQueryClient();
                                                             <span className="text-sm font-bold text-black">{r.username || 'You'}</span>
                                                         </div>
 
-                                                        <StarRating rating={r.rating} />
+                                                        <StarRating rating={Number(r.rating)} />
                                                     </div>
                                                     <p className="text-black text-sm font-sans p-2">"{r.reviewText}"</p>
+                                                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-300">
+                                                        <button
+                                                            onClick={() => handleLikeClick(r.id)}
+                                                            disabled={likeMutation.isPending}
+                                                            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                                r.userLiked
+                                                                    ? ' text-teal-600 hover:text-teal-300'
+                                                                    : ' text-black hover:text-teal-400'
+                                                            } ${likeMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        >
+                                                            <Heart className={`w-3 h-3 ${r.userLiked ? 'fill-current' : ''}`} />
+                                                            <span>{r.likeCount}</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )})}
                                         </div>

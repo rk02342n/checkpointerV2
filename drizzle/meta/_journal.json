@@ -50,6 +50,13 @@
       "when": 1769408617162,
       "tag": "0006_medical_exodus",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769455871138,
+      "tag": "0007_neat_nemesis",
+      "breakpoints": true
     }
   ]
 }

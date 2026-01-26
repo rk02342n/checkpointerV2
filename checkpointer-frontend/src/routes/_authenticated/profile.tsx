@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
-import { getReviewsByUserIdInfiniteOptions, deleteReview } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar, Trash2, Search, X } from 'lucide-react'
+import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike } from '@/lib/reviewsQuery'
+import { Gamepad2, Calendar, Trash2, Search, X, Heart } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -32,9 +32,11 @@ type Review = {
   avatarUrl?: string | null
   gameName?: string | null
   gameCoverUrl?: string | null
+  likeCount: number
+  userLiked: boolean
 }
 
-function ReviewCard({ review, onDelete, isDeleting }: { review: Review, onDelete: (id: string) => void, isDeleting: boolean }) {
+function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review: Review, onDelete: (id: string) => void, isDeleting: boolean, onLike: (id: string) => void, isLiking: boolean }) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)
@@ -91,8 +93,20 @@ function ReviewCard({ review, onDelete, isDeleting }: { review: Review, onDelete
             </p>
           )}
 
-          {/* Delete Button */}
-          <div className="flex justify-end mt-2">
+          {/* Actions: Like & Delete */}
+          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-amber-300">
+            <button
+              onClick={() => onLike(String(review.id))}
+              disabled={isLiking}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                review.userLiked
+                  ? ' text-teal-600 hover:text-teal-400'
+                  : ' text-black hover:text-teal-400'
+              } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Heart className={`w-3 h-3 ${review.userLiked ? 'fill-current' : ''}`} />
+              <span>{review.likeCount}</span>
+            </button>
             <Button
               variant="ghost"
               size="sm"
@@ -209,6 +223,53 @@ function Profile() {
 
   const handleDeleteReview = (reviewId: string) => {
     deleteMutation.mutate(reviewId)
+  }
+
+  // Like mutation with optimistic updates (no re-sorting)
+  const likeMutation = useMutation({
+    mutationFn: toggleReviewLike,
+    onMutate: async (reviewId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
+
+      // Snapshot the previous value
+      const previousReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+
+      // Optimistically update the reviews (keep order stable)
+      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: typeof reviewsData) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map(page => ({
+            ...page,
+            reviews: page.reviews.map((review: Review) => {
+              if (String(review.id) === reviewId) {
+                const currentLikeCount = Number(review.likeCount)
+                return {
+                  ...review,
+                  userLiked: !review.userLiked,
+                  likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
+                }
+              }
+              return review
+            })
+          }))
+        }
+      })
+
+      return { previousReviews }
+    },
+    onError: (err, _reviewId, context) => {
+      // Rollback on error
+      if (context?.previousReviews) {
+        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousReviews)
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to update like')
+    },
+  })
+
+  const handleLikeReview = (reviewId: string) => {
+    likeMutation.mutate(reviewId)
   }
 
   if (isPending) {
@@ -344,6 +405,8 @@ function Profile() {
                     review={review}
                     onDelete={handleDeleteReview}
                     isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
+                    onLike={handleLikeReview}
+                    isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
                   />
                 ))}
 

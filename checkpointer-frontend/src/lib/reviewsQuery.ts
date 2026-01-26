@@ -1,6 +1,36 @@
 import { queryOptions } from "@tanstack/react-query";
 import { type CreateReview } from "../../../server/db/schema/reviews";
 
+export type GameReview = {
+  id: string
+  userId: string
+  gameId: string
+  rating: string | null
+  reviewText: string | null
+  createdAt: string
+  username: string | null
+  displayName: string | null
+  avatarUrl: string | null
+  likeCount: number
+  userLiked: boolean
+}
+
+export async function toggleReviewLike(reviewId: string): Promise<{ liked: boolean }> {
+  const res = await fetch(`/api/reviews/${reviewId}/like`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Please log in to like reviews");
+    }
+    if (res.status === 404) {
+      throw new Error("Review not found");
+    }
+    throw new Error("Failed to toggle like");
+  }
+  return res.json();
+}
+
   export async function getReviewByGameAndUser(gameId: string, userId: string) {
     const res = await fetch(`/api/reviews/game/${gameId}/user/${userId}`)
     if (!res.ok) {
@@ -17,7 +47,7 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
       staleTime: 1000 * 60 * 5
   })
 
-  export async function getReviewsByGameId(gameId: string) {
+  export async function getReviewsByGameId(gameId: string): Promise<GameReview[]> {
         // await new Promise((r) => setTimeout(r, 4000))
     const res = await fetch(`/api/reviews/game/${gameId}`)
     if (!res.ok) {
@@ -47,6 +77,8 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
       avatarUrl: string | null
       gameName: string | null
       gameCoverUrl: string | null
+      likeCount: number
+      userLiked: boolean
     }>
     hasMore: boolean
     nextOffset: number | null
