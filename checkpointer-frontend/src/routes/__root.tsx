@@ -12,46 +12,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootComponent,
 })
 
-function NavBar() {
-  return (
-    <div className='flex justify-between p-6 items-center'>
-      <Link
-        to="/"
-        activeProps={{
-          className: 'font-bold text-4xl',
-        }}
-        activeOptions={{ exact: true }}
-      >
-        <h1 className='text-xl font-bold font-serif'>Checkpointer V2</h1>
-      </Link>
-      <div className="flex gap-8 text-lg text-left">
-      <Link
-        to="/about"
-        activeProps={{
-          className: 'font-bold',
-        }}
-      >
-        About
-      </Link>
-      <Link
-        to="/create-expense"
-        activeProps={{
-          className: 'font-bold',
-        }}>
-          Create Post
-      </Link>
-      <Link
-        to="/profile"
-        activeProps={{
-          className: 'font-bold',
-        }}>
-          Profile
-      </Link>
-    </div>
-  </div>
-  )
-}
-
 function Footer() {
   return(
     <footer className="border-4 border-foreground bg-background py-12 mt-12 mb-4 mx-4 rounded-md">
@@ -75,7 +35,6 @@ function Footer() {
 function RootComponent() {
   return (
     <>
-    <NavBar/>
       <hr />
       <Outlet />
       <Toaster/>

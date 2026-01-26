@@ -26,13 +26,6 @@ export default function Checkpointer() {
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 justify-center">
           {/* Hero Section */}
           <div
-        // className={`
-        //   relative rounded-2xl border-2 border-black shadow-2xl
-        //   bg-sky-300 hover:bg-black
-        //   transition-colors duration-200
-        //   filter-[contrast(170%)_brightness(1000%)]
-        //   [background:linear-gradient(43deg,rgba(185,0,25,1),rgba(100,100,0,0)),url(assets/noise.svg)]
-        // `}
             className={`
               relative rounded-2xl border-2 border-black shadow-2xl
               bg-sky-300 hover:bg-rose-400
