@@ -157,6 +157,11 @@ export const getAuthUser = createMiddleware<Env>(async (c, next) => {
       dbUser = newUser!;
     }
 
+    // Check if user is suspended
+    if (dbUser.suspendedAt !== null) {
+      return c.json({ error: "Account suspended" }, 403);
+    }
+
     c.set("dbUser", dbUser);
     await next();
   } catch (e) {

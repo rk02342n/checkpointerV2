@@ -1,4 +1,4 @@
-import { Gamepad2, Search, User, Plus } from "lucide-react";
+import { Gamepad2, Search, User, Plus, Shield } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getSearchGamesQueryOptions } from "@/lib/gameQuery";
 import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 import LogModal from "./LogModal";
 
 interface NavbarProps {
@@ -18,10 +19,14 @@ const Navbar: React.FC<NavbarProps> = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const [showLogModal, setShowLogModal] = useState<boolean>(false);
-    
+
     // Debounce search query to avoid excessive API calls
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
-    
+
+    // Get current user to check for admin role
+    const { data: dbUserData } = useQuery(dbUserQueryOptions);
+    const isAdmin = dbUserData?.account?.role === 'admin';
+
     // Use React Query for search with debounced query
     const { data, isLoading, isError } = useQuery(
       getSearchGamesQueryOptions(debouncedSearchQuery)
@@ -106,7 +111,16 @@ const Navbar: React.FC<NavbarProps> = () => {
         </div>
 
         <div className="flex items-center gap-4 md:gap-6">
-          <button 
+          {isAdmin && (
+            <button
+              className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white active:text-amber-600"
+              onClick={() => { navigate({to: `/admin`});}}
+            >
+              <Shield className="w-4 h-4" />
+              <span>Admin</span>
+            </button>
+          )}
+          <button
             className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white active:text-green-600"
             onClick={() => { navigate({to: `/profile`});}}
           >

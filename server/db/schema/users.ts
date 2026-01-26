@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   role: userRoleEnum("role").default("free").notNull(),
+  suspendedAt: timestamp("suspended_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (users) => [
   index("users_auth_idx").on(users.kindeId),
