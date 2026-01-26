@@ -330,9 +330,14 @@ const queryClient = useQueryClient();
               >
                   <form.Field
                     name="rating"
-                    // validators={{
-                    //   onChange: createReviewSchema.shape.rating
-                    // }}
+                    validators={{
+                      onChange: ({ value }) => {
+                        if (!value || value === '0') {
+                          return 'Rating is required'
+                        }
+                        return undefined
+                      }
+                    }}
                     children={(field) => (
                       <>
                         <div className='flex flex-col gap-2'>
@@ -365,9 +370,17 @@ const queryClient = useQueryClient();
 
                 <form.Field
                     name="reviewText"
-                    // validators={{
-                    //   onChange: reviewFieldValidators.reviewText
-                    // }}
+                    validators={{
+                      onChange: ({ value }) => {
+                        if (!value || value.trim() === '') {
+                          return 'Review text is required'
+                        }
+                        if (value.length > 5000) {
+                          return 'Review text must be less than 5000 characters'
+                        }
+                        return undefined
+                      }
+                    }}
                     children={(field) => (
                       <>
                       <div className='flex flex-col gap-2'>
@@ -399,25 +412,38 @@ const queryClient = useQueryClient();
                     )}
                   />
                   <form.Subscribe
-                  selector={(state) => [state.canSubmit, state.isSubmitting]}
-                  children={([canSubmit, isSubmitting]) => (
-                    <>
-                    <div className='flex flex-row gap-2 justify-center'>
-                      <Button type="submit" disabled={!canSubmit}>
-                        {isSubmitting ? '...' : 'Submit'}
-                      </Button>
-                      <Button
-                        type="reset"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          form.reset()
-                        }}
-                      >
-                        Reset
-                      </Button>
-                      </div>
-                    </>
-                  )}
+                  selector={(state) => [state.canSubmit, state.isSubmitting, state.values]}
+                  children={([canSubmit, isSubmitting, values]) => {
+                    const isLoggedIn = !!dbUserData?.account;
+                    const reviewValues = typeof values === "object" && values !== null && "rating" in values && "reviewText" in values ? values as { rating: string; reviewText: string } : { rating: '', reviewText: '' };
+                    const hasRating = reviewValues.rating && reviewValues.rating !== '0';
+                    const hasReviewText = reviewValues.reviewText && reviewValues.reviewText.trim() !== '';
+                    const canSubmitForm = canSubmit && isLoggedIn && hasRating && hasReviewText;
+
+                    return (
+                      <>
+                        {!isLoggedIn && (
+                          <p className="text-amber-200 text-sm text-center mb-2">
+                            Please <a href="/api/login" className="underline font-bold">log in</a> to submit a review
+                          </p>
+                        )}
+                        <div className='flex flex-row gap-2 justify-center'>
+                          <Button type="submit" disabled={(!canSubmitForm) || !!isSubmitting}>
+                            {isSubmitting ? '...' : 'Submit'}
+                          </Button>
+                          <Button
+                            type="reset"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              form.reset()
+                            }}
+                          >
+                            Reset
+                          </Button>
+                        </div>
+                      </>
+                    )
+                  }}
                 /> 
             </form>
           </div>
