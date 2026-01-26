@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike } from '@/lib/reviewsQuery'
@@ -51,7 +51,11 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
   const gameCoverUrl = review.gameCoverUrl
 
   return (
-    <div className={`bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors ${isDeleting ? 'opacity-50' : ''}`}>
+    <Link
+      to="/games/$gameId"
+      params={{ gameId: review.gameId }}
+      className={`block bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors cursor-pointer ${isDeleting ? 'opacity-50' : ''}`}
+    >
       <div className="flex gap-4">
         {/* Game Cover */}
         <div className="shrink-0">
@@ -96,7 +100,11 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
           {/* Actions: Like & Delete */}
           <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-amber-300">
             <button
-              onClick={() => onLike(String(review.id))}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onLike(String(review.id))
+              }}
               disabled={isLiking}
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                 review.userLiked
@@ -110,7 +118,11 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onDelete(String(review.id))}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDelete(String(review.id))
+              }}
               disabled={isDeleting}
               className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 p-1 h-auto"
             >
@@ -119,7 +131,7 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
