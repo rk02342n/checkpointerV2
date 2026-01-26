@@ -4,7 +4,7 @@ import { Eye, Clock, Heart } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getGameByIdQueryOptions } from "@/lib/gameQuery";
+import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 
@@ -40,10 +40,11 @@ function GameView () {
 
     if (error) return 'An error has occurred: ' + error.message
 
-    const activeGame = { id: 1, name: "Elden Ring", releaseDate: '2022', coverUrl: "FromSoftware"}
-
-    const avgRating = 2.5;
-
+    // Average Rating
+    const { isPending: isRatingPending, data: avgRating } = useQuery({
+      queryKey: ['get-game-rating', gameId],
+      queryFn: () => getGameRating(gameId)
+    })
 
 const queryClient = useQueryClient();
 // const initials = `${dbUserData.given_name?.[0] || ''}${dbUserData.family_name?.[0] || ''}`.toUpperCase()
@@ -73,13 +74,23 @@ const queryClient = useQueryClient();
         // Also update user's reviews cache for profile page optimistic update
         const dbUserId = dbUserData?.account?.id;
         if (dbUserId) {
-          const existingUserReviews = queryClient.getQueryData(
-            getReviewsByUserIdQueryOptions(dbUserId).queryKey
+          // ensureQueryData: fetch from server if not in cache so we don't overwrite with only [newReview]
+          const existingUserReviews = await queryClient.ensureQueryData(
+            getReviewsByUserIdQueryOptions(dbUserId)
           ) as Array<unknown> | undefined;
+
+          // Attach gameName/gameCoverUrl so profile ReviewCard can render without extra fetches
+          const newReviewForUserCache = {
+            ...newReview,
+            ...(data?.game && {
+              gameName: data.game.name,
+              gameCoverUrl: data.game.coverUrl ?? null,
+            }),
+          };
 
           queryClient.setQueryData(
             getReviewsByUserIdQueryOptions(dbUserId).queryKey,
-            [newReview, ...(existingUserReviews || [])]
+            [newReviewForUserCache, ...(existingUserReviews || [])]
           );
         }
 
@@ -103,7 +114,7 @@ const queryClient = useQueryClient();
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* Left Column: Poster & Actions */}
                     {!isPending && <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
-                        {activeGame && <Poster game={data.game} size="xl" className="shadow-lg rounded-lg outline-2 outline-black" />}
+                        {!isPending && <Poster game={data.game} size="xl" className="shadow-lg rounded-lg outline-2 outline-black" />}
                         
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
                             <button
@@ -324,6 +335,7 @@ const queryClient = useQueryClient();
           </div>
                 </div>
                 
+                {isRatingPending ? <h1> Rating Pending</h1> :
                 <div className="bg-orange-400 rounded-xl p-6 h-full w-13/40 border-zinc-800 border-2 relative z-10">
                     <h3 className="text-black text-xs font-bold uppercase tracking-widest mb-4">Rating Distribution</h3>
                     <div className="space-y-2">
@@ -342,14 +354,14 @@ const queryClient = useQueryClient();
 
                     {isPending ? <h1>PENDINGG</h1> : <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
                         <div className="text-3xl font-bold text-black mb-1">
-                            {gameReviews?.length > 0 ? avgRating.toFixed(1) : "4.2"}
+                            {!isRatingPending && avgRating ? Number(avgRating.total).toFixed(2) : "4.2"}
                         </div>
                         <div className="flex items-center justify-center gap-2 mb-3">
-                            <StarRating rating={gameReviews?.length > 0 ? avgRating : 4} />
+                            <StarRating rating={!isRatingPending && avgRating ? avgRating.total : 4} />
                         </div>
                         <div className="text-xs text-black mt-2">Average Rating</div>
                     </div>}
-                </div>
+                </div>}
             </div>
         </div>
     );

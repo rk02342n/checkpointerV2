@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdQueryOptions } from '@/lib/reviewsQuery'
-import { getGameByIdQueryOptions, type Game } from '@/lib/gameQuery'
 import { Gamepad2, Calendar } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -28,15 +27,11 @@ type Review = {
   username?: string | null
   displayName?: string | null
   avatarUrl?: string | null
+  gameName?: string | null
+  gameCoverUrl?: string | null
 }
 
 function ReviewCard({ review }: { review: Review }) {
-  const { data: gameData, isPending: gamePending } = useQuery(
-    getGameByIdQueryOptions(review.gameId)
-  )
-
-  const game: Game | null = gameData?.game || null
-
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)
@@ -47,17 +42,18 @@ function ReviewCard({ review }: { review: Review }) {
     })
   }
 
+  const gameName = review.gameName || 'Unknown Game'
+  const gameCoverUrl = review.gameCoverUrl
+
   return (
     <div className="bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors">
       <div className="flex gap-4">
         {/* Game Cover */}
         <div className="shrink-0">
-          {gamePending ? (
-            <div className="w-16 h-20 bg-zinc-300 rounded-lg border border-black animate-pulse" />
-          ) : game?.coverUrl ? (
+          {gameCoverUrl ? (
             <img
-              src={game.coverUrl}
-              alt={game?.name || 'Game cover'}
+              src={gameCoverUrl}
+              alt={gameName}
               className="w-16 h-20 object-cover rounded-lg border border-black"
             />
           ) : (
@@ -71,13 +67,9 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
-              {gamePending ? (
-                <div className="h-5 w-32 bg-zinc-300 rounded animate-pulse" />
-              ) : (
-                <h4 className="text-black font-bold font-serif truncate">
-                  {game?.name || 'Unknown Game'}
-                </h4>
-              )}
+              <h4 className="text-black font-bold font-serif truncate">
+                {gameName}
+              </h4>
               {review.createdAt && (
                 <div className="flex items-center gap-1 text-zinc-600 text-xs mt-1">
                   <Calendar className="w-3 h-3" />

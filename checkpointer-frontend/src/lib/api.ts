@@ -17,7 +17,7 @@ async function getCurrentUser() {
     return data
   }
 async function getDbUser() {
-    const res = await fetch("api/user/account")
+    const res = await fetch("/api/user/account")
     // const res = await api.me.$get() // not working because of error caused by hono client
     if(!res.ok){
       throw new Error("Server error");
@@ -49,7 +49,6 @@ export async function getAllExpenses() {
   const data = await res.json()
   return data
 }
-
 
 export const getAllExpensesQueryOptions = queryOptions({
   queryKey: ['get-all-expenses'], 

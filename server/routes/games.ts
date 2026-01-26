@@ -1,12 +1,9 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
-import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
-import { gamesTable, gamesInsertSchema, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
-import { eq, desc, sum, and, ilike, or } from "drizzle-orm";
-
-import { createExpenseSchema } from "../sharedTypes";
+import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
+import { eq, desc, sum, and, ilike, or, avg } from "drizzle-orm";
+import { reviewsTable } from "../db/schema/reviews";
 
 export const gamesRoute = new Hono()
 
@@ -64,17 +61,15 @@ export const gamesRoute = new Hono()
 //     c.status(201)
 //     return c.json(result);
 // })
-// .get("/total-spent", getUser, async c => {
-//     // add a fake delay to test loading feature in frontend - needs to make function async for it
-//     // await new Promise((r) => setTimeout(r, 2000))
-//     const user = c.var.user
-//     const result = await db.select({ total: sum(expensesTable.amount) })
-//         .from(expensesTable)
-//         .where(eq(expensesTable.userId, user.id))
-//         .limit(1)
-//         .then(res => res[0]) // db commands always return an array sowe have to convert it into just the first element
-//     return c.json(result);
-// })
+// Average rating for a game by its ID
+.get("/rating/:id", async c => {
+    const id = c.req.param('id');
+    const result = await db.select({ total: avg(reviewsTable.rating) })
+        .from(reviewsTable)
+        .where(eq(reviewsTable.gameId, id))
+        .then(res => res[0]);
+    return c.json(result);
+})
 
 // })
 // .delete("/:id{[0-9]+}", getUser, async c => {  // regex makes sure we get a number as a request

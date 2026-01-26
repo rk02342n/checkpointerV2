@@ -70,3 +70,13 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
     staleTime: 1000 * 60 * 5,
     enabled: !!id // Only run query if id exists
   })
+
+  export async function getGameRating (id: string) {
+    //await new Promise((r) => setTimeout(r, 3000)) // to test skeleton TBD
+    const res = await fetch(`/api/games/rating/${id}`)
+    if(!res.ok){
+      throw new Error("Server error");
+    }
+    const data = await res.json()
+    return data
+}
