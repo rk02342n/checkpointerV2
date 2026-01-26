@@ -52,7 +52,7 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
   }
 
   export async function getGameById(id: string) {
-    // await new Promise((r) => setTimeout(r, 4000)) // to test skeleton TBD
+    // await new Promise((r) => setTimeout(r, 2000)) // to test skeleton TBD
     const res = await fetch(`/api/games/${id}`)
     if (!res.ok) {
       if (res.status === 404) {
@@ -72,7 +72,7 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
   })
 
   export async function getGameRating (id: string) {
-    //await new Promise((r) => setTimeout(r, 3000)) // to test skeleton TBD
+    // await new Promise((r) => setTimeout(r, 3000)) // to test skeleton TBD
     const res = await fetch(`/api/games/rating/${id}`)
     if(!res.ok){
       throw new Error("Server error");

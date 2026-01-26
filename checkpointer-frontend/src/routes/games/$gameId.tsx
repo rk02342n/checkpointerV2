@@ -200,7 +200,9 @@ const queryClient = useQueryClient();
                                                 </div>
                                         </div>
                                     }
-                                    {!reviewsLoading && gameReviews?.length > 0 ? 
+                                    {reviewsLoading ? (
+                                        <ReviewsSkeleton />
+                                    ) : gameReviews?.length > 0 ? (
                                         <div className="space-y-4">
                                             {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => {
                                                 const initials = r.username
@@ -227,9 +229,9 @@ const queryClient = useQueryClient();
                                                 </div>
                                             )})}
                                         </div>
-                                     :
+                                    ) : (
                                         <p className="text-black text-sm italic">No reviews yet</p>
-                                    }
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -415,7 +417,7 @@ export default GameView;
 
 function GameDetailSkeleton() {
   return (
-    <div className="container mx-auto mt-10 px-4 relative z-10">
+    <div className="container mx-auto mt-10 px-4 relative z-10 w-screen">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Column: Poster & Actions Skeleton */}
         <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
@@ -482,3 +484,22 @@ function GameDetailSkeleton() {
   )
 }
 
+function ReviewsSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[1, 2].map((i) => (
+        <div key={i} className="bg-amber-200 rounded border-2 border-black p-4">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-6 h-6 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <Skeleton className="h-4 w-full mt-2" />
+          <Skeleton className="h-4 w-3/4 mt-2" />
+        </div>
+      ))}
+    </div>
+  )
+}

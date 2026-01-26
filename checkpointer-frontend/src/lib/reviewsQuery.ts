@@ -18,6 +18,7 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
   })
 
   export async function getReviewsByGameId(gameId: string) {
+        // await new Promise((r) => setTimeout(r, 4000))
     const res = await fetch(`/api/reviews/game/${gameId}`)
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
