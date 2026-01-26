@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
+import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
 import { Label } from "@/components/ui/label"
 import { Button } from '@/components/ui/button'
@@ -76,26 +77,28 @@ const queryClient = useQueryClient();
         if (dbUserId) {
           // Use getQueryData (not ensureQueryData) to avoid fetching from server
           // since the server response would already include the new review, causing duplicates
-          const existingUserReviews = queryClient.getQueryData(
-            getReviewsByUserIdQueryOptions(dbUserId).queryKey
-          ) as Array<unknown> | undefined;
-
-          // Only update cache if it already exists (user visited profile before)
-          if (existingUserReviews) {
-            // Attach gameName/gameCoverUrl so profile ReviewCard can render without extra fetches
-            const newReviewForUserCache = {
-              ...newReview,
-              ...(data?.game && {
-                gameName: data.game.name,
-                gameCoverUrl: data.game.coverUrl ?? null,
-              }),
-            };
-
-            queryClient.setQueryData(
-              getReviewsByUserIdQueryOptions(dbUserId).queryKey,
-              [newReviewForUserCache, ...existingUserReviews]
-            );
-          }
+          const existingUserReviewsData = queryClient.getQueryData(                                                                                   
+            getReviewsByUserIdQueryOptions(dbUserId).queryKey                                                                                         
+          ) as UserReviewsResponse | undefined;                                                                                                       
+                                                                                                                                                      
+          if (existingUserReviewsData) {                                                                                                              
+            const newReviewForUserCache = {                                                                                                           
+              ...newReview,                                                                                                                           
+              ...(data?.game && {                                                                                                                     
+                gameName: data.game.name,                                                                                                             
+                gameCoverUrl: data.game.coverUrl ?? null,                                                                                             
+              }),                                                                                                                                     
+            };                                                                                                                                        
+                                                                                                                                                      
+            queryClient.setQueryData(                                                                                                                 
+              getReviewsByUserIdQueryOptions(dbUserId).queryKey,                                                                                      
+              {                                                                                                                                       
+                ...existingUserReviewsData,                                                                                                           
+                reviews: [newReviewForUserCache, ...existingUserReviewsData.reviews],                                                                 
+                totalCount: existingUserReviewsData.totalCount + 1,                                                                                   
+              }                                                                                                                                       
+            );                                                                                                                                        
+          } 
         }
 
         // success state

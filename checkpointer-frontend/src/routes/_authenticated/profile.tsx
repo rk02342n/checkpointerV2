@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdInfiniteOptions, deleteReview } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar, Trash2 } from 'lucide-react'
+import { Gamepad2, Calendar, Trash2, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -15,6 +16,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { StarRating } from '@/components/StarRating'
 import Navbar from '@/components/Navbar'
 
@@ -110,6 +112,7 @@ function ReviewCard({ review, onDelete, isDeleting }: { review: Review, onDelete
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchQuery, setSearchQuery] = useState('')
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
@@ -130,6 +133,15 @@ function Profile() {
   const userReviews = reviewsData?.pages.flatMap(page => page.reviews) ?? []
   // Get total count from the first page (it's the same across all pages)
   const totalReviewCount = reviewsData?.pages[0]?.totalCount ?? 0
+
+  // Filter reviews based on search query
+  const filteredReviews = userReviews.filter((review: Review) => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    const gameName = (review.gameName || '').toLowerCase()
+    const reviewText = (review.reviewText || '').toLowerCase()
+    return gameName.includes(query) || reviewText.includes(query)
+  })
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -274,9 +286,38 @@ function Profile() {
 
         {/* Reviews Section */}
         <div className="bg-[rgb(255,220,159)] border-2 border-black rounded-xl p-6">
-          <h2 className="text-black text-sm font-bold uppercase tracking-widest border-b border-black pb-2 mb-6">
+          <h2 className="text-black text-sm font-bold uppercase tracking-widest border-b border-black pb-2 mb-4">
             Your Reviews
           </h2>
+
+          {/* Search Bar */}
+          {userReviews.length > 0 && (
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  type="text"
+                  placeholder="Search by game name or review..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-white border-2 border-black rounded-lg pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-sky-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-black"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              {searchQuery.trim() && (
+                <p className="text-zinc-600 text-sm mt-2">
+                  Showing {filteredReviews.length} of {userReviews.length} reviews
+                </p>
+              )}
+            </div>
+          )}
 
           {reviewsPending ? (
             <div className="space-y-4">
@@ -294,29 +335,45 @@ function Profile() {
               ))}
             </div>
           ) : userReviews.length > 0 ? (
-            <div className="space-y-4">
-              {userReviews.map((review: Review) => (
-                <ReviewCard
-                  key={review.id}
-                  review={review}
-                  onDelete={handleDeleteReview}
-                  isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
-                />
-              ))}
+            filteredReviews.length > 0 ? (
+              <div className="space-y-4">
+                {filteredReviews.map((review: Review) => (
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onDelete={handleDeleteReview}
+                    isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
+                  />
+                ))}
 
-              {/* Load More Button */}
-              {hasNextPage && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={() => fetchNextPage()}
-                    disabled={isFetchingNextPage}
-                    className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
-                  >
-                    {isFetchingNextPage ? 'Loading...' : 'Load More'}
-                  </Button>
-                </div>
-              )}
-            </div>
+                {/* Load More Button */}
+                {hasNextPage && !searchQuery.trim() && (
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
+                    >
+                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
+                <p className="text-black font-bold mb-2">No matching reviews</p>
+                <p className="text-zinc-600 text-sm mb-4">
+                  Try a different search term
+                </p>
+                <Button
+                  onClick={() => setSearchQuery('')}
+                  className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
+                >
+                  Clear Search
+                </Button>
+              </div>
+            )
           ) : (
             <div className="text-center py-12">
               <Gamepad2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
