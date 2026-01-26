@@ -9,7 +9,7 @@ export interface Game {
 }
 
 export async function getAllGames() {
-    await new Promise((r) => setTimeout(r, 5000)) // fake delay to test skeleton
+    // await new Promise((r) => setTimeout(r, 5000)) // fake delay to test skeleton
     const res = await fetch("api/games")
   
     // client will let us use RPC instead - helps make everything typesafe
@@ -52,7 +52,7 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
   }
 
   export async function getGameById(id: string) {
-    await new Promise((r) => setTimeout(r, 4000)) // to test skeleton TBD
+    // await new Promise((r) => setTimeout(r, 4000)) // to test skeleton TBD
     const res = await fetch(`/api/games/${id}`)
     if (!res.ok) {
       if (res.status === 404) {
