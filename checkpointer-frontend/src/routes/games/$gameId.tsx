@@ -15,6 +15,12 @@ import { useForm } from '@tanstack/react-form'
 import { createReview } from '@/lib/reviewsQuery'
 import { Textarea } from "@/components/ui/textarea";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar"
+
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
 })
@@ -32,19 +38,15 @@ function GameView () {
     // Get the current user's database ID for optimistic updates on profile page
     const { data: dbUserData } = useQuery(dbUserQueryOptions);
 
-  if (error) return 'An error has occurred: ' + error.message
+    if (error) return 'An error has occurred: ' + error.message
 
-    // const [watchlist, setWatchlist] = useState<number[]>([217, 8]);
-    // const [favorites, setFavorites] = useState<number[]>([1, 10, 16, 12, 217]);
     const activeGame = { id: 1, name: "Elden Ring", releaseDate: '2022', coverUrl: "FromSoftware"}
 
     const avgRating = 2.5;
-    // const isWatchlisted = activeGame ? watchlist.includes(activeGame.id) : false;
-    // const isFavorited = activeGame ? favorites.includes(activeGame.id) : false;
 
 
 const queryClient = useQueryClient();
-  // const navigate = useNavigate();
+// const initials = `${dbUserData.given_name?.[0] || ''}${dbUserData.family_name?.[0] || ''}`.toUpperCase()
   const form = useForm({
     defaultValues: {
       rating: '',
@@ -56,7 +58,7 @@ const queryClient = useQueryClient();
         getReviewsByGameIdQueryOptions(gameId)
       ); // grab the existing reviews locally or from server if not on memory
 
-    //   Loading state
+      // Loading state
       toast.loading("Creating review...");
       queryClient.setQueryData(loadingCreateReviewQueryOptions.queryKey, {review: value})
       try{
@@ -92,7 +94,7 @@ const queryClient = useQueryClient();
       }
     },
   })
-
+  
     return (
         <div className="w-fit m-auto h-full duration-300 bg-amber-400 p-6 rounded-xl border-2 border-black [bg:url(assets/noise.svg)]">
             
@@ -167,7 +169,7 @@ const queryClient = useQueryClient();
                                     {loadingCreateReview?.review &&
                                         <div className="space-y-4 mb-4">
                                                 <div className="bg-amber-200 rounded border-2 border-black p-4">
-                                                    <div className="flex items-center gap-2 mb-2">
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
                                                         <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
                                                         <span className="text-sm font-bold text-zinc-300">You</span>
                                                         <StarRating rating={Number(loadingCreateReview?.review.rating)} />
@@ -178,22 +180,30 @@ const queryClient = useQueryClient();
                                     }
                                     {!isPending && !reviewsLoading && gameReviews?.length > 0 ? 
                                         <div className="space-y-4">
-                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => (
+                                            {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => {
+                                                const initials = r.username
+                                                    ? r.username.slice(0, 2).toUpperCase()
+                                                    : r.displayName
+                                                        ? r.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                                                        : '?';
+                                                return (
                                                 <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
                                                         <div className="flex items-center gap-2">
-                                                            {r.avatarUrl ? (
-                                                                <img src={r.avatarUrl} alt={r.username || 'User'} className="w-6 h-6 rounded-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
-                                                            )}
+                                                            <Avatar className="w-6 h-6 border border-black">
+                                                                 <AvatarImage src={r.avatarUrl || undefined} alt={r.username || 'User'} />
+                                                                <AvatarFallback className="bg-lime-400 text-black text-xs font-bold">
+                                                                    {initials}
+                                                                </AvatarFallback>
+                                                            </Avatar>
                                                             <span className="text-sm font-bold text-black">{r.username || 'You'}</span>
                                                         </div>
+
                                                         <StarRating rating={r.rating} />
                                                     </div>
                                                     <p className="text-black text-sm font-sans p-2">"{r.reviewText}"</p>
                                                 </div>
-                                            ))}
+                                            )})}
                                         </div>
                                      :
                                         <p className="text-black text-sm italic">No reviews yet</p>

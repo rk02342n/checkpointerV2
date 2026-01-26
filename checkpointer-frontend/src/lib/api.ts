@@ -8,7 +8,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { type CreateExpense} from "../../../server/sharedTypes";
 
 async function getCurrentUser() {
-    const res = await fetch("api/me")
+    const res = await fetch("/api/me")
     // const res = await api.me.$get() // not working because of error caused by hono client
     if(!res.ok){
       throw new Error("Server error");
@@ -44,7 +44,7 @@ export async function getAllExpenses() {
   // client will let us use RPC instead - helps make everything typesafe
   // const res = await api.expenses.$get() // not working because of error caused by hono client
   if(!res.ok){
-    throw new Error("Ummmm Server error");
+    throw new Error("Server error");
   }
   const data = await res.json()
   return data
