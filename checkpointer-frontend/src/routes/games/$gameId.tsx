@@ -21,6 +21,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
@@ -117,11 +118,14 @@ const queryClient = useQueryClient();
         <div className="w-fit m-auto h-full duration-300 bg-amber-400 p-6 rounded-xl border-2 border-black [bg:url(assets/noise.svg)]">
             
             <Navbar />
+            {isPending ? (
+              <GameDetailSkeleton />
+            ) : (
             <div className="container mx-auto mt-10 px-4 relative z-10">
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* Left Column: Poster & Actions */}
-                    {!isPending && <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
-                        {!isPending && <Poster game={data.game} size="xl" className="shadow-lg rounded-lg outline-2 outline-black" />}
+                    <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
+                        <Poster game={data.game} size="xl" className="shadow-lg rounded-lg outline-2 outline-black" />
                         
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
                             <button
@@ -153,10 +157,10 @@ const queryClient = useQueryClient();
                             <div className="text-xs uppercase tracking-widest mb-1 text-black">Total Logs</div>
                             <div className="text-2xl mb-4 font-serif text-black">{1240}</div>
                         </div>
-                    </div>}
+                    </div>
 
                     {/* Right Column: Info & Reviews */}
-                    {!isPending && <div className="flex-1 pt-0 text-center md:text-left">
+                    <div className="flex-1 pt-0 text-center md:text-left">
                         <div className="mb-8">
                             <h1 className="text-4xl font-black text-black mb-2 font-serif tracking-tight">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-black text-sm">
@@ -196,7 +200,7 @@ const queryClient = useQueryClient();
                                                 </div>
                                         </div>
                                     }
-                                    {!isPending && !reviewsLoading && gameReviews?.length > 0 ? 
+                                    {!reviewsLoading && gameReviews?.length > 0 ? 
                                         <div className="space-y-4">
                                             {gameReviews?.slice(0,4).map((r: { id: string | number; rating: number; reviewText: string; userId: string; username: string | null; displayName: string | null; avatarUrl: string | null }) => {
                                                 const initials = r.username
@@ -230,15 +234,22 @@ const queryClient = useQueryClient();
                             </div>
                         </div>
                         
-                    </div>}
+                    </div>
                 </div>
             </div>
+            )}
 
             {/* Backdrop */}
             <div className=" container flex h-84 gap-4 relative overflow-hidden mask-image-b items-end justify-end mt-8">
                 <div className={`absolute inset-0 bg-indigo-600 text-white opacity-100 w-2/3 rounded-xl border-2 border-black overflow-y-scroll`}>
                  <div className='m-auto p-4 max-w-lg'>
-             {isPending ? <h2>no</h2> : <h2 className="text-md tracking-tight p-4 text-left">Write a review for  <span className="font-bold">{data.game?.name}</span></h2>}
+             {isPending ? (
+                    <div className="p-4">
+                      <Skeleton className="h-6 w-48" />
+                    </div>
+                  ) : (
+                    <h2 className="text-md tracking-tight p-4 text-left">Write a review for <span className="font-bold">{data.game?.name}</span></h2>
+                  )}
              <form
                 onSubmit={(e) => {
                   e.preventDefault()
@@ -342,7 +353,24 @@ const queryClient = useQueryClient();
           </div>
                 </div>
                 
-                {isRatingPending ? <h1> Rating Pending</h1> :
+                {isRatingPending ? (
+                  <div className="bg-orange-400 rounded-xl p-6 h-full w-13/40 border-zinc-800 border-2 relative z-10">
+                    <Skeleton className="h-4 w-32 mb-4" />
+                    <div className="space-y-2">
+                      {[5, 4, 3, 2, 1].map(stars => (
+                        <div key={stars} className="flex items-center gap-2 text-xs">
+                          <span className="w-3 text-zinc-500">{stars}</span>
+                          <Skeleton className="flex-1 h-2 rounded-full" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
+                      <Skeleton className="h-8 w-16 mb-2" />
+                      <Skeleton className="h-4 w-24 mb-3" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                ) : (
                 <div className="bg-orange-400 rounded-xl p-6 h-full w-13/40 border-zinc-800 border-2 relative z-10">
                     <h3 className="text-black text-xs font-bold uppercase tracking-widest mb-4">Rating Distribution</h3>
                     <div className="space-y-2">
@@ -359,7 +387,14 @@ const queryClient = useQueryClient();
                         ))}
                     </div>
 
-                    {isPending ? <h1>PENDINGG</h1> : <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
+                    {isPending ? (
+                      <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
+                        <Skeleton className="h-8 w-16 mb-2" />
+                        <Skeleton className="h-4 w-24 mb-3" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    ) : (
+                    <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
                         <div className="text-3xl font-bold text-black mb-1">
                             {!isRatingPending && avgRating ? Number(avgRating.total).toFixed(2) : "4.2"}
                         </div>
@@ -367,12 +402,83 @@ const queryClient = useQueryClient();
                             <StarRating rating={!isRatingPending && avgRating ? avgRating.total : 4} />
                         </div>
                         <div className="text-xs text-black mt-2">Average Rating</div>
-                    </div>}
-                </div>}
+                    </div>
+                    )}
+                </div>
+                )}
             </div>
         </div>
     );
 };
 
 export default GameView;
+
+function GameDetailSkeleton() {
+  return (
+    <div className="container mx-auto mt-10 px-4 relative z-10">
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Left Column: Poster & Actions Skeleton */}
+        <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
+          <Skeleton className="w-[250px] h-[350px] rounded-lg" />
+
+          <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
+            <Skeleton className="h-16 rounded" />
+            <Skeleton className="h-16 rounded" />
+            <Skeleton className="h-16 rounded" />
+          </div>
+
+          <div className="w-full pt-4 border-t border-zinc-800 text-center md:text-left">
+            <Skeleton className="h-3 w-20 mb-2" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+
+        {/* Right Column: Info & Reviews Skeleton */}
+        <div className="flex-1 pt-0 text-center md:text-left">
+          <div className="mb-8">
+            <Skeleton className="h-10 w-3/4 mb-4" />
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-24 rounded" />
+              <Skeleton className="h-5 w-32 rounded" />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-8">
+              {/* Synopsis Skeleton */}
+              <div>
+                <Skeleton className="h-4 w-24 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-5/6 mb-2" />
+                <Skeleton className="h-4 w-4/5" />
+              </div>
+
+              {/* Reviews Skeleton */}
+              <div>
+                <Skeleton className="h-4 w-32 mb-4" />
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-amber-200 rounded border-2 border-black p-4">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="w-6 h-6 rounded-full" />
+                          <Skeleton className="h-4 w-20" />
+                        </div>
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <Skeleton className="h-4 w-full mt-2" />
+                      <Skeleton className="h-4 w-3/4 mt-2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 

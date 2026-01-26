@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { FeaturedGames } from "@/components/FeaturedGames"
+import { FeaturedGames, FeaturedGamesSkeleton } from "@/components/FeaturedGames"
 import { Button } from "@/components/ui/button"
 import { getAllGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { useQuery } from "@tanstack/react-query"
@@ -62,7 +62,7 @@ export default function Checkpointer() {
             "
           >
             {isPending ? (
-              <div>Loading games...</div>
+              <FeaturedGamesSkeleton count={4} />
             ) : (
               <FeaturedGames games={data.games} limit={8} onGameClick={handleGameClick} />
             )}

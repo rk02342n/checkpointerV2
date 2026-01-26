@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Game } from "@/lib/gameQuery"
 
 
@@ -105,6 +106,50 @@ export function FeaturedGames({
             </Card>
           )
         })}
+      </div>
+    </section>
+  )
+}
+
+function GameCardSkeleton() {
+  return (
+    <Card className="relative mx-auto w-full bg-amber-100 max-w-sm pt-0 outline-4 outline-black border-black rounded-none">
+      <Skeleton className="aspect-9/16 w-full h-48 sm:h-64 md:h-80 rounded-none bg-amber-200" />
+      <CardHeader className="px-4 py-4">
+        <CardAction>
+          <Skeleton className="h-5 w-12 rounded-full bg-amber-200" />
+        </CardAction>
+        <Skeleton className="h-6 w-3/4 bg-amber-200" />
+      </CardHeader>
+    </Card>
+  )
+}
+
+export function FeaturedGamesSkeleton({
+  title = "Featured games",
+  count = 4,
+}: {
+  title?: string
+  count?: number
+}) {
+  return (
+    <section className="space-y-2 w-full rounded-lg">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between px-4 sm:px-6 lg:px-10">
+        <div className="space-y-1 bg-white p-2 hover:border-2 border-black border-2 mb-0">
+          <h2 className="text-md font-bold uppercase tracking-widest text-black px-4">
+            {title}
+          </h2>
+        </div>
+        <Button type="button" variant="pop" size="sm" disabled>
+          Browse
+        </Button>
+      </div>
+      <br />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-4 sm:px-6 lg:px-10 w-full">
+        {Array.from({ length: count }).map((_, i) => (
+          <GameCardSkeleton key={i} />
+        ))}
       </div>
     </section>
   )
