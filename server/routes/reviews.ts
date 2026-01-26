@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator'
 import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema, createReviewSchema } from "../db/schema/reviews";
-import { eq, desc, sum, and } from "drizzle-orm";
+import { eq, desc, sum, and, count } from "drizzle-orm";
 import { usersTable } from "../db/schema/users";
 import { gamesTable } from "../db/schema/games";
 
@@ -56,29 +56,48 @@ export const reviewsRoute = new Hono()
 // Protected: all reviews by a user (includes game name/cover to avoid N+1 per review)
 .get('/user/:userId', getAuthUser, async (c) => {
   const userId = c.req.param('userId');
+  const limit = Math.min(Number(c.req.query('limit')) || 10, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const reviews = await db
-  .select({
-    id: reviewsTable.id,
-    userId: reviewsTable.userId,
-    gameId: reviewsTable.gameId,
-    rating: reviewsTable.rating,
-    reviewText: reviewsTable.reviewText,
-    createdAt: reviewsTable.createdAt,
-    username: usersTable.username,
-    displayName: usersTable.displayName,
-    avatarUrl: usersTable.avatarUrl,
-    gameName: gamesTable.name,
-    gameCoverUrl: gamesTable.coverUrl,
-  })
-  .from(reviewsTable)
-  .innerJoin(usersTable, eq(reviewsTable.userId, usersTable.id))
-  .innerJoin(gamesTable, eq(reviewsTable.gameId, gamesTable.id))
-  .where(eq(reviewsTable.userId, userId))
-  .orderBy(desc(reviewsTable.createdAt))
-  .limit(20); // Add pagination
+  // Get total count and reviews in parallel
+  const [countResult, reviews] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(reviewsTable)
+      .where(eq(reviewsTable.userId, userId))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        id: reviewsTable.id,
+        userId: reviewsTable.userId,
+        gameId: reviewsTable.gameId,
+        rating: reviewsTable.rating,
+        reviewText: reviewsTable.reviewText,
+        createdAt: reviewsTable.createdAt,
+        username: usersTable.username,
+        displayName: usersTable.displayName,
+        avatarUrl: usersTable.avatarUrl,
+        gameName: gamesTable.name,
+        gameCoverUrl: gamesTable.coverUrl,
+      })
+      .from(reviewsTable)
+      .innerJoin(usersTable, eq(reviewsTable.userId, usersTable.id))
+      .innerJoin(gamesTable, eq(reviewsTable.gameId, gamesTable.id))
+      .where(eq(reviewsTable.userId, userId))
+      .orderBy(desc(reviewsTable.createdAt))
+      .limit(limit + 1)
+      .offset(offset)
+  ]);
 
-  return c.json(reviews);
+  const hasMore = reviews.length > limit;
+  const paginatedReviews = hasMore ? reviews.slice(0, limit) : reviews;
+
+  return c.json({
+    reviews: paginatedReviews,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: countResult
+  });
 })
 .post("/", zValidator("json", createReviewSchema), getAuthUser, async c => {
     const user = c.var.dbUser
@@ -94,6 +113,33 @@ export const reviewsRoute = new Hono()
     .then(res => res[0]);
     c.status(201)
     return c.json(result);
+})
+.delete("/:id", getAuthUser, async c => {
+    const id = c.req.param('id');
+    const user = c.var.dbUser;
+
+    // First check if the review exists and belongs to the user
+    const existingReview = await db
+        .select()
+        .from(reviewsTable)
+        .where(eq(reviewsTable.id, id))
+        .then(res => res[0]);
+
+    if (!existingReview) {
+        return c.json({ error: "Review not found" }, 404);
+    }
+
+    if (existingReview.userId !== user.id) {
+        return c.json({ error: "You can only delete your own reviews" }, 403);
+    }
+
+    const deletedReview = await db
+        .delete(reviewsTable)
+        .where(eq(reviewsTable.id, id))
+        .returning()
+        .then(res => res[0]);
+
+    return c.json({ review: deletedReview });
 })
 // .get("/:id{[0-9]+}", getUser, async c => {  // regex makes sure we get a number as a request
 //     const id = Number.parseInt(c.req.param('id'))

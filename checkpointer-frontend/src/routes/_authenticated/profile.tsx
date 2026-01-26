@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
-import { getReviewsByUserIdQueryOptions } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar } from 'lucide-react'
+import { getReviewsByUserIdInfiniteOptions, deleteReview } from '@/lib/reviewsQuery'
+import { Gamepad2, Calendar, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
   component: Profile,
@@ -31,7 +32,7 @@ type Review = {
   gameCoverUrl?: string | null
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, onDelete, isDeleting }: { review: Review, onDelete: (id: string) => void, isDeleting: boolean }) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)
@@ -46,7 +47,7 @@ function ReviewCard({ review }: { review: Review }) {
   const gameCoverUrl = review.gameCoverUrl
 
   return (
-    <div className="bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors">
+    <div className={`bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors ${isDeleting ? 'opacity-50' : ''}`}>
       <div className="flex gap-4">
         {/* Game Cover */}
         <div className="shrink-0">
@@ -64,10 +65,11 @@ function ReviewCard({ review }: { review: Review }) {
         </div>
 
         {/* Review Content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <div>
-              <h4 className="text-black font-bold font-serif truncate">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-black font-bold font-serif truncate" title={gameName}>
                 {gameName}
               </h4>
               {review.createdAt && (
@@ -80,11 +82,25 @@ function ReviewCard({ review }: { review: Review }) {
             <StarRating rating={review.rating} size="sm" />
           </div>
 
+          {/* Review Text */}
           {review.reviewText && (
-            <p className="text-black text-sm font-sans line-clamp-3">
+            <p className="text-black text-sm font-sans line-clamp-3 flex-1">
               "{review.reviewText}"
             </p>
           )}
+
+          {/* Delete Button */}
+          <div className="flex justify-end mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(String(review.id))}
+              disabled={isDeleting}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 p-1 h-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -93,15 +109,95 @@ function ReviewCard({ review }: { review: Review }) {
 
 function Profile() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
   // Get user's reviews - using the database user ID (not Kinde ID)
   const dbUserId = dbUserData?.account?.id || ''
-  const { data: userReviews = [], isPending: reviewsPending } = useQuery({
-    ...getReviewsByUserIdQueryOptions(dbUserId),
+  const {
+    data: reviewsData,
+    isPending: reviewsPending,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
+    ...getReviewsByUserIdInfiniteOptions(dbUserId),
     enabled: !!dbUserId && !isUserPending
   })
+
+  // Flatten all pages into a single array of reviews
+  const userReviews = reviewsData?.pages.flatMap(page => page.reviews) ?? []
+  // Get total count from the first page (it's the same across all pages)
+  const totalReviewCount = reviewsData?.pages[0]?.totalCount ?? 0
+
+  const deleteMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      // Find the review to get its gameId before deleting
+      const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
+      const result = await deleteReview(reviewId)
+      return { result, gameId: reviewToDelete?.gameId }
+    },
+    onMutate: async (reviewId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
+
+      // Find the review to get its gameId
+      const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
+      const gameId = reviewToDelete?.gameId
+
+      // Snapshot the previous values
+      const previousUserReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+      const previousGameReviews = gameId
+        ? queryClient.getQueryData(['get-reviews-game', gameId])
+        : undefined
+
+      // Optimistically update user reviews (infinite query format)
+      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: typeof reviewsData) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map(page => ({
+            ...page,
+            reviews: page.reviews.filter((r: Review) => String(r.id) !== reviewId),
+            totalCount: page.totalCount - 1
+          }))
+        }
+      })
+
+      // Optimistically update game reviews if we have the gameId
+      if (gameId) {
+        await queryClient.cancelQueries({ queryKey: ['get-reviews-game', gameId] })
+        queryClient.setQueryData(['get-reviews-game', gameId], (old: Review[] | undefined) =>
+          old?.filter((r) => String(r.id) !== reviewId) ?? []
+        )
+      }
+
+      return { previousUserReviews, previousGameReviews, gameId }
+    },
+    onError: (error, _reviewId, context) => {
+      // Rollback on error
+      if (context?.previousUserReviews) {
+        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousUserReviews)
+      }
+      if (context?.gameId && context?.previousGameReviews) {
+        queryClient.setQueryData(['get-reviews-game', context.gameId], context.previousGameReviews)
+      }
+      toast.error(error.message || 'Failed to delete review')
+    },
+    onSuccess: (_data, _reviewId, context) => {
+      toast.success('Review deleted')
+      // Invalidate to ensure consistency with server
+      queryClient.invalidateQueries({ queryKey: ['get-reviews-user', dbUserId] })
+      if (context?.gameId) {
+        queryClient.invalidateQueries({ queryKey: ['get-reviews-game', context.gameId] })
+      }
+    }
+  })
+
+  const handleDeleteReview = (reviewId: string) => {
+    deleteMutation.mutate(reviewId)
+  }
 
   if (isPending) {
     return (
@@ -118,7 +214,7 @@ function Profile() {
 
   const user = data.user
   const initials = `${user.given_name?.[0] || ''}${user.family_name?.[0] || ''}`.toUpperCase()
-  const reviewCount = Array.isArray(userReviews) ? userReviews.length : 0
+  const reviewCount = totalReviewCount
 
   return (
     <div className="min-h-screen bg-amber-400 p-6 [background:url(assets/noise.svg)]">
@@ -197,11 +293,29 @@ function Profile() {
                 </div>
               ))}
             </div>
-          ) : Array.isArray(userReviews) && userReviews.length > 0 ? (
+          ) : userReviews.length > 0 ? (
             <div className="space-y-4">
               {userReviews.map((review: Review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  onDelete={handleDeleteReview}
+                  isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
+                />
               ))}
+
+              {/* Load More Button */}
+              {hasNextPage && (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
+                  >
+                    {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">

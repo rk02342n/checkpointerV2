@@ -33,8 +33,27 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
       staleTime: 1000 * 60 * 5
   })
   
-  export async function getReviewsByUserId(userId: string) {
-    const res = await fetch(`/api/reviews/user/${userId}`)
+  export type UserReviewsResponse = {
+    reviews: Array<{
+      id: string
+      userId: string
+      gameId: string
+      rating: number
+      reviewText: string
+      createdAt: string
+      username: string | null
+      displayName: string | null
+      avatarUrl: string | null
+      gameName: string | null
+      gameCoverUrl: string | null
+    }>
+    hasMore: boolean
+    nextOffset: number | null
+    totalCount: number
+  }
+
+  export async function getReviewsByUserId(userId: string, offset: number = 0, limit: number = 10): Promise<UserReviewsResponse> {
+    const res = await fetch(`/api/reviews/user/${userId}?limit=${limit}&offset=${offset}`)
     if (!res.ok) {
       throw new Error("Failed to fetch reviews");
     }
@@ -42,11 +61,19 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
     return data
   }
 
-  export const getReviewsByUserIdQueryOptions = (userId: string) => 
+  export const getReviewsByUserIdQueryOptions = (userId: string) =>
     queryOptions({
       queryKey: ['get-reviews-user', userId],
       queryFn: () => getReviewsByUserId(userId),
       staleTime: 1000 * 60 * 5
+  })
+
+  export const getReviewsByUserIdInfiniteOptions = (userId: string, limit: number = 10) => ({
+    queryKey: ['get-reviews-user', userId],
+    queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getReviewsByUserId(userId, pageParam, limit),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: UserReviewsResponse) => lastPage.nextOffset,
+    staleTime: 1000 * 60 * 5
   })
   
   export async function getReviewById(id: string) {
@@ -137,18 +164,18 @@ import { type CreateReview } from "../../../server/db/schema/reviews";
   //   return data
   // }
   
-  // export async function deleteReview(id: string) {
-  //   const res = await fetch(`/api/reviews/${id}`, {
-  //     method: 'DELETE',
-  //   })
-  //   if (!res.ok) {
-  //     if (res.status === 404) {
-  //       throw new Error("Review not found");
-  //     }
-  //     if (res.status === 403) {
-  //       throw new Error("You can only delete your own reviews");
-  //     }
-  //     throw new Error("Failed to delete review");
-  //   }
-  //   return true
-  // }
+  export async function deleteReview(id: string) {
+    const res = await fetch(`/api/reviews/${id}`, {
+      method: 'DELETE',
+    })
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error("Review not found");
+      }
+      if (res.status === 403) {
+        throw new Error("You can only delete your own reviews");
+      }
+      throw new Error("Failed to delete review");
+    }
+    return res.json()
+  }

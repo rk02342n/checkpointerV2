@@ -74,24 +74,28 @@ const queryClient = useQueryClient();
         // Also update user's reviews cache for profile page optimistic update
         const dbUserId = dbUserData?.account?.id;
         if (dbUserId) {
-          // ensureQueryData: fetch from server if not in cache so we don't overwrite with only [newReview]
-          const existingUserReviews = await queryClient.ensureQueryData(
-            getReviewsByUserIdQueryOptions(dbUserId)
+          // Use getQueryData (not ensureQueryData) to avoid fetching from server
+          // since the server response would already include the new review, causing duplicates
+          const existingUserReviews = queryClient.getQueryData(
+            getReviewsByUserIdQueryOptions(dbUserId).queryKey
           ) as Array<unknown> | undefined;
 
-          // Attach gameName/gameCoverUrl so profile ReviewCard can render without extra fetches
-          const newReviewForUserCache = {
-            ...newReview,
-            ...(data?.game && {
-              gameName: data.game.name,
-              gameCoverUrl: data.game.coverUrl ?? null,
-            }),
-          };
+          // Only update cache if it already exists (user visited profile before)
+          if (existingUserReviews) {
+            // Attach gameName/gameCoverUrl so profile ReviewCard can render without extra fetches
+            const newReviewForUserCache = {
+              ...newReview,
+              ...(data?.game && {
+                gameName: data.game.name,
+                gameCoverUrl: data.game.coverUrl ?? null,
+              }),
+            };
 
-          queryClient.setQueryData(
-            getReviewsByUserIdQueryOptions(dbUserId).queryKey,
-            [newReviewForUserCache, ...(existingUserReviews || [])]
-          );
+            queryClient.setQueryData(
+              getReviewsByUserIdQueryOptions(dbUserId).queryKey,
+              [newReviewForUserCache, ...existingUserReviews]
+            );
+          }
         }
 
         // success state
