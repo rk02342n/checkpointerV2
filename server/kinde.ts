@@ -8,10 +8,17 @@ import { type Context } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
-import { usersTable } from "./db/schema/users";
+import { usersTable, type UserRole } from "./db/schema/users";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { usersSelectSchema } from "./db/schema/users";
+
+// Role hierarchy: admin > pro > free
+const roleHierarchy: Record<UserRole, number> = {
+  free: 0,
+  pro: 1,
+  admin: 2,
+};
 
 const KindeEnv = z.object({
   KINDE_DOMAIN: z.string(),
@@ -157,3 +164,47 @@ export const getAuthUser = createMiddleware<Env>(async (c, next) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 });
+
+// Middleware to require specific roles (must be used after getAuthUser)
+export const requireRole = (...allowedRoles: UserRole[]) => {
+  return createMiddleware<Env>(async (c, next) => {
+    const dbUser = c.get("dbUser");
+
+    if (!dbUser) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    if (!allowedRoles.includes(dbUser.role as UserRole)) {
+      return c.json({ error: "Forbidden: insufficient permissions" }, 403);
+    }
+
+    await next();
+  });
+};
+
+// Middleware to require minimum role level (uses hierarchy)
+export const requireMinRole = (minRole: UserRole) => {
+  return createMiddleware<Env>(async (c, next) => {
+    const dbUser = c.get("dbUser");
+
+    if (!dbUser) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    if (roleHierarchy[dbUser.role as UserRole] < roleHierarchy[minRole]) {
+      return c.json({ error: "Forbidden: insufficient permissions" }, 403);
+    }
+
+    await next();
+  });
+};
+
+// Helper to check role in route handlers
+export const hasRole = (dbUser: z.infer<typeof usersSelectSchema>, ...roles: UserRole[]): boolean => {
+  return roles.includes(dbUser.role as UserRole);
+};
+
+// Helper to check minimum role level
+export const hasMinRole = (dbUser: z.infer<typeof usersSelectSchema>, minRole: UserRole): boolean => {
+  return roleHierarchy[dbUser.role as UserRole] >= roleHierarchy[minRole];
+};

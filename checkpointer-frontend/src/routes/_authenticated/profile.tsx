@@ -263,11 +263,12 @@ function Profile() {
                   <div className="text-2xl font-bold text-black font-serif">{reviewCount}</div>
                   <div className="text-xs uppercase tracking-widest text-zinc-600">Reviews</div>
                 </div>
+                {/* Other stats can go here just a placeholder (Liked games, played games, watchlist, favorites) */}
                 <div className="bg-white border-2 border-black rounded-lg px-4 py-2">
                   <div className="text-2xl font-bold text-black font-serif">
                     <Gamepad2 className="w-6 h-6 inline" />
                   </div>
-                  <div className="text-xs uppercase tracking-widest text-zinc-600">Gamer</div>
+                  <div className="text-xs uppercase tracking-widest text-zinc-600 text-center">Gamer</div>
                 </div>
               </div>
             </div>
