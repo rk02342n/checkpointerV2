@@ -82,6 +82,33 @@ export const loadingCreateExpenseQueryOptions = queryOptions<{
   staleTime: Infinity
 });
 
+export type PublicUserProfile = {
+  id: string
+  username: string | null
+  displayName: string | null
+  avatarUrl: string | null
+  createdAt: string
+}
+
+async function getPublicUserProfile(userId: string): Promise<PublicUserProfile> {
+  const res = await fetch(`/api/user/profile/${userId}`)
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error("User not found")
+    }
+    throw new Error("Server error")
+  }
+  const data = await res.json()
+  return data.user
+}
+
+export const publicUserProfileQueryOptions = (userId: string) =>
+  queryOptions({
+    queryKey: ['get-public-user', userId],
+    queryFn: () => getPublicUserProfile(userId),
+    staleTime: 1000 * 60 * 5
+  })
+
 export async function deleteExpense({id}: {id: number}) {
   // await new Promise((r) => setTimeout(r, 3000))
   const res = await fetch(`/api/expenses/${id}`, {

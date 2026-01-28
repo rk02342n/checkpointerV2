@@ -76,6 +76,30 @@ export const usersRoute = new Hono()
     return c.json({ avatarUrl, key });
 })
 
+// Get public user profile by ID (no auth required)
+.get("/profile/:userId", async c => {
+    const userId = c.req.param("userId");
+
+    const user = await db
+        .select({
+            id: usersTable.id,
+            username: usersTable.username,
+            displayName: usersTable.displayName,
+            avatarUrl: usersTable.avatarUrl,
+            createdAt: usersTable.createdAt,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1)
+        .then(res => res[0]);
+
+    if (!user) {
+        return c.notFound();
+    }
+
+    return c.json({ user });
+})
+
 .get("/avatar/:userId", async c => {
     const userId = c.req.param("userId");
 

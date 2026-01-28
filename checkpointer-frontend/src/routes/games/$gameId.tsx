@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
 import { Eye, Clock, Heart } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
@@ -267,15 +267,20 @@ const queryClient = useQueryClient();
                                                 return (
                                                 <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <div className="flex items-center gap-2">
+                                                        <Link
+                                                            to="/users/$userId"
+                                                            params={{ userId: r.userId }}
+                                                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
                                                             <Avatar className="w-6 h-6 border border-black">
-                                                                 <AvatarImage src={r.avatarUrl || undefined} alt={r.username || 'User'} />
+                                                                <AvatarImage src={r.avatarUrl || undefined} alt={r.username || 'User'} />
                                                                 <AvatarFallback className="bg-lime-400 text-black text-xs font-bold">
                                                                     {initials}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-sm font-bold text-black">{r.username || 'You'}</span>
-                                                        </div>
+                                                            <span className="text-sm font-bold text-black hover:underline">{r.username || r.displayName || 'Anonymous'}</span>
+                                                        </Link>
 
                                                         <StarRating rating={Number(r.rating)} />
                                                     </div>
