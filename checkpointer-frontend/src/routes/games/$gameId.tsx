@@ -268,8 +268,8 @@ const queryClient = useQueryClient();
                                                 <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
                                                         <Link
-                                                            to="/users/$userId"
-                                                            params={{ userId: r.userId }}
+                                                            to={r.userId === dbUserData?.account?.id ? "/profile" : "/users/$userId"}
+                                                            params={r.userId === dbUserData?.account?.id ? {} : { userId: r.userId }}
                                                             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
@@ -279,7 +279,7 @@ const queryClient = useQueryClient();
                                                                     {initials}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-sm font-bold text-black hover:underline">{r.username || r.displayName || 'Anonymous'}</span>
+                                                            <span className="text-sm font-bold text-black hover:underline">{r.userId === dbUserData?.account?.id ? 'You' : (r.username || r.displayName || 'Anonymous')}</span>
                                                         </Link>
 
                                                         <StarRating rating={Number(r.rating)} />

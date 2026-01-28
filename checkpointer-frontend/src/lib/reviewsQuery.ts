@@ -101,6 +101,13 @@ export async function toggleReviewLike(reviewId: string): Promise<{ liked: boole
       staleTime: 1000 * 60 * 5
   })
 
+  export const getAllReviewsByUserIdQueryOptions = (userId: string) =>
+    queryOptions({
+      queryKey: ['get-all-reviews-user', userId],
+      queryFn: () => getReviewsByUserId(userId, 0, 500),
+      staleTime: 1000 * 60 * 5
+  })
+
   export const getReviewsByUserIdInfiniteOptions = (userId: string, limit: number = 10) => ({
     queryKey: ['get-reviews-user', userId],
     queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getReviewsByUserId(userId, pageParam, limit),

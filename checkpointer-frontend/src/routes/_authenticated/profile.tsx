@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
-import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike } from '@/lib/reviewsQuery'
+import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -194,21 +194,13 @@ function Profile() {
 
   // Get user's reviews - using the database user ID (not Kinde ID)
   const dbUserId = dbUserData?.account?.id || ''
-  const {
-    data: reviewsData,
-    isPending: reviewsPending,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = useInfiniteQuery({
-    ...getReviewsByUserIdInfiniteOptions(dbUserId),
+  const { data: reviewsData, isPending: reviewsPending } = useQuery({
+    ...getAllReviewsByUserIdQueryOptions(dbUserId),
     enabled: !!dbUserId && !isUserPending
   })
 
-  // Flatten all pages into a single array of reviews
-  const userReviews = reviewsData?.pages.flatMap(page => page.reviews) ?? []
-  // Get total count from the first page (it's the same across all pages)
-  const totalReviewCount = reviewsData?.pages[0]?.totalCount ?? 0
+  const userReviews = reviewsData?.reviews ?? []
+  const totalReviewCount = reviewsData?.totalCount ?? 0
 
   // Filter reviews based on search query
   const filteredReviews = userReviews.filter((review: Review) => {
@@ -228,28 +220,25 @@ function Profile() {
     },
     onMutate: async (reviewId: string) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
+      await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
       // Find the review to get its gameId
       const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
       const gameId = reviewToDelete?.gameId
 
       // Snapshot the previous values
-      const previousUserReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+      const previousUserReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
       const previousGameReviews = gameId
         ? queryClient.getQueryData(['get-reviews-game', gameId])
         : undefined
 
-      // Optimistically update user reviews (infinite query format)
-      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: typeof reviewsData) => {
+      // Optimistically update user reviews
+      queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
           ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            reviews: page.reviews.filter((r: Review) => String(r.id) !== reviewId),
-            totalCount: page.totalCount - 1
-          }))
+          reviews: old.reviews.filter((r) => String(r.id) !== reviewId),
+          totalCount: old.totalCount - 1
         }
       })
 
@@ -266,7 +255,7 @@ function Profile() {
     onError: (error, _reviewId, context) => {
       // Rollback on error
       if (context?.previousUserReviews) {
-        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousUserReviews)
+        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousUserReviews)
       }
       if (context?.gameId && context?.previousGameReviews) {
         queryClient.setQueryData(['get-reviews-game', context.gameId], context.previousGameReviews)
@@ -276,7 +265,7 @@ function Profile() {
     onSuccess: (_data, _reviewId, context) => {
       toast.success('Review deleted')
       // Invalidate to ensure consistency with server
-      queryClient.invalidateQueries({ queryKey: ['get-reviews-user', dbUserId] })
+      queryClient.invalidateQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
       if (context?.gameId) {
         queryClient.invalidateQueries({ queryKey: ['get-reviews-game', context.gameId] })
       }
@@ -292,30 +281,27 @@ function Profile() {
     mutationFn: toggleReviewLike,
     onMutate: async (reviewId: string) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
+      await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
       // Snapshot the previous value
-      const previousReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+      const previousReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
 
       // Optimistically update the reviews (keep order stable)
-      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: typeof reviewsData) => {
+      queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
           ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            reviews: page.reviews.map((review: Review) => {
-              if (String(review.id) === reviewId) {
-                const currentLikeCount = Number(review.likeCount)
-                return {
-                  ...review,
-                  userLiked: !review.userLiked,
-                  likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
-                }
+          reviews: old.reviews.map((review) => {
+            if (String(review.id) === reviewId) {
+              const currentLikeCount = Number(review.likeCount)
+              return {
+                ...review,
+                userLiked: !review.userLiked,
+                likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
               }
-              return review
-            })
-          }))
+            }
+            return review
+          })
         }
       })
 
@@ -324,7 +310,7 @@ function Profile() {
     onError: (err, _reviewId, context) => {
       // Rollback on error
       if (context?.previousReviews) {
-        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousReviews)
+        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousReviews)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update like')
     },
@@ -491,19 +477,6 @@ function Profile() {
                     isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
                   />
                 ))}
-
-                {/* Load More Button */}
-                {hasNextPage && !searchQuery.trim() && (
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      onClick={() => fetchNextPage()}
-                      disabled={isFetchingNextPage}
-                      className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
-                    >
-                      {isFetchingNextPage ? 'Loading...' : 'Load More'}
-                    </Button>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-center py-12">
