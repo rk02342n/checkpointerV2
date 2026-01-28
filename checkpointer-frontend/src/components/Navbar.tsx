@@ -1,4 +1,4 @@
-import { Gamepad2, Search, User, Plus, Shield } from "lucide-react";
+import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
@@ -9,6 +9,13 @@ import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 import LogModal from "./LogModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface NavbarProps {
   logModalTrigger?: boolean;
@@ -23,8 +30,12 @@ const Navbar: React.FC<NavbarProps> = () => {
     // Debounce search query to avoid excessive API calls
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-    // Get current user to check for admin role
-    const { data: dbUserData } = useQuery(dbUserQueryOptions);
+    // Get current user to check for admin role and login status
+    const { data: dbUserData, isError: isAuthError } = useQuery({
+      ...dbUserQueryOptions,
+      retry: false,
+    });
+    const isLoggedIn = !!dbUserData?.account && !isAuthError;
     const isAdmin = dbUserData?.account?.role === 'admin';
 
     // Use React Query for search with debounced query
@@ -120,13 +131,39 @@ const Navbar: React.FC<NavbarProps> = () => {
               <span>Admin</span>
             </button>
           )}
-          <button
-            className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white active:text-green-600"
-            onClick={() => { navigate({to: `/profile`});}}
-          >
-            <User className="w-4 h-4" />
-            <span>Profile</span>
-          </button>
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white focus:outline-none">
+                <User className="w-4 h-4" />
+                <span>Account</span>
+                <ChevronDown className="w-3 h-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-white border-2 border-black">
+                <DropdownMenuItem
+                  onClick={() => navigate({to: `/profile`})}
+                  className="cursor-pointer font-medium"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-black/20" />
+                <DropdownMenuItem asChild variant="destructive" className="cursor-pointer font-medium">
+                  <a href="/api/logout">
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <a
+              href="/api/login"
+              className="hidden md:flex items-center gap-2 text-black text-xs font-bold uppercase tracking-widest hover:text-white active:text-green-600"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Login / Sign Up</span>
+            </a>
+          )}
           <Button
             className="flex items-center gap-2 bg-white hover:bg-green-500 text-black border-black border-2 px-4 py-2 rounded font-bold transition-colors text-sm active:text-white"
             onClick={() => inputRef?.current?.focus()}

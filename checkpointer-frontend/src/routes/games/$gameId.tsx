@@ -274,7 +274,13 @@ const queryClient = useQueryClient();
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <Avatar className="w-6 h-6 border border-black">
-                                                                <AvatarImage src={r.avatarUrl || undefined} alt={r.username || 'User'} />
+                                                                <AvatarImage
+                                                                    src={r.avatarUrl
+                                                                        ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : `/api/user/avatar/${r.userId}`)
+                                                                        : undefined
+                                                                    }
+                                                                    alt={r.username || 'User'}
+                                                                />
                                                                 <AvatarFallback className="bg-lime-400 text-black text-xs font-bold">
                                                                     {initials}
                                                                 </AvatarFallback>
