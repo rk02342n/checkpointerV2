@@ -44,7 +44,7 @@ export default function Checkpointer() {
                 </p>
                 <Button
                   variant='pop'
-                  onClick={() => {}}
+                  onClick={() => navigate({ to: '/browse' })}
                   className="text-black text-center font-bold py-3 px-8 outline-black outline-2 hover:outline-4 hover:rounded-full active:text-xs"
                 >
                   Start Logging

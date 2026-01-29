@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Game } from "@/lib/gameQuery"
+import { useNavigate } from "@tanstack/react-router"
 
 
 function formatRating(value: Game["igdbRating"]) {
@@ -36,7 +37,8 @@ export function FeaturedGames({
   onGameClick?: (game: Game) => void
 }) {
   const items = games
-  
+  const navigate = useNavigate()
+
   return (
     <section className="space-y-2 w-full rounded-lg">
       <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between px-4 sm:px-6 lg:px-10">
@@ -49,9 +51,7 @@ export function FeaturedGames({
           type="button"
           variant="pop"
           size="sm"
-          onClick={() => {
-            /* optional “see more” hook later */
-          }}
+          onClick={() => navigate({ to: '/browse' })}
         >
           Browse
         </Button>

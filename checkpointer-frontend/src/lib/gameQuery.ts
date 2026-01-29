@@ -80,3 +80,50 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
     const data = await res.json()
     return data
 }
+
+export interface BrowseGamesParams {
+  q?: string
+  sortBy?: 'rating' | 'year' | 'name'
+  sortOrder?: 'asc' | 'desc'
+  year?: string
+  limit?: number
+  offset?: number
+}
+
+export interface BrowseGamesResponse {
+  games: Game[]
+  totalCount: number
+  years: string[]
+  pagination: {
+    limit: number
+    offset: number
+    hasMore: boolean
+  }
+}
+
+export async function browseGames(params: BrowseGamesParams = {}): Promise<BrowseGamesResponse> {
+  const searchParams = new URLSearchParams()
+
+  if (params.q) searchParams.set('q', params.q)
+  if (params.sortBy) searchParams.set('sortBy', params.sortBy)
+  if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder)
+  if (params.year) searchParams.set('year', params.year)
+  if (params.limit) searchParams.set('limit', String(params.limit))
+  if (params.offset) searchParams.set('offset', String(params.offset))
+
+  const res = await fetch(`/api/games/browse?${searchParams.toString()}`)
+
+  if (!res.ok) {
+    throw new Error(`Server error while browsing games: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export function getBrowseGamesQueryOptions(params: BrowseGamesParams = {}) {
+  return queryOptions({
+    queryKey: ['browse-games', params],
+    queryFn: () => browseGames(params),
+    staleTime: 1000 * 60 * 2, // Cache for 2 minutes
+  })
+}
