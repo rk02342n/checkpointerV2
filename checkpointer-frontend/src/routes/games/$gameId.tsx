@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Eye, Clock, Heart } from "lucide-react";
+import { Eye, Clock, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -36,6 +37,13 @@ function GameView () {
     (getReviewsByGameIdQueryOptions(gameId));
 
     const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const reviewsPerPage = 4;
+    const totalPages = Math.ceil(gameReviews.length / reviewsPerPage);
+    const startIndex = (currentPage - 1) * reviewsPerPage;
+    const paginatedReviews = gameReviews.slice(startIndex, startIndex + reviewsPerPage);
 
     // Like mutation with optimistic updates
     const likeMutation = useMutation({
@@ -121,11 +129,12 @@ const queryClient = useQueryClient();
       try{
         const newReview = await createReview({ value });
 
-        // Update game reviews cache (existing behavior)
+        // Update game reviews cache and reset to first page to show the new review
         queryClient.setQueryData(
           getReviewsByGameIdQueryOptions(gameId as string).queryKey,
-          [newReview, ...(existingGameReviews || [])].slice(0, 4)
+          [newReview, ...(existingGameReviews || [])]
         );
+        setCurrentPage(1);
 
         // Also update user's reviews cache for profile page optimistic update
         const dbUserId = dbUserData?.account?.id;
@@ -209,7 +218,7 @@ const queryClient = useQueryClient();
 
                         <div className="w-full pt-4 border-t border-zinc-800 text-center md:text-left">
                             <div className="text-xs uppercase tracking-widest mb-1 text-black">Total Logs</div>
-                            <div className="text-2xl mb-4 font-serif text-black">{1240}</div>
+                            <div className="text-2xl mb-4 font-serif text-black">{reviewsLoading ? '—' : gameReviews.length}</div>
                         </div>
                     </div>
 
@@ -257,8 +266,9 @@ const queryClient = useQueryClient();
                                     {reviewsLoading ? (
                                         <ReviewsSkeleton />
                                     ) : gameReviews?.length > 0 ? (
+                                        <>
                                         <div className="space-y-4">
-                                            {gameReviews?.slice(0,4).map((r: GameReview) => {
+                                            {paginatedReviews.map((r: GameReview) => {
                                                 const initials = r.username
                                                     ? r.username.slice(0, 2).toUpperCase()
                                                     : r.displayName
@@ -308,6 +318,31 @@ const queryClient = useQueryClient();
                                                 </div>
                                             )})}
                                         </div>
+                                        {/* Pagination Controls */}
+                                        {totalPages > 1 && (
+                                            <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-zinc-800">
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-white border-2 border-black text-black text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 transition-colors"
+                                                >
+                                                    <ChevronLeft className="w-4 h-4" />
+                                                    Prev
+                                                </button>
+                                                <span className="text-black text-sm font-medium">
+                                                    Page {currentPage} of {totalPages}
+                                                </span>
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-white border-2 border-black text-black text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 transition-colors"
+                                                >
+                                                    Next
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        )}
+                                        </>
                                     ) : (
                                         <p className="text-black text-sm italic">No reviews yet</p>
                                     )}
