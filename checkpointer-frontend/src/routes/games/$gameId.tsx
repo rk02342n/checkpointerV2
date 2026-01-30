@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Eye, Clock, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Clock, Heart, Maximize2, Minimize2 } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -38,12 +38,13 @@ function GameView () {
 
     const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
+    // Load more state
+    const [visibleCount, setVisibleCount] = useState(4);
+    // Maximize review form state
+    const [isFormMaximized, setIsFormMaximized] = useState(false);
     const reviewsPerPage = 4;
-    const totalPages = Math.ceil(gameReviews.length / reviewsPerPage);
-    const startIndex = (currentPage - 1) * reviewsPerPage;
-    const paginatedReviews = gameReviews.slice(startIndex, startIndex + reviewsPerPage);
+    const visibleReviews = gameReviews.slice(0, visibleCount);
+    const hasMoreReviews = visibleCount < gameReviews.length;
 
     // Like mutation with optimistic updates
     const likeMutation = useMutation({
@@ -111,155 +112,163 @@ function GameView () {
     })
 
 const queryClient = useQueryClient();
-// const initials = `${dbUserData.given_name?.[0] || ''}${dbUserData.family_name?.[0] || ''}`.toUpperCase()
   const form = useForm({
     defaultValues: {
       rating: '',
       reviewText: '',
       gameId: gameId,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
+      // Validate rating format before submission
+      const ratingStr = String(value.rating);
+      const ratingRegex = /^[0-5](\.[0-9])?$/;
+      if (!ratingRegex.test(ratingStr)) {
+        toast.error("Please select a valid rating (1-5 stars)");
+        return;
+      }
+
       const existingGameReviews = await queryClient.ensureQueryData(
         getReviewsByGameIdQueryOptions(gameId)
-      ); // grab the existing reviews locally or from server if not on memory
+      );
 
-      // Loading state
       toast.loading("Creating review...");
       queryClient.setQueryData(loadingCreateReviewQueryOptions.queryKey, {review: value})
       try{
-        const newReview = await createReview({ value });
+        const reviewPayload = {
+          ...value,
+          rating: ratingStr,
+        };
+        const newReview = await createReview({ value: reviewPayload });
 
-        // Update game reviews cache and reset to first page to show the new review
         queryClient.setQueryData(
           getReviewsByGameIdQueryOptions(gameId as string).queryKey,
           [newReview, ...(existingGameReviews || [])]
         );
-        setCurrentPage(1);
+        setVisibleCount(4);
 
-        // Also update user's reviews cache for profile page optimistic update
         const dbUserId = dbUserData?.account?.id;
         if (dbUserId) {
-          // Use getQueryData (not ensureQueryData) to avoid fetching from server
-          // since the server response would already include the new review, causing duplicates
-          const existingUserReviewsData = queryClient.getQueryData(                                                                                   
-            getReviewsByUserIdQueryOptions(dbUserId).queryKey                                                                                         
-          ) as UserReviewsResponse | undefined;                                                                                                       
-                                                                                                                                                      
-          if (existingUserReviewsData) {                                                                                                              
-            const newReviewForUserCache = {                                                                                                           
-              ...newReview,                                                                                                                           
-              ...(data?.game && {                                                                                                                     
-                gameName: data.game.name,                                                                                                             
-                gameCoverUrl: data.game.coverUrl ?? null,                                                                                             
-              }),                                                                                                                                     
-            };                                                                                                                                        
-                                                                                                                                                      
-            queryClient.setQueryData(                                                                                                                 
-              getReviewsByUserIdQueryOptions(dbUserId).queryKey,                                                                                      
-              {                                                                                                                                       
-                ...existingUserReviewsData,                                                                                                           
-                reviews: [newReviewForUserCache, ...existingUserReviewsData.reviews],                                                                 
-                totalCount: existingUserReviewsData.totalCount + 1,                                                                                   
-              }                                                                                                                                       
-            );                                                                                                                                        
-          } 
+          const existingUserReviewsData = queryClient.getQueryData(
+            getReviewsByUserIdQueryOptions(dbUserId).queryKey
+          ) as UserReviewsResponse | undefined;
+
+          if (existingUserReviewsData) {
+            const newReviewForUserCache = {
+              ...newReview,
+              ...(data?.game && {
+                gameName: data.game.name,
+                gameCoverUrl: data.game.coverUrl ?? null,
+              }),
+            };
+
+            queryClient.setQueryData(
+              getReviewsByUserIdQueryOptions(dbUserId).queryKey,
+              {
+                ...existingUserReviewsData,
+                reviews: [newReviewForUserCache, ...existingUserReviewsData.reviews],
+                totalCount: existingUserReviewsData.totalCount + 1,
+              }
+            );
+          }
         }
 
-        // success state
         toast.dismiss();
         toast.success(`Review has been added: ID: ${newReview.id}`)
+        setIsFormMaximized(false);
+        formApi.reset();
       } catch(error){
-        // handle error state
         toast.error("Failed to create new review")
       } finally{
         queryClient.setQueryData(loadingCreateReviewQueryOptions.queryKey, {})
       }
     },
   })
-  
+
     return (
-        <div className="w-fit m-auto h-full duration-300 bg-amber-400 p-6 rounded-xl border-2 border-black [bg:url(assets/noise.svg)]">
-            
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
             <Navbar />
+
             {isPending ? (
-              <GameDetailSkeleton />
+              <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-6 max-w-screen-2xl">
+                <GameDetailSkeleton />
+              </div>
             ) : (
-            <div className="container mx-auto mt-10 px-4 relative z-10">
-                <div className="flex flex-col md:flex-row gap-8">
+            <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-6 max-w-screen-2xl">
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Left Column: Poster & Actions */}
-                    <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
-                        <Poster game={data.game} size="xl" className="shadow-lg rounded-lg outline-2 outline-black" />
-                        
+                    <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
+                        <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+                          <Poster game={data.game} size="xl" className="" />
+                        </div>
+
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
                             <button
                                 onClick={()=>{}}
-                                className="flex flex-col items-center justify-center gap-1 rounded bg-white text-black hover:bg-green-600 hover:text-amber-400 active:bg-green-800 transition-colors p-2"
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-green-100 transition-all p-2"
                             >
                                 <Eye className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => {}}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-indigo-500 active:text-amber-500 active:bg-indigo-800`}
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-indigo-100 transition-all p-2"
                             >
                                 <Clock className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Watch</span>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => {}}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded bg-white transition-colors hover:text-amber-400 hover:bg-red-500 active:text-red-500 active:bg-red-800`}
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-rose-100 transition-all p-2"
                             >
                                 <Heart className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Like</span>
                             </button>
                         </div>
 
-                        <div className="w-full pt-4 border-t border-zinc-800 text-center md:text-left">
-                            <div className="text-xs uppercase tracking-widest mb-1 text-black">Total Logs</div>
-                            <div className="text-2xl mb-4 font-serif text-black">{reviewsLoading ? '—' : gameReviews.length}</div>
+                        <div className="w-full pt-4 border-t-4 border-stone-900 text-center lg:text-left">
+                            <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Total Logs</div>
+                            <div className="text-2xl font-bold text-stone-900">{reviewsLoading ? '—' : gameReviews.length}</div>
                         </div>
                     </div>
 
                     {/* Right Column: Info & Reviews */}
-                    <div className="flex-1 pt-0 text-center md:text-left">
-                        <div className="mb-8">
-                            <h1 className="text-4xl font-black text-black mb-2 font-serif tracking-tight">{data.game?.name}</h1>
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-black text-sm">
-                                <span className="font-bold">
+                    <div className="flex-1 pt-0 text-center lg:text-left min-w-0">
+                        <div className="mb-6">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 mb-2 font-serif">{data.game?.name}</h1>
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm">
+                                <span className="bg-amber-200 px-2 sm:px-3 py-1 font-semibold border-2 border-stone-900 text-xs sm:text-sm">
                                     {new Date(data.game.releaseDate).getFullYear()}
                                 </span>
-                                <span>•</span>
-                                <span className="px-2 py-0.5 border border-zinc-700 rounded text-black text-xs uppercase bg-sky-300">{data.game?.name}</span>
-                                <span>•</span>
-                                <span className="bg-lime-400 px-2 py-0.5 border border-zinc-700 rounded text-black text-xs uppercase">IGDB Rating: {data.game.igdbRating}</span>
-                                
+                                <span className="bg-sky-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium">{data.game?.name?.split(':')[0]}</span>
+                                <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium">IGDB: {data.game.igdbRating}</span>
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-8">
-                            <div className="md:col-span-2 space-y-8">
-                                <div className="prose prose-invert">
-                                    <h3 className="text-sm font-bold uppercase tracking-widest border-b text-black border-zinc-800 pb-2 mb-4">Synopsis</h3>
-                                    <p className="text-black leading-relaxed">
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+                            {/* Left: Synopsis & Reviews */}
+                            <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+                                <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                    <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">Synopsis</h3>
+                                    <p className="text-stone-700 leading-relaxed">
                                       {data.game?.summary}
                                     </p>
                                 </div>
 
-                                <div>
-                                    <h3 className="text-black text-sm font-bold uppercase tracking-widest border-b border-zinc-800 pb-2 mb-4">
-                                        Friend Reviews
+                                <div className="bg-blue-400 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                    <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">
+                                        Top Reviews
                                     </h3>
                                     {loadingCreateReview?.review &&
                                         <div className="space-y-4 mb-4">
-                                                <div className="bg-amber-200 rounded border-2 border-black p-4">
+                                                <div className="bg-orange-50 border-4 border-stone-900 p-3 sm:p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <div className="w-6 h-6 rounded-full bg-linear-to-tr from-green-400 to-blue-500" />
-                                                        <span className="text-sm font-bold text-zinc-300">You</span>
+                                                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-orange-50 to-amber-500 border-2 border-stone-900" />
+                                                        <span className="text-sm font-bold text-stone-900">You</span>
                                                         <StarRating rating={Number(loadingCreateReview?.review.rating)} />
                                                     </div>
-                                                    <p className="text-black text-sm font-sans p-2">"{loadingCreateReview.review.reviewText}"</p>
+                                                    <p className="text-stone-700 text-sm p-2">"{loadingCreateReview.review.reviewText}"</p>
                                                 </div>
                                         </div>
                                     }
@@ -268,14 +277,14 @@ const queryClient = useQueryClient();
                                     ) : gameReviews?.length > 0 ? (
                                         <>
                                         <div className="space-y-4">
-                                            {paginatedReviews.map((r: GameReview) => {
+                                            {visibleReviews.map((r: GameReview) => {
                                                 const initials = r.username
                                                     ? r.username.slice(0, 2).toUpperCase()
                                                     : r.displayName
                                                         ? r.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
                                                         : '?';
                                                 return (
-                                                <div key={r.id} className="bg-amber-200 rounded border-2 border-black p-4">
+                                                <div key={r.id} className="bg-stone-50 border-4 border-stone-900 p-3 sm:p-4">
                                                     <div className="flex items-center justify-between gap-2 mb-2">
                                                         <Link
                                                             to={r.userId === dbUserData?.account?.id ? "/profile" : "/users/$userId"}
@@ -283,7 +292,7 @@ const queryClient = useQueryClient();
                                                             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <Avatar className="w-6 h-6 border border-black">
+                                                            <Avatar className="w-6 h-6 border-2 border-stone-900">
                                                                 <AvatarImage
                                                                     src={r.avatarUrl
                                                                         ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : `/api/user/avatar/${r.userId}`)
@@ -291,24 +300,24 @@ const queryClient = useQueryClient();
                                                                     }
                                                                     alt={r.username || 'User'}
                                                                 />
-                                                                <AvatarFallback className="bg-lime-400 text-black text-xs font-bold">
+                                                                <AvatarFallback className="bg-orange-50 text-stone-900 text-xs font-bold">
                                                                     {initials}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-sm font-bold text-black hover:underline">{r.userId === dbUserData?.account?.id ? 'You' : (r.username || r.displayName || 'Anonymous')}</span>
+                                                            <span className="text-sm font-bold text-stone-900 hover:underline">{r.userId === dbUserData?.account?.id ? 'You' : (r.username || r.displayName || 'Anonymous')}</span>
                                                         </Link>
 
                                                         <StarRating rating={Number(r.rating)} />
                                                     </div>
-                                                    <p className="text-black text-sm font-sans p-2">"{r.reviewText}"</p>
-                                                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-300">
+                                                    <p className="text-stone-700 text-sm p-2">"{r.reviewText}"</p>
+                                                    <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-stone-200">
                                                         <button
                                                             onClick={() => handleLikeClick(r.id)}
                                                             disabled={likeMutation.isPending}
-                                                            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                                                                 r.userLiked
-                                                                    ? ' text-teal-600 hover:text-teal-300'
-                                                                    : ' text-black hover:text-teal-400'
+                                                                    ? 'text-orange-400 hover:text-orange-300'
+                                                                    : 'text-stone-600 hover:text-orange-300'
                                                             } ${likeMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         >
                                                             <Heart className={`w-3 h-3 ${r.userLiked ? 'fill-current' : ''}`} />
@@ -318,237 +327,77 @@ const queryClient = useQueryClient();
                                                 </div>
                                             )})}
                                         </div>
-                                        {/* Pagination Controls */}
-                                        {totalPages > 1 && (
-                                            <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-zinc-800">
-                                                <button
-                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                    disabled={currentPage === 1}
-                                                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-white border-2 border-black text-black text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 transition-colors"
+                                        {/* Load More Button */}
+                                        {hasMoreReviews && (
+                                            <div className="flex items-center justify-center mt-4 pt-4 border-t-2 border-stone-200">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setVisibleCount(prev => prev + reviewsPerPage)}
+                                                    className="px-6 py-2 text-sm"
                                                 >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                    Prev
-                                                </button>
-                                                <span className="text-black text-sm font-medium">
-                                                    Page {currentPage} of {totalPages}
-                                                </span>
-                                                <button
-                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                    disabled={currentPage === totalPages}
-                                                    className="flex items-center gap-1 px-3 py-1.5 rounded bg-white border-2 border-black text-black text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-100 transition-colors"
-                                                >
-                                                    Next
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
+                                                    Load More ({gameReviews.length - visibleCount} remaining)
+                                                </Button>
                                             </div>
                                         )}
                                         </>
                                     ) : (
-                                        <p className="text-black text-sm italic">No reviews yet</p>
+                                        <p className="text-stone-500 text-sm italic">No reviews yet</p>
                                     )}
                                 </div>
                             </div>
+
+                            {/* Right: Rating & Review Form */}
+                            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                                {/* Average Rating */}
+                                <div className="bg-amber-200 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-center">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest mb-4 text-stone-900">Average Rating</h3>
+                                    {isRatingPending ? (
+                                        <>
+                                            <Skeleton className="h-10 w-20 mx-auto mb-2 bg-amber-300" />
+                                            <Skeleton className="h-5 w-28 mx-auto bg-amber-300" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="text-4xl font-bold text-stone-900 mb-2">
+                                                {avgRating ? Number(avgRating.total).toFixed(1) : "—"}
+                                            </div>
+                                            <div className="flex items-center justify-center">
+                                                <StarRating rating={avgRating ? avgRating.total : 0} />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Review Form */}
+                                <ReviewFormBox
+                                    isMaximized={isFormMaximized}
+                                    onMaximize={() => setIsFormMaximized(true)}
+                                    onMinimize={() => setIsFormMaximized(false)}
+                                    form={form}
+                                    dbUserData={dbUserData}
+                                />
+                            </div>
                         </div>
-                        
+
                     </div>
                 </div>
             </div>
             )}
 
-            {/* Backdrop */}
-            <div className=" container flex h-84 gap-4 relative overflow-hidden mask-image-b items-end justify-end mt-8">
-                <div className={`absolute inset-0 bg-indigo-600 text-white opacity-100 w-2/3 rounded-xl border-2 border-black overflow-y-scroll`}>
-                 <div className='m-auto p-4 max-w-lg'>
-             {isPending ? (
-                    <div className="p-4">
-                      <Skeleton className="h-6 w-48" />
-                    </div>
-                  ) : (
-                    <h2 className="text-md tracking-tight p-4 text-left">Write a review for <span className="font-bold">{data.game?.name}</span></h2>
-                  )}
-             <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  form.handleSubmit()
-                }}
-                className='flex flex-col gap-4'
-              >
-                  <form.Field
-                    name="rating"
-                    validators={{
-                      onChange: ({ value }) => {
-                        if (!value || value === '0') {
-                          return 'Rating is required'
-                        }
-                        return undefined
-                      }
-                    }}
-                    children={(field) => (
-                      <>
-                        <div className='flex flex-col gap-2'>
-                        <Label htmlFor={field.name}>Rating</Label>
-                        </div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <StarRating
-                            interactive 
-                            rating={Number(field.state.value) || 0}
-                            onValueChange={(rating) => field.handleChange(rating.toString())}
-                          />
-                        </div>
-                        <>
-                          {field.state.meta.isTouched && !field.state.meta.isValid ? (
-                            <p className='text-red-600 text-sm'>
-                            {field.state.meta.errors.map((err: any) => 
-                              typeof err === 'string'
-                                ? err
-                                : err && err.message 
-                                  ? err.message 
-                                  : JSON.stringify(err)
-                            ).join(',')}
-                          </p>
-                          ) : null}
-                          {field.state.meta.isValidating ? 'Validating...' : null}
-                        </>
-                      </>
-                    )}
-                  />
-
-                <form.Field
-                    name="reviewText"
-                    validators={{
-                      onChange: ({ value }) => {
-                        if (!value || value.trim() === '') {
-                          return 'Review text is required'
-                        }
-                        if (value.length > 5000) {
-                          return 'Review text must be less than 5000 characters'
-                        }
-                        return undefined
-                      }
-                    }}
-                    children={(field) => (
-                      <>
-                      <div className='flex flex-col gap-2'>
-                      <Label htmlFor={field.name}>Review</Label>
-                        <Textarea
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange((e.target.value))}
-                            className="bg-white border-2 border-black text-black"
-                        />
-                        </div>
-                        <>
-                          {field.state.meta.isTouched && !field.state.meta.isValid ? (
-                            <p className='text-red-600 text-sm'>
-                              {field.state.meta.errors.map((err: any) => 
-                                typeof err === 'string'
-                                  ? err
-                                  : err && err.message 
-                                    ? err.message 
-                                    : JSON.stringify(err)
-                              ).join(',')}
-                            </p>
-                          ) : null}
-                          {field.state.meta.isValidating ? 'Validating...' : null}
-                        </>
-                      </>
-                    )}
-                  />
-                  <form.Subscribe
-                  selector={(state) => [state.canSubmit, state.isSubmitting, state.values]}
-                  children={([canSubmit, isSubmitting, values]) => {
-                    const isLoggedIn = !!dbUserData?.account;
-                    const reviewValues = typeof values === "object" && values !== null && "rating" in values && "reviewText" in values ? values as { rating: string; reviewText: string } : { rating: '', reviewText: '' };
-                    const hasRating = reviewValues.rating && reviewValues.rating !== '0';
-                    const hasReviewText = reviewValues.reviewText && reviewValues.reviewText.trim() !== '';
-                    const canSubmitForm = canSubmit && isLoggedIn && hasRating && hasReviewText;
-
-                    return (
-                      <>
-                        {!isLoggedIn && (
-                          <p className="text-amber-200 text-sm text-center mb-2">
-                            Please <a href="/api/login" className="underline font-bold">log in</a> to submit a review
-                          </p>
-                        )}
-                        <div className='flex flex-row gap-2 justify-center'>
-                          <Button type="submit" disabled={(!canSubmitForm) || !!isSubmitting}>
-                            {isSubmitting ? '...' : 'Submit'}
-                          </Button>
-                          <Button
-                            type="reset"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              form.reset()
-                            }}
-                          >
-                            Reset
-                          </Button>
-                        </div>
-                      </>
-                    )
-                  }}
-                /> 
-            </form>
-          </div>
-                </div>
-                
-                {isRatingPending ? (
-                  <div className="bg-orange-400 rounded-xl p-6 h-full w-13/40 border-zinc-800 border-2 relative z-10">
-                    <Skeleton className="h-4 w-32 mb-4" />
-                    <div className="space-y-2">
-                      {[5, 4, 3, 2, 1].map(stars => (
-                        <div key={stars} className="flex items-center gap-2 text-xs">
-                          <span className="w-3 text-zinc-500">{stars}</span>
-                          <Skeleton className="flex-1 h-2 rounded-full" />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
-                      <Skeleton className="h-8 w-16 mb-2" />
-                      <Skeleton className="h-4 w-24 mb-3" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
+            {/* Footer */}
+            <footer className="border-t-4 border-stone-900 bg-stone-200 mt-12 sm:mt-16">
+              <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 max-w-screen-2xl">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="font-bold text-lg sm:text-xl text-stone-900">
+                    Checkpointer
                   </div>
-                ) : (
-                <div className="bg-orange-400 rounded-xl p-6 h-full w-13/40 border-zinc-800 border-2 relative z-10">
-                    <h3 className="text-black text-xs font-bold uppercase tracking-widest mb-4">Rating Distribution</h3>
-                    <div className="space-y-2">
-                        {[5, 4, 3, 2, 1].map(stars => (
-                            <div key={stars} className="flex items-center gap-2 text-xs">
-                                <span className="w-3 text-zinc-500">{stars}</span>
-                                <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-green-600" 
-                                        style={{ width: `${Math.random() * 80 + 10}%` }} 
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {isPending ? (
-                      <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
-                        <Skeleton className="h-8 w-16 mb-2" />
-                        <Skeleton className="h-4 w-24 mb-3" />
-                        <Skeleton className="h-3 w-20" />
-                      </div>
-                    ) : (
-                    <div className="mt-6 pt-6 border-t border-black text-center flex flex-col justify-center items-center">
-                        <div className="text-3xl font-bold text-black mb-1">
-                            {!isRatingPending && avgRating ? Number(avgRating.total).toFixed(2) : "4.2"}
-                        </div>
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                            <StarRating rating={!isRatingPending && avgRating ? avgRating.total : 4} />
-                        </div>
-                        <div className="text-xs text-black mt-2">Average Rating</div>
-                    </div>
-                    )}
+                  <div className="text-xs sm:text-sm text-stone-500 text-center sm:text-right">
+                    Track games. Share reviews. Build history.
+                  </div>
                 </div>
-                )}
-            </div>
+              </div>
+            </footer>
+
         </div>
     );
 };
@@ -557,66 +406,42 @@ export default GameView;
 
 function GameDetailSkeleton() {
   return (
-    <div className="container mx-auto mt-10 px-4 relative z-10 w-screen">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Left Column: Poster & Actions Skeleton */}
-        <div className="flex flex-col items-center md:items-start space-y-4 shrink-0">
-          <Skeleton className="w-[250px] h-[350px] rounded-lg" />
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      {/* Left Column */}
+      <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
+        <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+          <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-stone-200" />
+        </div>
+        <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
+          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
+          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
+          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
-            <Skeleton className="h-16 rounded" />
-            <Skeleton className="h-16 rounded" />
-            <Skeleton className="h-16 rounded" />
-          </div>
-
-          <div className="w-full pt-4 border-t border-zinc-800 text-center md:text-left">
-            <Skeleton className="h-3 w-20 mb-2" />
-            <Skeleton className="h-8 w-16" />
+      {/* Right Column */}
+      <div className="flex-1 pt-0 min-w-0">
+        <div className="mb-6">
+          <Skeleton className="h-8 sm:h-10 w-3/4 mb-4 bg-stone-200" />
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 bg-stone-200 border-2 border-stone-900" />
+            <Skeleton className="h-7 sm:h-8 w-20 sm:w-24 bg-stone-200 border-2 border-stone-900" />
+            <Skeleton className="h-7 sm:h-8 w-24 sm:w-28 bg-stone-200 border-2 border-stone-900" />
           </div>
         </div>
 
-        {/* Right Column: Info & Reviews Skeleton */}
-        <div className="flex-1 pt-0 text-center md:text-left">
-          <div className="mb-8">
-            <Skeleton className="h-10 w-3/4 mb-4" />
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-5 w-24 rounded" />
-              <Skeleton className="h-5 w-32 rounded" />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+              <Skeleton className="h-4 w-24 mb-4 bg-stone-200" />
+              <Skeleton className="h-4 w-full mb-2 bg-stone-200" />
+              <Skeleton className="h-4 w-full mb-2 bg-stone-200" />
+              <Skeleton className="h-4 w-5/6 bg-stone-200" />
             </div>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-8">
-              {/* Synopsis Skeleton */}
-              <div>
-                <Skeleton className="h-4 w-24 mb-4" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-5/6 mb-2" />
-                <Skeleton className="h-4 w-4/5" />
-              </div>
-
-              {/* Reviews Skeleton */}
-              <div>
-                <Skeleton className="h-4 w-32 mb-4" />
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="bg-amber-200 rounded border-2 border-black p-4">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="w-6 h-6 rounded-full" />
-                          <Skeleton className="h-4 w-20" />
-                        </div>
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                      <Skeleton className="h-4 w-full mt-2" />
-                      <Skeleton className="h-4 w-3/4 mt-2" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-24 w-full bg-amber-200 border-4 border-stone-900" />
+            <Skeleton className="h-64 w-full bg-orange-200 border-4 border-stone-900" />
           </div>
         </div>
       </div>
@@ -628,18 +453,215 @@ function ReviewsSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2].map((i) => (
-        <div key={i} className="bg-amber-200 rounded border-2 border-black p-4">
+        <div key={i} className="bg-stone-50 border-4 border-stone-900 p-3 sm:p-4">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Skeleton className="w-6 h-6 rounded-full" />
-              <Skeleton className="h-4 w-20" />
+              <Skeleton className="w-6 h-6 rounded-full bg-stone-200" />
+              <Skeleton className="h-4 w-20 bg-stone-200" />
             </div>
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24 bg-stone-200" />
           </div>
-          <Skeleton className="h-4 w-full mt-2" />
-          <Skeleton className="h-4 w-3/4 mt-2" />
+          <Skeleton className="h-4 w-full mt-2 bg-stone-200" />
+          <Skeleton className="h-4 w-3/4 mt-2 bg-stone-200" />
         </div>
       ))}
     </div>
+  )
+}
+
+interface ReviewFormBoxProps {
+  isMaximized: boolean;
+  onMaximize: () => void;
+  onMinimize: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any;
+  dbUserData: { account?: { id: string } | null } | undefined;
+}
+
+function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }: ReviewFormBoxProps) {
+  return (
+    <>
+      {/* Backdrop overlay */}
+      <div
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ${
+          isMaximized ? 'opacity-100 z-40' : 'opacity-0 pointer-events-none -z-10'
+        }`}
+        onClick={onMinimize}
+      />
+
+      {/* Form container */}
+      <div
+        className={`bg-orange-300 text-stone-900 border-4 border-stone-900 transition-all duration-300 ease-out ${
+          isMaximized
+            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-6 sm:p-8'
+            : 'relative shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6'
+        }`}
+      >
+        {/* Maximize Button - outer left edge */}
+        {!isMaximized && (
+          <button
+            onClick={onMaximize}
+            className="group absolute top-1/2 -translate-y-1/2 right-full mr-0 z-10 flex items-center flex-row-reverse"
+          >
+            <div className="flex items-center flex-row-reverse bg-stone-900 text-white border-2 border-stone-900 transition-all duration-200 ease-out overflow-hidden group-hover:pl-3">
+              <div className="p-2">
+                <Maximize2 className="w-4 h-4" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap max-w-0 group-hover:max-w-[80px] transition-all duration-200 ease-out overflow-hidden">
+                Maximize
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Minimize Button - top right */}
+        {isMaximized && (
+          <button
+            onClick={onMinimize}
+            className="group absolute top-3 right-3 z-10 flex items-center"
+          >
+            <div className="flex items-center bg-stone-900 text-white border-2 border-stone-900 transition-all duration-200 ease-out overflow-hidden group-hover:pl-3">
+              <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap max-w-0 group-hover:max-w-[80px] transition-all duration-200 ease-out overflow-hidden">
+                Minimize
+              </span>
+              <div className="p-2">
+                <Minimize2 className="w-4 h-4" />
+              </div>
+            </div>
+          </button>
+        )}
+
+        <h3 className={`font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4 ${
+          isMaximized ? 'text-sm sm:text-base mb-6' : 'text-xs sm:text-sm'
+        }`}>Write a Review</h3>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+          className={`flex flex-col ${isMaximized ? 'gap-6' : 'gap-4'}`}
+        >
+          <form.Field
+            name="rating"
+            validators={{
+              onChange: ({ value }: { value: string }) => {
+                if (!value || value === '0') {
+                  return 'Rating is required'
+                }
+                return undefined
+              }
+            }}
+            children={(field: any) => (
+              <>
+                <div className='flex flex-col gap-2'>
+                  <Label htmlFor={field.name} className={`text-stone-900 font-semibold ${isMaximized ? 'text-sm sm:text-base' : 'text-sm'}`}>Your Rating</Label>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <StarRating
+                    interactive
+                    rating={Number(field.state.value) || 0}
+                    onValueChange={(rating) => field.handleChange(rating.toString())}
+                  />
+                </div>
+                {field.state.meta.isTouched && !field.state.meta.isValid && (
+                  <p className={`text-rose-700 ${isMaximized ? 'text-xs sm:text-sm' : 'text-xs'}`}>
+                    {field.state.meta.errors.map((err: any) =>
+                      typeof err === 'string'
+                        ? err
+                        : err && err.message
+                          ? err.message
+                          : JSON.stringify(err)
+                    ).join(',')}
+                  </p>
+                )}
+              </>
+            )}
+          />
+
+          <form.Field
+            name="reviewText"
+            validators={{
+              onChange: ({ value }: { value: string }) => {
+                if (!value || value.trim() === '') {
+                  return 'Review text is required'
+                }
+                if (value.length > 5000) {
+                  return 'Review text must be less than 5000 characters'
+                }
+                return undefined
+              }
+            }}
+            children={(field: any) => (
+              <>
+                <div className='flex flex-col gap-2'>
+                  <Label htmlFor={field.name} className={`text-stone-900 font-semibold ${isMaximized ? 'text-sm sm:text-base' : 'text-sm'}`}>Your Review</Label>
+                  <Textarea
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange((e.target.value))}
+                    placeholder="What did you think?"
+                    className={`bg-white border-4 border-stone-900 text-stone-900 rounded-none focus:ring-2 focus:ring-stone-900 transition-all duration-300 ${
+                      isMaximized ? 'min-h-48 sm:min-h-64' : 'min-h-28 sm:min-h-32 lg:min-h-40'
+                    }`}
+                  />
+                </div>
+                {field.state.meta.isTouched && !field.state.meta.isValid && (
+                  <p className={`text-rose-700 ${isMaximized ? 'text-xs sm:text-sm' : 'text-xs'}`}>
+                    {field.state.meta.errors.map((err: any) =>
+                      typeof err === 'string'
+                        ? err
+                        : err && err.message
+                          ? err.message
+                          : JSON.stringify(err)
+                    ).join(',')}
+                  </p>
+                )}
+              </>
+            )}
+          />
+
+          <form.Subscribe
+            selector={(state: any) => [state.canSubmit, state.isSubmitting, state.values]}
+            children={([canSubmit, isSubmitting, values]: [boolean, boolean, any]) => {
+              const isLoggedIn = !!dbUserData?.account;
+              const reviewValues = typeof values === "object" && values !== null && "rating" in values && "reviewText" in values ? values as { rating: string; reviewText: string } : { rating: '', reviewText: '' };
+              const hasRating = reviewValues.rating && reviewValues.rating !== '0';
+              const hasReviewText = reviewValues.reviewText && reviewValues.reviewText.trim() !== '';
+              const canSubmitForm = canSubmit && isLoggedIn && hasRating && hasReviewText;
+
+              return (
+                <>
+                  {!isLoggedIn && (
+                    <p className={`text-stone-700 text-center ${isMaximized ? 'text-sm' : 'text-xs'}`}>
+                      <a href="/api/login" className="underline font-bold">Log in</a> to submit a review
+                    </p>
+                  )}
+                  <div className={`flex gap-2 ${isMaximized ? 'flex-col sm:flex-row gap-3' : 'flex-col'}`}>
+                    <Button type="submit" variant="outline" disabled={(!canSubmitForm) || !!isSubmitting} className={`bg-white text-stone-900 hover:bg-stone-50 ${isMaximized ? 'flex-1 py-3' : 'w-full'}`}>
+                      {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                    </Button>
+                    <Button
+                      type="reset"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        form.reset()
+                      }}
+                      className={`text-stone-700 hover:text-stone-900 ${isMaximized ? 'flex-1 py-3' : 'w-full'}`}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </>
+              )
+            }}
+          />
+        </form>
+      </div>
+    </>
   )
 }

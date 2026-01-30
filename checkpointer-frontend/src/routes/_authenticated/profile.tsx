@@ -54,7 +54,7 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className={`block bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors cursor-pointer ${isDeleting ? 'opacity-50' : ''}`}
+      className={`block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -63,11 +63,11 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
             <img
               src={gameCoverUrl}
               alt={gameName}
-              className="w-16 h-20 object-cover rounded-lg border border-black"
+              className="w-16 h-20 object-cover border-2 border-stone-900"
             />
           ) : (
-            <div className="w-16 h-20 bg-zinc-200 rounded-lg border border-black flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-zinc-500" />
+            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-stone-500" />
             </div>
           )}
         </div>
@@ -77,11 +77,11 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0 flex-1">
-              <h4 className="text-black font-bold font-serif truncate" title={gameName}>
+              <h4 className="text-stone-900 font-bold truncate" title={gameName}>
                 {gameName}
               </h4>
               {review.createdAt && (
-                <div className="flex items-center gap-1 text-zinc-600 text-xs mt-1">
+                <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
                   <Calendar className="w-3 h-3" />
                   <span>{formatDate(review.createdAt)}</span>
                 </div>
@@ -92,13 +92,13 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
 
           {/* Review Text */}
           {review.reviewText && (
-            <p className="text-black text-sm font-sans line-clamp-3 flex-1">
+            <p className="text-stone-700 text-sm line-clamp-3 flex-1">
               "{review.reviewText}"
             </p>
           )}
 
           {/* Actions: Like & Delete */}
-          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-amber-300">
+          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t-2 border-stone-200">
             <button
               onClick={(e) => {
                 e.preventDefault()
@@ -106,10 +106,10 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
                 onLike(String(review.id))
               }}
               disabled={isLiking}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                 review.userLiked
-                  ? ' text-teal-600 hover:text-teal-400'
-                  : ' text-black hover:text-teal-400'
+                  ? 'text-orange-100 hover:text-orange-100'
+                  : 'text-stone-600 hover:text-orange-300'
               } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-3 h-3 ${review.userLiked ? 'fill-current' : ''}`} />
@@ -213,26 +213,21 @@ function Profile() {
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
-      // Find the review to get its gameId before deleting
       const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
       const result = await deleteReview(reviewId)
       return { result, gameId: reviewToDelete?.gameId }
     },
     onMutate: async (reviewId: string) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
-      // Find the review to get its gameId
       const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
       const gameId = reviewToDelete?.gameId
 
-      // Snapshot the previous values
       const previousUserReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
       const previousGameReviews = gameId
         ? queryClient.getQueryData(['get-reviews-game', gameId])
         : undefined
 
-      // Optimistically update user reviews
       queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
@@ -242,7 +237,6 @@ function Profile() {
         }
       })
 
-      // Optimistically update game reviews if we have the gameId
       if (gameId) {
         await queryClient.cancelQueries({ queryKey: ['get-reviews-game', gameId] })
         queryClient.setQueryData(['get-reviews-game', gameId], (old: Review[] | undefined) =>
@@ -253,7 +247,6 @@ function Profile() {
       return { previousUserReviews, previousGameReviews, gameId }
     },
     onError: (error, _reviewId, context) => {
-      // Rollback on error
       if (context?.previousUserReviews) {
         queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousUserReviews)
       }
@@ -264,7 +257,6 @@ function Profile() {
     },
     onSuccess: (_data, _reviewId, context) => {
       toast.success('Review deleted')
-      // Invalidate to ensure consistency with server
       queryClient.invalidateQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
       if (context?.gameId) {
         queryClient.invalidateQueries({ queryKey: ['get-reviews-game', context.gameId] })
@@ -276,17 +268,14 @@ function Profile() {
     deleteMutation.mutate(reviewId)
   }
 
-  // Like mutation with optimistic updates (no re-sorting)
+  // Like mutation with optimistic updates
   const likeMutation = useMutation({
     mutationFn: toggleReviewLike,
     onMutate: async (reviewId: string) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
-      // Snapshot the previous value
       const previousReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
 
-      // Optimistically update the reviews (keep order stable)
       queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
@@ -308,7 +297,6 @@ function Profile() {
       return { previousReviews }
     },
     onError: (err, _reviewId, context) => {
-      // Rollback on error
       if (context?.previousReviews) {
         queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousReviews)
       }
@@ -322,11 +310,11 @@ function Profile() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-amber-400 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <Navbar />
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="flex items-center justify-center h-64">
-            <div className="text-black font-bold">Loading profile...</div>
+            <div className="text-stone-600 font-medium">Loading profile...</div>
           </div>
         </div>
       </div>
@@ -338,12 +326,12 @@ function Profile() {
   const reviewCount = totalReviewCount
 
   return (
-    <div className="min-h-screen bg-amber-400 p-6 [background:url(assets/noise.svg)]">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
       <Navbar />
 
-      <div className="container mx-auto max-w-4xl mt-6">
+      <div className="container mx-auto max-w-4xl px-6 py-8">
         {/* Profile Header */}
-        <div className="bg-sky-300 border-2 border-black rounded-xl p-8 mb-8">
+        <div className="bg-orange-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <input
@@ -358,16 +346,16 @@ function Profile() {
               disabled={avatarMutation.isPending}
               className="relative group cursor-pointer"
             >
-              <Avatar className="w-24 h-24 border-4 border-black group-hover:opacity-80 transition-opacity">
+              <Avatar className="w-24 h-24 border-4 border-stone-900 group-hover:opacity-80 transition-opacity">
                 <AvatarImage
                   src={dbUserData?.account?.avatarUrl ? `/api/user/avatar/${dbUserData.account.id}` : undefined}
                   alt={user.given_name}
                 />
-                <AvatarFallback className="bg-lime-400 text-black text-2xl font-bold">
+                <AvatarFallback className="bg-orange-100 text-stone-900 text-2xl font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center bg-stone-900/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 {avatarMutation.isPending ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
@@ -378,26 +366,25 @@ function Profile() {
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-black text-black font-serif tracking-tight">
+              <h1 className="text-3xl font-bold text-stone-900">
                 {user.given_name} {user.family_name}
               </h1>
               {dbUserData?.account?.username && (
-                <p className="text-zinc-700 text-sm font-medium mt-1">@{dbUserData.account.username}</p>
+                <p className="text-stone-700 text-sm font-medium mt-1">@{dbUserData.account.username}</p>
               )}
-              <p className="text-black text-sm mt-1">{user.email}</p>
+              <p className="text-stone-600 text-sm mt-1">{user.email}</p>
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className="bg-white border-2 border-black rounded-lg px-4 py-2">
-                  <div className="text-2xl font-bold text-black font-serif">{reviewCount}</div>
-                  <div className="text-xs uppercase tracking-widest text-zinc-600">Reviews</div>
+                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
+                  <div className="text-2xl font-bold text-stone-900">{reviewCount}</div>
+                  <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Reviews</div>
                 </div>
-                {/* Other stats can go here just a placeholder (Liked games, played games, watchlist, favorites) */}
-                <div className="bg-white border-2 border-black rounded-lg px-4 py-2">
-                  <div className="text-2xl font-bold text-black font-serif">
+                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
+                  <div className="text-2xl font-bold text-stone-900">
                     <Gamepad2 className="w-6 h-6 inline" />
                   </div>
-                  <div className="text-xs uppercase tracking-widest text-zinc-600 text-center">Gamer</div>
+                  <div className="text-xs uppercase tracking-wide text-stone-600 text-center font-medium">Gamer</div>
                 </div>
               </div>
             </div>
@@ -406,7 +393,8 @@ function Profile() {
             <div className="shrink-0">
               <Button
                 asChild
-                className="bg-rose-400 hover:bg-rose-500 text-black border-2 border-black font-bold px-6"
+                variant="destructive"
+                className="px-6"
               >
                 <a href='/api/logout'>Logout</a>
               </Button>
@@ -415,8 +403,8 @@ function Profile() {
         </div>
 
         {/* Reviews Section */}
-        <div className="bg-[rgb(255,220,159)] border-2 border-black rounded-xl p-6">
-          <h2 className="text-black text-sm font-bold uppercase tracking-widest border-b border-black pb-2 mb-4">
+        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+          <h2 className="text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">
             Your Reviews
           </h2>
 
@@ -424,25 +412,25 @@ function Profile() {
           {userReviews.length > 0 && (
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
                 <Input
                   type="text"
                   placeholder="Search by game name or review..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white border-2 border-black rounded-lg pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-sky-400"
+                  className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-black"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
               {searchQuery.trim() && (
-                <p className="text-zinc-600 text-sm mt-2">
+                <p className="text-stone-600 text-sm mt-2">
                   Showing {filteredReviews.length} of {userReviews.length} reviews
                 </p>
               )}
@@ -452,13 +440,13 @@ function Profile() {
           {reviewsPending ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-amber-200 rounded-xl border-2 border-black p-4 animate-pulse">
+                <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
                   <div className="flex gap-4">
-                    <div className="w-16 h-20 bg-zinc-300 rounded-lg" />
+                    <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-5 w-32 bg-zinc-300 rounded" />
-                      <div className="h-4 w-full bg-zinc-300 rounded" />
-                      <div className="h-4 w-2/3 bg-zinc-300 rounded" />
+                      <div className="h-5 w-32 bg-stone-200" />
+                      <div className="h-4 w-full bg-stone-200" />
+                      <div className="h-4 w-2/3 bg-stone-200" />
                     </div>
                   </div>
                 </div>
@@ -480,14 +468,13 @@ function Profile() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Search className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                <p className="text-black font-bold mb-2">No matching reviews</p>
-                <p className="text-zinc-600 text-sm mb-4">
+                <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
+                <p className="text-stone-600 text-sm mb-4">
                   Try a different search term
                 </p>
                 <Button
                   onClick={() => setSearchQuery('')}
-                  className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
                 >
                   Clear Search
                 </Button>
@@ -495,14 +482,13 @@ function Profile() {
             )
           ) : (
             <div className="text-center py-12">
-              <Gamepad2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <p className="text-black font-bold mb-2">No reviews yet</p>
-              <p className="text-zinc-600 text-sm mb-4">
+              <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+              <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
+              <p className="text-stone-600 text-sm mb-4">
                 Start playing games and share your thoughts!
               </p>
               <Button
                 onClick={() => navigate({ to: '/' })}
-                className="bg-green-500 hover:bg-green-600 text-black border-2 border-black font-bold"
               >
                 Browse Games
               </Button>
@@ -510,6 +496,20 @@ function Profile() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t-4 border-stone-900 bg-stone-200 mt-16">
+        <div className="container mx-auto px-6 py-8 max-w-7xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="font-bold text-xl text-stone-900">
+              Checkpointer
+            </div>
+            <div className="text-sm text-stone-500">
+              Track games. Share reviews. Build history.
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
