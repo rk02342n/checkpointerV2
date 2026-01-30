@@ -53,7 +53,7 @@ function ReviewCard({ review, onLike, isLiking }: { review: Review, onLike: (id:
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className="block bg-amber-200 rounded-xl border-2 border-black p-4 hover:bg-amber-300 transition-colors cursor-pointer"
+      className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -62,11 +62,11 @@ function ReviewCard({ review, onLike, isLiking }: { review: Review, onLike: (id:
             <img
               src={gameCoverUrl}
               alt={gameName}
-              className="w-16 h-20 object-cover rounded-lg border border-black"
+              className="w-16 h-20 object-cover border-2 border-stone-900"
             />
           ) : (
-            <div className="w-16 h-20 bg-zinc-200 rounded-lg border border-black flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-zinc-500" />
+            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-stone-500" />
             </div>
           )}
         </div>
@@ -76,11 +76,11 @@ function ReviewCard({ review, onLike, isLiking }: { review: Review, onLike: (id:
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0 flex-1">
-              <h4 className="text-black font-bold font-serif truncate" title={gameName}>
+              <h4 className="text-stone-900 font-bold truncate" title={gameName}>
                 {gameName}
               </h4>
               {review.createdAt && (
-                <div className="flex items-center gap-1 text-zinc-600 text-xs mt-1">
+                <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
                   <Calendar className="w-3 h-3" />
                   <span>{formatDate(review.createdAt)}</span>
                 </div>
@@ -91,13 +91,13 @@ function ReviewCard({ review, onLike, isLiking }: { review: Review, onLike: (id:
 
           {/* Review Text */}
           {review.reviewText && (
-            <p className="text-black text-sm font-sans line-clamp-3 flex-1">
+            <p className="text-stone-700 text-sm line-clamp-3 flex-1">
               "{review.reviewText}"
             </p>
           )}
 
           {/* Actions: Like */}
-          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-amber-300">
+          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t-2 border-stone-200">
             <button
               onClick={(e) => {
                 e.preventDefault()
@@ -105,10 +105,10 @@ function ReviewCard({ review, onLike, isLiking }: { review: Review, onLike: (id:
                 onLike(String(review.id))
               }}
               disabled={isLiking}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                 review.userLiked
-                  ? ' text-teal-600 hover:text-teal-400'
-                  : ' text-black hover:text-teal-400'
+                  ? 'text-orange-100 hover:text-orange-100'
+                  : 'text-stone-600 hover:text-orange-300'
               } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-3 h-3 ${review.userLiked ? 'fill-current' : ''}`} />
@@ -194,13 +194,13 @@ function PublicProfile() {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-amber-400 p-6 [background:url(assets/noise.svg)]">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <Navbar />
-        <div className="container mx-auto max-w-4xl mt-6">
-          <div className="bg-rose-200 border-2 border-black rounded-xl p-8 text-center">
+        <div className="container mx-auto max-w-4xl px-6 py-8">
+          <div className="bg-rose-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
             <Gamepad2 className="w-12 h-12 text-rose-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-black mb-2">User Not Found</h2>
-            <p className="text-zinc-700">This user profile doesn't exist.</p>
+            <h2 className="text-xl font-bold text-stone-900 mb-2">User Not Found</h2>
+            <p className="text-stone-600">This user profile doesn't exist.</p>
           </div>
         </div>
       </div>
@@ -209,9 +209,9 @@ function PublicProfile() {
 
   if (isProfilePending) {
     return (
-      <div className="min-h-screen bg-amber-400 p-6 [background:url(assets/noise.svg)]">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
         <Navbar />
-        <div className="container mx-auto max-w-4xl mt-6">
+        <div className="container mx-auto max-w-4xl px-6 py-8">
           <ProfileSkeleton />
         </div>
       </div>
@@ -226,44 +226,44 @@ function PublicProfile() {
       : '?'
 
   return (
-    <div className="min-h-screen bg-amber-400 p-6 [background:url(assets/noise.svg)]">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
       <Navbar />
 
-      <div className="container mx-auto max-w-4xl mt-6">
+      <div className="container mx-auto max-w-4xl px-6 py-8">
         {/* Profile Header */}
-        <div className="bg-sky-300 border-2 border-black rounded-xl p-8 mb-8">
+        <div className="bg-orange-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
-            <Avatar className="w-24 h-24 border-4 border-black">
+            <Avatar className="w-24 h-24 border-4 border-stone-900">
               <AvatarImage
                 src={user?.avatarUrl ? `/api/user/avatar/${user.id}` : undefined}
                 alt={user?.displayName || user?.username || 'User'}
               />
-              <AvatarFallback className="bg-lime-400 text-black text-2xl font-bold">
+              <AvatarFallback className="bg-orange-100 text-stone-900 text-2xl font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-black text-black font-serif tracking-tight">
+              <h1 className="text-3xl font-bold text-stone-900">
                 {user?.displayName || user?.username || 'Anonymous User'}
               </h1>
               {user?.username && (
-                <p className="text-zinc-700 text-sm font-medium mt-1">@{user.username}</p>
+                <p className="text-stone-700 text-sm font-medium mt-1">@{user.username}</p>
               )}
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className="bg-white border-2 border-black rounded-lg px-4 py-2">
-                  <div className="text-2xl font-bold text-black font-serif">{totalReviewCount}</div>
-                  <div className="text-xs uppercase tracking-widest text-zinc-600">Reviews</div>
+                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
+                  <div className="text-2xl font-bold text-stone-900">{totalReviewCount}</div>
+                  <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Reviews</div>
                 </div>
-                <div className="bg-white border-2 border-black rounded-lg px-4 py-2">
-                  <div className="text-2xl font-bold text-black font-serif">
+                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
+                  <div className="text-2xl font-bold text-stone-900">
                     <Gamepad2 className="w-6 h-6 inline" />
                   </div>
-                  <div className="text-xs uppercase tracking-widest text-zinc-600 text-center">Gamer</div>
+                  <div className="text-xs uppercase tracking-wide text-stone-600 text-center font-medium">Gamer</div>
                 </div>
               </div>
             </div>
@@ -271,21 +271,21 @@ function PublicProfile() {
         </div>
 
         {/* Reviews Section */}
-        <div className="bg-[rgb(255,220,159)] border-2 border-black rounded-xl p-6">
-          <h2 className="text-black text-sm font-bold uppercase tracking-widest border-b border-black pb-2 mb-4">
+        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+          <h2 className="text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">
             Reviews
           </h2>
 
           {reviewsPending ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-amber-200 rounded-xl border-2 border-black p-4 animate-pulse">
+                <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
                   <div className="flex gap-4">
-                    <div className="w-16 h-20 bg-zinc-300 rounded-lg" />
+                    <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-5 w-32 bg-zinc-300 rounded" />
-                      <div className="h-4 w-full bg-zinc-300 rounded" />
-                      <div className="h-4 w-2/3 bg-zinc-300 rounded" />
+                      <div className="h-5 w-32 bg-stone-200" />
+                      <div className="h-4 w-full bg-stone-200" />
+                      <div className="h-4 w-2/3 bg-stone-200" />
                     </div>
                   </div>
                 </div>
@@ -308,7 +308,6 @@ function PublicProfile() {
                   <Button
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingNextPage}
-                    className="bg-sky-400 hover:bg-sky-500 text-black border-2 border-black font-bold"
                   >
                     {isFetchingNextPage ? 'Loading...' : 'Load More'}
                   </Button>
@@ -317,15 +316,29 @@ function PublicProfile() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Gamepad2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <p className="text-black font-bold mb-2">No reviews yet</p>
-              <p className="text-zinc-600 text-sm">
+              <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+              <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
+              <p className="text-stone-600 text-sm">
                 This user hasn't written any reviews yet.
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t-4 border-stone-900 bg-stone-200 mt-16">
+        <div className="container mx-auto px-6 py-8 max-w-7xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="font-bold text-xl text-stone-900">
+              Checkpointer
+            </div>
+            <div className="text-sm text-stone-500">
+              Track games. Share reviews. Build history.
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
@@ -333,30 +346,30 @@ function PublicProfile() {
 function ProfileSkeleton() {
   return (
     <>
-      <div className="bg-sky-300 border-2 border-black rounded-xl p-8 mb-8">
+      <div className="bg-orange-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full" />
+          <Skeleton className="w-24 h-24 rounded-full bg-orange-300 border-4 border-stone-900" />
           <div className="flex-1 text-center md:text-left">
-            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0" />
-            <Skeleton className="h-5 w-32 mx-auto md:mx-0" />
+            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-orange-300" />
+            <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-orange-300" />
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-              <Skeleton className="h-16 w-24 rounded-lg" />
-              <Skeleton className="h-16 w-24 rounded-lg" />
+              <Skeleton className="h-16 w-24 bg-white border-4 border-stone-900" />
+              <Skeleton className="h-16 w-24 bg-white border-4 border-stone-900" />
             </div>
           </div>
         </div>
       </div>
-      <div className="bg-[rgb(255,220,159)] border-2 border-black rounded-xl p-6">
-        <Skeleton className="h-5 w-24 mb-4" />
+      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <Skeleton className="h-5 w-24 mb-4 bg-stone-200" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-amber-200 rounded-xl border-2 border-black p-4 animate-pulse">
+            <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
               <div className="flex gap-4">
-                <div className="w-16 h-20 bg-zinc-300 rounded-lg" />
+                <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 w-32 bg-zinc-300 rounded" />
-                  <div className="h-4 w-full bg-zinc-300 rounded" />
-                  <div className="h-4 w-2/3 bg-zinc-300 rounded" />
+                  <div className="h-5 w-32 bg-stone-200" />
+                  <div className="h-4 w-full bg-stone-200" />
+                  <div className="h-4 w-2/3 bg-stone-200" />
                 </div>
               </div>
             </div>
