@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { dbUserQueryOptions } from '@/lib/api'
 import {
@@ -288,12 +288,16 @@ function UsersPanel({
             {data.users.map((user: AdminUser) => (
               <tr key={user.id} className="border-b-2 border-stone-200 hover:bg-stone-50">
                 <td className="p-4">
-                  <div>
-                    <div className="font-bold text-stone-900">
+                  <Link
+                    to="/users/$userId"
+                    params={{ userId: user.id }}
+                    className="block hover:bg-stone-100 -m-2 p-2 rounded transition-colors"
+                  >
+                    <div className="font-bold text-stone-900 hover:text-sky-700 transition-colors">
                       {user.displayName || user.username}
                     </div>
                     <div className="text-sm text-stone-500">@{user.username}</div>
-                  </div>
+                  </Link>
                 </td>
                 <td className="p-4">
                   <select

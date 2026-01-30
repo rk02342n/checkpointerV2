@@ -204,7 +204,7 @@ const queryClient = useQueryClient();
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
                             <button
                                 onClick={()=>{}}
-                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-green-100 transition-all p-2"
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-green-100 transition-all p-2"
                             >
                                 <Eye className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
@@ -212,7 +212,7 @@ const queryClient = useQueryClient();
 
                             <button
                                 onClick={() => {}}
-                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-indigo-100 transition-all p-2"
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-indigo-100 transition-all p-2"
                             >
                                 <Clock className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Watch</span>
@@ -220,7 +220,7 @@ const queryClient = useQueryClient();
 
                             <button
                                 onClick={() => {}}
-                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-rose-100 transition-all p-2"
+                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-rose-100 transition-all p-2"
                             >
                                 <Heart className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Like</span>

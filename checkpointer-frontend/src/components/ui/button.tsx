@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-orange-300 text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-orange-400",
+        default: "bg-orange-300 text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-orange-400 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px]",
         destructive:
-          "bg-rose-500 text-white font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-rose-600",
+          "bg-rose-500 text-white font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-rose-600 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px]",
         outline:
-          "bg-white text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-stone-50",
+          "bg-white text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:bg-stone-50 active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
         secondary:
-          "bg-stone-200 text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-stone-300",
+          "bg-stone-200 text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-stone-300 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px]",
         ghost:
           "hover:bg-stone-100 hover:text-stone-900 rounded-none",
         link: "text-orange-600 underline-offset-4 hover:underline",
-        pop: "bg-white text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
+        pop: "bg-white text-stone-900 font-semibold rounded-none border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px]",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
