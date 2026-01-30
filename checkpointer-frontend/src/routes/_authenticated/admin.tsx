@@ -53,16 +53,16 @@ function AdminDashboard() {
   // Redirect non-admins
   if (!isUserPending && !isAdmin) {
     return (
-      <div className="min-h-screen bg-zinc-900 p-6">
+      <div className="min-h-screen bg-rose-50 p-6">
         <Navbar />
         <div className="container mx-auto max-w-4xl mt-12">
-          <div className="bg-rose-500 border-2 border-black rounded-xl p-8 text-center">
-            <Shield className="w-16 h-16 text-black mx-auto mb-4" />
-            <h1 className="text-2xl font-black text-black mb-2">Access Denied</h1>
-            <p className="text-black mb-4">You don't have permission to access the admin dashboard.</p>
+          <div className="bg-rose-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
+            <Shield className="w-16 h-16 text-stone-900 mx-auto mb-4" />
+            <h1 className="text-2xl font-black text-stone-900 mb-2">Access Denied</h1>
+            <p className="text-stone-900 mb-4">You don't have permission to access the admin dashboard.</p>
             <Button
               onClick={() => navigate({ to: '/' })}
-              className="bg-white hover:bg-zinc-100 text-black border-2 border-black font-bold"
+              className="bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
             >
               Go Home
             </Button>
@@ -80,28 +80,28 @@ function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-zinc-800 p-6">
+    <div className="min-h-screen bg-rose-50 p-6">
       <Navbar />
 
       <div className="container mx-auto max-w-6xl mt-6">
         {/* Header */}
-        <div className="bg-amber-400 border-2 border-black rounded-xl p-6 mb-6">
+        <div className="bg-amber-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-black" />
-            <h1 className="text-3xl font-black text-black font-serif">Admin Dashboard</h1>
+            <Shield className="w-8 h-8 text-stone-900" />
+            <h1 className="text-3xl font-black text-stone-900 font-serif">Admin Dashboard</h1>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-3 mb-6 flex-wrap">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black font-bold text-sm transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 border-4 border-stone-900 font-bold text-sm transition-all ${
                 activeTab === tab.id
-                  ? 'bg-green-400 text-black'
-                  : 'bg-white text-black hover:bg-zinc-100'
+                  ? 'bg-green-300 text-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]'
+                  : 'bg-white text-stone-900 hover:bg-stone-50 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px]'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -146,59 +146,59 @@ function StatsPanel() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Users Stats */}
-      <div className="bg-sky-300 border-2 border-black rounded-xl p-6">
+      <div className="bg-sky-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Users className="w-6 h-6 text-black" />
-          <h3 className="text-lg font-bold text-black">Users</h3>
+          <Users className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Users</h3>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-black">Total</span>
-            <span className="font-bold text-black">{stats.users.total}</span>
+            <span className="text-stone-900">Total</span>
+            <span className="font-bold text-stone-900">{stats.users.total}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-black">Suspended</span>
-            <span className="font-bold text-rose-600">{stats.users.suspended}</span>
+            <span className="text-stone-900">Suspended</span>
+            <span className="font-bold text-rose-700">{stats.users.suspended}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-black">New (7 days)</span>
-            <span className="font-bold text-green-600">{stats.users.newLast7Days}</span>
+            <span className="text-stone-900">New (7 days)</span>
+            <span className="font-bold text-green-700">{stats.users.newLast7Days}</span>
           </div>
         </div>
       </div>
 
       {/* Role Distribution */}
-      <div className="bg-lime-300 border-2 border-black rounded-xl p-6">
+      <div className="bg-lime-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <UserCog className="w-6 h-6 text-black" />
-          <h3 className="text-lg font-bold text-black">Roles</h3>
+          <UserCog className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Roles</h3>
         </div>
         <div className="space-y-2">
           {Object.entries(stats.users.byRole).map(([role, count]) => (
             <div key={role} className="flex justify-between">
-              <span className="text-black capitalize">{role}</span>
-              <span className="font-bold text-black">{count}</span>
+              <span className="text-stone-900 capitalize">{role}</span>
+              <span className="font-bold text-stone-900">{count}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Reviews Stats */}
-      <div className="bg-amber-300 border-2 border-black rounded-xl p-6">
+      <div className="bg-amber-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <MessageSquare className="w-6 h-6 text-black" />
-          <h3 className="text-lg font-bold text-black">Reviews</h3>
+          <MessageSquare className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Reviews</h3>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-black">Total</span>
-            <span className="font-bold text-black">{stats.reviews.total}</span>
+            <span className="text-stone-900">Total</span>
+            <span className="font-bold text-stone-900">{stats.reviews.total}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-black">Avg Rating</span>
-            <span className="font-bold text-black">
+            <span className="text-stone-900">Avg Rating</span>
+            <span className="font-bold text-stone-900">
               {stats.reviews.averageRating ? `${stats.reviews.averageRating}/5` : 'N/A'}
             </span>
           </div>
@@ -206,15 +206,15 @@ function StatsPanel() {
       </div>
 
       {/* Games Stats */}
-      <div className="bg-rose-300 border-2 border-black rounded-xl p-6">
+      <div className="bg-rose-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
         <div className="flex items-center gap-3 mb-4">
-          <BarChart3 className="w-6 h-6 text-black" />
-          <h3 className="text-lg font-bold text-black">Games</h3>
+          <BarChart3 className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Games</h3>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-black">Total in DB</span>
-            <span className="font-bold text-black">{stats.games.total}</span>
+            <span className="text-stone-900">Total in DB</span>
+            <span className="font-bold text-stone-900">{stats.games.total}</span>
           </div>
         </div>
       </div>
@@ -272,27 +272,27 @@ function UsersPanel({
   }
 
   return (
-    <div className="bg-white border-2 border-black rounded-xl overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-zinc-100 border-b-2 border-black">
+          <thead className="bg-stone-100 border-b-4 border-stone-900">
             <tr>
-              <th className="text-left p-4 font-bold text-black">User</th>
-              <th className="text-left p-4 font-bold text-black">Role</th>
-              <th className="text-left p-4 font-bold text-black">Status</th>
-              <th className="text-left p-4 font-bold text-black">Joined</th>
-              <th className="text-right p-4 font-bold text-black">Actions</th>
+              <th className="text-left p-4 font-bold text-stone-900">User</th>
+              <th className="text-left p-4 font-bold text-stone-900">Role</th>
+              <th className="text-left p-4 font-bold text-stone-900">Status</th>
+              <th className="text-left p-4 font-bold text-stone-900">Joined</th>
+              <th className="text-right p-4 font-bold text-stone-900">Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.users.map((user: AdminUser) => (
-              <tr key={user.id} className="border-b border-zinc-200 hover:bg-zinc-50">
+              <tr key={user.id} className="border-b-2 border-stone-200 hover:bg-stone-50">
                 <td className="p-4">
                   <div>
-                    <div className="font-bold text-black">
+                    <div className="font-bold text-stone-900">
                       {user.displayName || user.username}
                     </div>
-                    <div className="text-sm text-zinc-500">@{user.username}</div>
+                    <div className="text-sm text-stone-500">@{user.username}</div>
                   </div>
                 </td>
                 <td className="p-4">
@@ -305,7 +305,7 @@ function UsersPanel({
                       })
                     }
                     disabled={roleMutation.isPending}
-                    className="bg-white border-2 border-black rounded px-2 py-1 text-sm font-bold"
+                    className="bg-white border-4 border-stone-900 px-2 py-1 text-sm font-bold"
                   >
                     <option value="free">Free</option>
                     <option value="pro">Pro</option>
@@ -314,17 +314,17 @@ function UsersPanel({
                 </td>
                 <td className="p-4">
                   {user.suspendedAt ? (
-                    <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-700 px-2 py-1 rounded text-sm font-bold">
+                    <span className="inline-flex items-center gap-1 bg-rose-200 text-rose-800 px-2 py-1 border-2 border-stone-900 text-sm font-bold">
                       <Ban className="w-3 h-3" />
                       Suspended
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">
+                    <span className="inline-flex items-center gap-1 bg-green-200 text-green-800 px-2 py-1 border-2 border-stone-900 text-sm font-bold">
                       Active
                     </span>
                   )}
                 </td>
-                <td className="p-4 text-sm text-zinc-600">{formatDate(user.createdAt)}</td>
+                <td className="p-4 text-sm text-stone-600">{formatDate(user.createdAt)}</td>
                 <td className="p-4 text-right">
                   <Button
                     size="sm"
@@ -333,8 +333,8 @@ function UsersPanel({
                     disabled={suspendMutation.isPending || user.role === 'admin'}
                     className={
                       user.suspendedAt
-                        ? 'text-green-600 hover:text-green-700 hover:bg-green-100'
-                        : 'text-rose-600 hover:text-rose-700 hover:bg-rose-100'
+                        ? 'text-green-700 hover:text-green-800 hover:bg-green-100 border-2 border-stone-900'
+                        : 'text-rose-700 hover:text-rose-800 hover:bg-rose-100 border-2 border-stone-900'
                     }
                     title={user.role === 'admin' ? 'Cannot suspend admins' : ''}
                   >
@@ -396,46 +396,46 @@ function ReviewsPanel({
   }
 
   return (
-    <div className="bg-white border-2 border-black rounded-xl overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-zinc-100 border-b-2 border-black">
+          <thead className="bg-stone-100 border-b-4 border-stone-900">
             <tr>
-              <th className="text-left p-4 font-bold text-black">Game</th>
-              <th className="text-left p-4 font-bold text-black">User</th>
-              <th className="text-left p-4 font-bold text-black">Rating</th>
-              <th className="text-left p-4 font-bold text-black">Review</th>
-              <th className="text-left p-4 font-bold text-black">Date</th>
-              <th className="text-right p-4 font-bold text-black">Actions</th>
+              <th className="text-left p-4 font-bold text-stone-900">Game</th>
+              <th className="text-left p-4 font-bold text-stone-900">User</th>
+              <th className="text-left p-4 font-bold text-stone-900">Rating</th>
+              <th className="text-left p-4 font-bold text-stone-900">Review</th>
+              <th className="text-left p-4 font-bold text-stone-900">Date</th>
+              <th className="text-right p-4 font-bold text-stone-900">Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.reviews.map((review: AdminReview) => (
-              <tr key={review.id} className="border-b border-zinc-200 hover:bg-zinc-50">
-                <td className="p-4 font-bold text-black max-w-[150px] truncate">
+              <tr key={review.id} className="border-b-2 border-stone-200 hover:bg-stone-50">
+                <td className="p-4 font-bold text-stone-900 max-w-[150px] truncate">
                   {review.gameName}
                 </td>
                 <td className="p-4">
-                  <div className="text-sm text-zinc-600">@{review.username}</div>
+                  <div className="text-sm text-stone-600">@{review.username}</div>
                 </td>
                 <td className="p-4">
-                  <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm font-bold">
+                  <span className="bg-amber-200 text-amber-900 px-2 py-1 border-2 border-stone-900 text-sm font-bold">
                     {review.rating}/5
                   </span>
                 </td>
                 <td className="p-4 max-w-[200px]">
-                  <p className="text-sm text-zinc-600 truncate">
+                  <p className="text-sm text-stone-600 truncate">
                     {review.reviewText || <span className="italic">No text</span>}
                   </p>
                 </td>
-                <td className="p-4 text-sm text-zinc-600">{formatDate(review.createdAt)}</td>
+                <td className="p-4 text-sm text-stone-600">{formatDate(review.createdAt)}</td>
                 <td className="p-4 text-right">
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => deleteMutation.mutate(review.id)}
                     disabled={deleteMutation.isPending}
-                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-100"
+                    className="text-rose-700 hover:text-rose-800 hover:bg-rose-100 border-2 border-stone-900"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -485,13 +485,13 @@ function AuditPanel({
       case 'DELETE_REVIEW':
       case 'DELETE_USER':
       case 'SUSPEND_USER':
-        return 'bg-rose-100 text-rose-700'
+        return 'bg-rose-200 text-rose-800'
       case 'UNSUSPEND_USER':
-        return 'bg-green-100 text-green-700'
+        return 'bg-green-200 text-green-800'
       case 'UPDATE_USER_ROLE':
-        return 'bg-amber-100 text-amber-700'
+        return 'bg-amber-200 text-amber-800'
       default:
-        return 'bg-zinc-100 text-zinc-700'
+        return 'bg-stone-200 text-stone-800'
     }
   }
 
@@ -507,37 +507,37 @@ function AuditPanel({
   }
 
   return (
-    <div className="bg-white border-2 border-black rounded-xl overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
       {data.logs.length === 0 ? (
         <div className="p-8 text-center">
-          <ScrollText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-          <p className="text-zinc-600">No audit logs yet</p>
+          <ScrollText className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+          <p className="text-stone-600">No audit logs yet</p>
         </div>
       ) : (
         <>
-          <div className="divide-y divide-zinc-200">
+          <div className="divide-y-2 divide-stone-200">
             {data.logs.map((log: AuditLog) => (
-              <div key={log.id} className="p-4 hover:bg-zinc-50">
+              <div key={log.id} className="p-4 hover:bg-stone-50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${getActionColor(log.action)}`}
+                        className={`px-2 py-1 border-2 border-stone-900 text-xs font-bold ${getActionColor(log.action)}`}
                       >
                         {formatAction(log.action)}
                       </span>
-                      <span className="text-sm text-zinc-600">
+                      <span className="text-sm text-stone-600">
                         by <span className="font-bold">@{log.adminUsername}</span>
                       </span>
                     </div>
                     {log.details && (
-                      <div className="text-sm text-zinc-600 mt-1">
+                      <div className="text-sm text-stone-600 mt-1">
                         {log.details.username !== undefined && log.details.username !== null && (
                           <span>User: @{getDetailValue(log.details.username)} </span>
                         )}
-                        {log.details.previousRole !== undefined && 
+                        {log.details.previousRole !== undefined &&
                          log.details.previousRole !== null &&
-                         log.details.newRole !== undefined && 
+                         log.details.newRole !== undefined &&
                          log.details.newRole !== null && (
                           <span>
                             ({getDetailValue(log.details.previousRole)} → {getDetailValue(log.details.newRole)})
@@ -549,7 +549,7 @@ function AuditPanel({
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-zinc-500 shrink-0">
+                  <div className="flex items-center gap-1 text-xs text-stone-500 shrink-0">
                     <Clock className="w-3 h-3" />
                     {formatDate(log.createdAt)}
                   </div>
@@ -588,21 +588,21 @@ function Pagination({
   const totalPages = Math.ceil(totalCount / limit)
 
   return (
-    <div className="flex items-center justify-between p-4 border-t-2 border-black bg-zinc-50">
-      <div className="text-sm text-zinc-600">
+    <div className="flex items-center justify-between p-4 border-t-4 border-stone-900 bg-stone-100">
+      <div className="text-sm text-stone-600">
         Showing {offset + 1}-{Math.min(offset + limit, totalCount)} of {totalCount}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <Button
           size="sm"
           variant="outline"
           onClick={() => onOffsetChange(Math.max(0, offset - limit))}
           disabled={offset === 0}
-          className="border-2 border-black"
+          className="border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <span className="text-sm font-bold">
+        <span className="text-sm font-bold text-stone-900">
           {currentPage} / {totalPages || 1}
         </span>
         <Button
@@ -610,7 +610,7 @@ function Pagination({
           variant="outline"
           onClick={() => onOffsetChange(offset + limit)}
           disabled={!hasMore}
-          className="border-2 border-black"
+          className="border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
@@ -621,10 +621,10 @@ function Pagination({
 
 function LoadingCard() {
   return (
-    <div className="bg-white border-2 border-black rounded-xl p-8">
+    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8">
       <div className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-        <span className="ml-3 text-black font-bold">Loading...</span>
+        <div className="animate-spin h-8 w-8 border-4 border-stone-900 border-t-transparent"></div>
+        <span className="ml-3 text-stone-900 font-bold">Loading...</span>
       </div>
     </div>
   )
@@ -632,8 +632,8 @@ function LoadingCard() {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="bg-rose-100 border-2 border-black rounded-xl p-8 text-center">
-      <p className="text-rose-700 font-bold">{message}</p>
+    <div className="bg-rose-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
+      <p className="text-rose-800 font-bold">{message}</p>
     </div>
   )
 }
