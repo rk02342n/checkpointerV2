@@ -324,20 +324,6 @@ export default function Checkpointer() {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t-4 border-stone-900 bg-stone-200 mt-10 sm:mt-16">
-        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-            <div className="font-bold text-lg sm:text-xl text-stone-900">
-              Checkpointer
-            </div>
-            <div className="text-xs sm:text-sm text-stone-500 text-center">
-              Track games. Share reviews. Build history.
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

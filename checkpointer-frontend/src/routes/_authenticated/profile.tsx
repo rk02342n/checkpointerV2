@@ -496,20 +496,6 @@ function Profile() {
           )}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t-4 border-stone-900 bg-stone-200 mt-16">
-        <div className="container mx-auto px-6 py-8 max-w-7xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="font-bold text-xl text-stone-900">
-              Checkpointer
-            </div>
-            <div className="text-sm text-stone-500">
-              Track games. Share reviews. Build history.
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
