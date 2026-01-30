@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { getAllGamesQueryOptions, type Game } from "@/lib/gameQuery"
+import { dbUserQueryOptions } from "@/lib/api"
 import { useQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
 import { Badge } from "@/components/ui/badge"
@@ -38,19 +39,36 @@ function BrutalistFeaturedGames({
   const items = games
   const navigate = useNavigate()
 
+  const { data: dbUserData, isError: isAuthError } = useQuery({
+    ...dbUserQueryOptions,
+    retry: false,
+  })
+  const isLoggedIn = !!dbUserData?.account && !isAuthError
+
   return (
     <section className="w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-stone-900">
           {title}
         </h2>
-        <Button
-          type="button"
-          onClick={() => navigate({ to: '/browse' })}
-          className="mt-4 sm:mt-0"
-        >
-          Browse All
-        </Button>
+        {isLoggedIn ? (
+          <Button
+            type="button"
+            onClick={() => navigate({ to: '/browse' })}
+            className="mt-4 sm:mt-0"
+          >
+            Browse All
+          </Button>
+        ) : (
+          <div className="flex gap-2 mt-4 sm:mt-0">
+            <Button type="button" asChild>
+              <a href="/api/login">Login</a>
+            </Button>
+            <Button type="button" asChild variant="outline">
+              <a href="/api/register">Sign Up</a>
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -147,6 +165,11 @@ function BrutalistFeaturedGamesSkeleton({
 
 export default function Checkpointer() {
   const { data, isPending } = useQuery(getAllGamesQueryOptions)
+  const { data: dbUserData, isError: isAuthError } = useQuery({
+    ...dbUserQueryOptions,
+    retry: false,
+  })
+  const isLoggedIn = !!dbUserData?.account && !isAuthError
   const navigate = useNavigate()
 
   const handleGameClick = (game: Game) => {
@@ -176,19 +199,39 @@ export default function Checkpointer() {
                   Track, log, and review games as you play. Build your personal gaming history.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button
-                    onClick={() => navigate({ to: '/browse' })}
-                    className="px-8 py-6 text-lg"
-                  >
-                    Start Logging
-                  </Button>
-                  <Button
-                    onClick={() => navigate({ to: '/browse' })}
-                    variant="outline"
-                    className="px-8 py-6 text-lg"
-                  >
-                    Browse Games
-                  </Button>
+                  {isLoggedIn ? (
+                    <>
+                      <Button
+                        onClick={() => navigate({ to: '/browse' })}
+                        className="px-8 py-6 text-lg"
+                      >
+                        Start Logging
+                      </Button>
+                      <Button
+                        onClick={() => navigate({ to: '/browse' })}
+                        variant="outline"
+                        className="px-8 py-6 text-lg"
+                      >
+                        Browse Games
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        asChild
+                        className="px-8 py-6 text-lg"
+                      >
+                        <a href="/api/login">Login</a>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="px-8 py-6 text-lg"
+                      >
+                        <a href="/api/register">Sign Up</a>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="hidden md:block">
@@ -252,13 +295,31 @@ export default function Checkpointer() {
                   Join the community and start building your gaming history.
                 </p>
               </div>
-              <Button
-                onClick={() => navigate({ to: '/browse' })}
-                variant="outline"
-                className="bg-white text-orange-400 hover:bg-stone-50 px-8 py-6 text-lg"
-              >
-                Get Started
-              </Button>
+              {isLoggedIn ? (
+                <Button
+                  onClick={() => navigate({ to: '/browse' })}
+                  variant="outline"
+                  className="bg-white text-orange-400 hover:bg-stone-50 px-8 py-6 text-lg"
+                >
+                  Get Started
+                </Button>
+              ) : (
+                <div className="flex gap-4">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="bg-white text-orange-400 hover:bg-stone-50 px-8 py-6 text-lg"
+                  >
+                    <a href="/api/login">Login</a>
+                  </Button>
+                  <Button
+                    asChild
+                    className="px-8 py-6 text-lg"
+                  >
+                    <a href="/api/register">Sign Up</a>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </section>
