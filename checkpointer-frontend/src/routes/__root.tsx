@@ -14,7 +14,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function Footer() {
   return(
-    <footer className="border-4 border-foreground bg-background py-12 mt-12 mb-4 mx-4 rounded-md">
+    <footer className="border-4 border-foreground bg-sky-300 py-12 mt-12 mb-4 mx-4 rounded-md">
         <div className="mx-auto px-12 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-2">
             <Gamepad className="w-6 h-6 text-zinc-600" />

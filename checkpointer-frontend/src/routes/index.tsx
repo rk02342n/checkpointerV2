@@ -155,13 +155,13 @@ export default function Checkpointer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+    <div className="min-h-screen bg-linear-to-br bg-rose-50 text-stone-900 selection:bg-green-300">
       <Navbar />
 
       <main className="container mx-auto px-6 py-12 max-w-7xl">
         {/* Hero Section */}
         <section className="mb-16">
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 border-4 border-stone-900 shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-8 md:p-12 lg:p-16">
+          <div className="bg-sky-300 border-4 border-stone-900 shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-8 md:p-12 lg:p-16">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
                 <div className="inline-block bg-orange-300 text-white px-3 py-1 text-xs font-semibold rounded-none border-2 border-stone-900">

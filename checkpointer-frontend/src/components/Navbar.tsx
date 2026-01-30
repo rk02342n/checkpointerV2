@@ -68,7 +68,16 @@ const Navbar: React.FC<NavbarProps> = () => {
           <span className="text-xl font-bold text-stone-900 tracking-tight hidden md:block font-serif">Checkpointer</span>
         </div>
 
-        {/* Search Component and Logic */}
+        {/* Mobile Search Button - navigates to browse page */}
+        <button
+          className="md:hidden flex items-center justify-center w-10 h-10 bg-white border-4 border-stone-900 hover:bg-stone-50 transition-colors"
+          onClick={() => navigate({to: `/browse`})}
+          aria-label="Search games"
+        >
+          <Search className="w-5 h-5 text-stone-900" />
+        </button>
+
+        {/* Search Component and Logic - Desktop only */}
         <div className="flex-1 max-w-lg relative hidden md:block text-stone-900">
           <Input
             type="text"
