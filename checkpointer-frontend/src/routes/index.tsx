@@ -193,10 +193,10 @@ export default function Checkpointer() {
               </div>
               <div className="hidden md:block">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-orange-50 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-amber-300 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] translate-y-4" />
-                  <div className="bg-rose-300 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] -translate-y-4" />
-                  <div className="bg-sky-300 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-amber-100 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-black border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-black border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-amber-100 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
                 </div>
               </div>
             </div>
