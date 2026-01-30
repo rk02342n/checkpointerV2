@@ -142,10 +142,17 @@ const Navbar: React.FC<NavbarProps> = () => {
           )}
           {isLoggedIn ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="hidden md:flex items-center gap-2 text-stone-900 text-xs font-bold uppercase tracking-wide hover:text-white focus:outline-none transition-colors">
-                <User className="w-4 h-4" />
-                <span>Account</span>
-                <ChevronDown className="w-3 h-3" />
+              <DropdownMenuTrigger className="focus:outline-none">
+                {/* Mobile: icon only */}
+                <div className="md:hidden flex items-center justify-center w-10 h-10 bg-white border-4 border-stone-900 hover:bg-stone-50 transition-colors">
+                  <ChevronDown className="w-5 h-5 text-stone-900" />
+                </div>
+                {/* Desktop: full button with text */}
+                <div className="hidden md:flex items-center gap-2 text-stone-900 text-xs font-bold uppercase tracking-wide hover:text-white transition-colors">
+                  <User className="w-4 h-4" />
+                  <span>Account</span>
+                  <ChevronDown className="w-3 h-3" />
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none">
                 <DropdownMenuItem
@@ -165,21 +172,33 @@ const Navbar: React.FC<NavbarProps> = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <a
-              href="/api/login"
-              className="hidden md:flex items-center gap-2 text-stone-900 text-xs font-bold uppercase tracking-wide hover:text-white transition-colors"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Login / Sign Up</span>
-            </a>
+            <>
+              {/* Mobile: icon only */}
+              <a
+                href="/api/login"
+                className="md:hidden flex items-center justify-center w-10 h-10 bg-white border-4 border-stone-900 hover:bg-stone-50 transition-colors"
+                aria-label="Login or Sign Up"
+              >
+                <LogIn className="w-5 h-5 text-stone-900" />
+              </a>
+              {/* Desktop: full link with text */}
+              <a
+                href="/api/login"
+                className="hidden md:flex items-center gap-2 text-stone-900 text-xs font-bold uppercase tracking-wide hover:text-white transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Login / Sign Up</span>
+              </a>
+            </>
           )}
+          {/* Log Game button - desktop only */}
           <Button
             variant="outline"
-            className="flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 px-4 py-2 font-semibold transition-all text-sm"
+            className="hidden md:flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 px-4 py-2 font-semibold transition-all text-sm"
             onClick={() => inputRef?.current?.focus()}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden md:inline">Log Game</span>
+            <span>Log Game</span>
           </Button>
           <LogModal
             isOpen={showLogModal}

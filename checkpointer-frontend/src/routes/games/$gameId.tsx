@@ -237,12 +237,12 @@ const queryClient = useQueryClient();
                     <div className="flex-1 pt-0 text-center lg:text-left min-w-0">
                         <div className="mb-6">
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 mb-2 font-serif">{data.game?.name}</h1>
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm">
-                                <span className="bg-amber-200 px-2 sm:px-3 py-1 font-semibold border-2 border-stone-900 text-xs sm:text-sm">
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
+                                <span className="bg-amber-200 px-2 sm:px-3 py-1 font-semibold border-2 border-stone-900 text-xs sm:text-sm shrink-0">
                                     {new Date(data.game.releaseDate).getFullYear()}
                                 </span>
-                                <span className="bg-sky-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium">{data.game?.name?.split(':')[0]}</span>
-                                <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium">IGDB: {data.game.igdbRating}</span>
+                                <span className="bg-sky-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium truncate max-w-[120px] sm:max-w-none">{data.game?.name?.split(':')[0]}</span>
+                                <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium shrink-0">IGDB: {Math.round(data.game.igdbRating)}</span>
                             </div>
                         </div>
 
@@ -263,10 +263,12 @@ const queryClient = useQueryClient();
                                     {loadingCreateReview?.review &&
                                         <div className="space-y-4 mb-4">
                                                 <div className="bg-orange-50 border-4 border-stone-900 p-3 sm:p-4">
-                                                    <div className="flex items-center justify-between gap-2 mb-2">
-                                                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-orange-50 to-amber-500 border-2 border-stone-900" />
-                                                        <span className="text-sm font-bold text-stone-900">You</span>
-                                                        <StarRating rating={Number(loadingCreateReview?.review.rating)} />
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-orange-50 to-amber-500 border-2 border-stone-900 shrink-0" />
+                                                            <span className="text-sm font-bold text-stone-900">You</span>
+                                                        </div>
+                                                        <StarRating rating={Number(loadingCreateReview?.review.rating)} size="sm" />
                                                     </div>
                                                     <p className="text-stone-700 text-sm p-2">"{loadingCreateReview.review.reviewText}"</p>
                                                 </div>
@@ -285,14 +287,14 @@ const queryClient = useQueryClient();
                                                         : '?';
                                                 return (
                                                 <div key={r.id} className="bg-stone-50 border-4 border-stone-900 p-3 sm:p-4">
-                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                                         <Link
                                                             to={r.userId === dbUserData?.account?.id ? "/profile" : "/users/$userId"}
                                                             params={r.userId === dbUserData?.account?.id ? {} : { userId: r.userId }}
-                                                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                                            className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
-                                                            <Avatar className="w-6 h-6 border-2 border-stone-900">
+                                                            <Avatar className="w-6 h-6 border-2 border-stone-900 shrink-0">
                                                                 <AvatarImage
                                                                     src={r.avatarUrl
                                                                         ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : `/api/user/avatar/${r.userId}`)
@@ -304,12 +306,12 @@ const queryClient = useQueryClient();
                                                                     {initials}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <span className="text-sm font-bold text-stone-900 hover:underline">{r.userId === dbUserData?.account?.id ? 'You' : (r.username || r.displayName || 'Anonymous')}</span>
+                                                            <span className="text-sm font-bold text-stone-900 hover:underline truncate">{r.userId === dbUserData?.account?.id ? 'You' : (r.username || r.displayName || 'Anonymous')}</span>
                                                         </Link>
 
-                                                        <StarRating rating={Number(r.rating)} />
+                                                        <StarRating rating={Number(r.rating)} size="sm" />
                                                     </div>
-                                                    <p className="text-stone-700 text-sm p-2">"{r.reviewText}"</p>
+                                                    <p className="text-stone-700 text-sm p-2 text-left">{r.reviewText}</p>
                                                     <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-stone-200">
                                                         <button
                                                             onClick={() => handleLikeClick(r.id)}
@@ -454,12 +456,12 @@ function ReviewsSkeleton() {
     <div className="space-y-4">
       {[1, 2].map((i) => (
         <div key={i} className="bg-stone-50 border-4 border-stone-900 p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-              <Skeleton className="w-6 h-6 rounded-full bg-stone-200" />
-              <Skeleton className="h-4 w-20 bg-stone-200" />
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Skeleton className="w-6 h-6 rounded-full bg-stone-200 shrink-0" />
+              <Skeleton className="h-4 w-16 sm:w-20 bg-stone-200" />
             </div>
-            <Skeleton className="h-4 w-24 bg-stone-200" />
+            <Skeleton className="h-4 w-20 sm:w-24 bg-stone-200" />
           </div>
           <Skeleton className="h-4 w-full mt-2 bg-stone-200" />
           <Skeleton className="h-4 w-3/4 mt-2 bg-stone-200" />
@@ -497,21 +499,31 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
             : 'relative shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6'
         }`}
       >
-        {/* Maximize Button - outer left edge */}
+        {/* Maximize Button - top right on mobile, outer left edge on desktop */}
         {!isMaximized && (
-          <button
-            onClick={onMaximize}
-            className="group absolute top-1/2 -translate-y-1/2 right-full mr-0 z-10 flex items-center flex-row-reverse"
-          >
-            <div className="flex items-center flex-row-reverse bg-stone-900 text-white border-2 border-stone-900 transition-all duration-200 ease-out overflow-hidden group-hover:pl-3">
-              <div className="p-2">
-                <Maximize2 className="w-4 h-4" />
+          <>
+            {/* Mobile: top right corner */}
+            <button
+              onClick={onMaximize}
+              className="lg:hidden absolute top-2 right-2 z-10 bg-stone-900 text-white border-2 border-stone-900 p-1.5"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </button>
+            {/* Desktop: outer left edge */}
+            <button
+              onClick={onMaximize}
+              className="hidden lg:flex group absolute top-1/2 -translate-y-1/2 right-full mr-0 z-10 items-center flex-row-reverse"
+            >
+              <div className="flex items-center flex-row-reverse bg-stone-900 text-white border-2 border-stone-900 transition-all duration-200 ease-out overflow-hidden group-hover:pl-3">
+                <div className="p-2">
+                  <Maximize2 className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap max-w-0 group-hover:max-w-[80px] transition-all duration-200 ease-out overflow-hidden">
+                  Maximize
+                </span>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider whitespace-nowrap max-w-0 group-hover:max-w-[80px] transition-all duration-200 ease-out overflow-hidden">
-                Maximize
-              </span>
-            </div>
-          </button>
+            </button>
+          </>
         )}
 
         {/* Minimize Button - top right */}
@@ -532,7 +544,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
         )}
 
         <h3 className={`font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4 ${
-          isMaximized ? 'text-sm sm:text-base mb-6' : 'text-xs sm:text-sm'
+          isMaximized ? 'text-sm sm:text-base mb-6' : 'text-xs sm:text-sm pt-6 lg:pt-0'
         }`}>Write a Review</h3>
 
         <form
@@ -558,11 +570,12 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
                 <div className='flex flex-col gap-2'>
                   <Label htmlFor={field.name} className={`text-stone-900 font-semibold ${isMaximized ? 'text-sm sm:text-base' : 'text-sm'}`}>Your Rating</Label>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 overflow-x-auto">
                   <StarRating
                     interactive
                     rating={Number(field.state.value) || 0}
                     onValueChange={(rating) => field.handleChange(rating.toString())}
+                    size={isMaximized ? "md" : "sm"}
                   />
                 </div>
                 {field.state.meta.isTouched && !field.state.meta.isValid && (
