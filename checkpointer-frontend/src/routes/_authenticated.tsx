@@ -6,12 +6,12 @@ import Navbar from '@/components/Navbar'
 
 const Login = () => {
     return (
-        <div className="min-h-screen bg-amber-900 p-6">
+        <div className="min-h-screen bg-amber-100 p-6">
             <Navbar />
             <div className="container mx-auto max-w-2xl mt-12">
                 {/* Hero Card */}
                 <div 
-                className="bg-cyan-600 border-2 border-black rounded-2xl p-8 md:p-12 text-center shadow-lg">
+                className="bg-cyan-200 border-2 border-black rounded-none p-8 md:p-12 text-center shadow-lg">
                     {/* Logo/Icon */}
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-lime-200 border-4 border-black rounded-full mb-6">
                         <Gamepad2 className="w-10 h-10 text-black" />
@@ -45,7 +45,7 @@ const Login = () => {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Button
                             asChild
-                            className="bg-green-500 hover:bg-green-600 hover:text-white  text-black border-2 border-black font-bold px-8 py-6 text-lg"
+                            className="bg-lime-200 hover:bg-lime-400 hover:text-white  text-black border-2 border-black font-bold px-8 py-6 text-lg"
                         >
                             <a href="/api/login" className="flex items-center gap-2">
                                 <LogIn className="w-5 h-5" />
