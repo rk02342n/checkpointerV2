@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera } from 'lucide-react'
+import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -139,6 +139,14 @@ function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
+  const [isEditingUsername, setIsEditingUsername] = useState(false)
+  const [newUsername, setNewUsername] = useState('')
+  const [usernameStatus, setUsernameStatus] = useState<{
+    checking: boolean
+    available: boolean | null
+    error: string | null
+    isCurrent: boolean
+  }>({ checking: false, available: null, error: null, isCurrent: false })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
@@ -166,6 +174,105 @@ function Profile() {
       toast.error(error.message || 'Failed to upload avatar')
     },
   })
+
+  // Username update mutation
+  const usernameMutation = useMutation({
+    mutationFn: async (username: string) => {
+      const res = await fetch('/api/user/username', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to update username')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('Username updated!')
+      queryClient.invalidateQueries({ queryKey: ['get-db-user'] })
+      setIsEditingUsername(false)
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update username')
+    },
+  })
+
+  const handleEditUsername = () => {
+    setNewUsername(dbUserData?.account?.username || '')
+    setIsEditingUsername(true)
+  }
+
+  const handleSaveUsername = () => {
+    if (!usernameStatus.available || usernameStatus.checking) {
+      return
+    }
+    const trimmed = newUsername.trim()
+    if (usernameStatus.isCurrent) {
+      setIsEditingUsername(false)
+      return
+    }
+    usernameMutation.mutate(trimmed)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingUsername(false)
+    setNewUsername('')
+    setUsernameStatus({ checking: false, available: null, error: null, isCurrent: false })
+  }
+
+  // Debounced username availability check
+  useEffect(() => {
+    if (!isEditingUsername || !newUsername.trim()) {
+      setUsernameStatus({ checking: false, available: null, error: null, isCurrent: false })
+      return
+    }
+
+    const trimmed = newUsername.trim()
+
+    // Client-side validation first
+    if (trimmed.length < 3) {
+      setUsernameStatus({ checking: false, available: false, error: 'At least 3 characters', isCurrent: false })
+      return
+    }
+    if (trimmed.length > 32) {
+      setUsernameStatus({ checking: false, available: false, error: 'At most 32 characters', isCurrent: false })
+      return
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      setUsernameStatus({ checking: false, available: false, error: 'Only letters, numbers, underscores', isCurrent: false })
+      return
+    }
+
+    setUsernameStatus(prev => ({ ...prev, checking: true, error: null }))
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/user/username/check/${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal
+        })
+        if (!res.ok) throw new Error('Failed to check username')
+        const data = await res.json()
+        setUsernameStatus({
+          checking: false,
+          available: data.available,
+          error: data.error || null,
+          isCurrent: data.isCurrent || false
+        })
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          setUsernameStatus({ checking: false, available: null, error: 'Failed to check', isCurrent: false })
+        }
+      }
+    }, 400)
+
+    return () => {
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
+  }, [newUsername, isEditingUsername])
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click()
@@ -369,8 +476,87 @@ function Profile() {
               <h1 className="text-3xl font-bold text-stone-900">
                 {user.given_name} {user.family_name}
               </h1>
-              {dbUserData?.account?.username && (
-                <p className="text-stone-700 text-sm font-medium mt-1">@{dbUserData.account.username}</p>
+              {isEditingUsername ? (
+                <div className="mt-1">
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <span className="text-stone-700 text-sm font-medium">@</span>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && usernameStatus.available && !usernameStatus.checking) {
+                            handleSaveUsername()
+                          }
+                          if (e.key === 'Escape') handleCancelEdit()
+                        }}
+                        className={`bg-white border-2 px-2 py-1 h-7 text-sm md:w-75 sm:w-40 rounded-none pr-7 ${
+                          usernameStatus.error || usernameStatus.available === false
+                            ? 'border-rose-500'
+                            : usernameStatus.available === true
+                            ? 'border-green-500'
+                            : 'border-stone-900'
+                        }`}
+                        autoFocus
+                        disabled={usernameMutation.isPending}
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        {usernameStatus.checking ? (
+                          <Loader2 className="w-3 h-3 text-stone-500 animate-spin" />
+                        ) : usernameStatus.available === true ? (
+                          <Check className="w-3 h-3 text-green-600" />
+                        ) : usernameStatus.available === false ? (
+                          <X className="w-3 h-3 text-rose-500" />
+                        ) : null}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleSaveUsername}
+                      disabled={usernameMutation.isPending || usernameStatus.checking || !usernameStatus.available}
+                      className="text-green-600 hover:text-green-700 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Save username"
+                    >
+                      {usernameMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={usernameMutation.isPending}
+                      className="text-stone-600 hover:text-stone-700 p-1 disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {/* Status message */}
+                  <div className="h-4 text-center md:text-left pb-2 md:pl-6 mt-2 mb-4">
+                    {usernameStatus.error ? (
+                      <p className="text-rose-500 text-xs">{usernameStatus.error}</p>
+                    ) : usernameStatus.available === false ? (
+                      <p className="text-rose-500 text-xs">Username is taken</p>
+                    ) : usernameStatus.isCurrent ? (
+                      <p className="text-stone-500 text-xs">This is your current username</p>
+                    ) : usernameStatus.available === true ? (
+                      <p className="text-green-600 text-xs">Username is available</p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
+                  <p className="text-stone-700 text-sm font-medium">
+                    @{dbUserData?.account?.username || 'username'}
+                  </p>
+                  <button
+                    onClick={handleEditUsername}
+                    className="text-stone-500 hover:text-stone-700 p-1"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                </div>
               )}
               <p className="text-stone-600 text-sm mt-1">{user.email}</p>
 

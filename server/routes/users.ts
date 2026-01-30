@@ -1,11 +1,19 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
 import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { gamesTable, gamesInsertSchema, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
 import { eq, desc, sum, and, ilike, or } from "drizzle-orm";
+
+const updateUsernameSchema = z.object({
+    username: z.string()
+        .min(3, "Username must be at least 3 characters")
+        .max(32, "Username must be at most 32 characters")
+        .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+});
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
 
 export const usersRoute = new Hono()
@@ -26,6 +34,64 @@ export const usersRoute = new Hono()
         return c.notFound();
     }
     return c.json({ account })
+})
+
+.get("/username/check/:username", getAuthUser, async c => {
+    const username = c.req.param("username");
+    const dbUser = c.var.dbUser;
+
+    // Validate format first
+    if (username.length < 3) {
+        return c.json({ available: false, error: "Username must be at least 3 characters" });
+    }
+    if (username.length > 32) {
+        return c.json({ available: false, error: "Username must be at most 32 characters" });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return c.json({ available: false, error: "Username can only contain letters, numbers, and underscores" });
+    }
+
+    // Check if it's the user's current username
+    if (username === dbUser.username) {
+        return c.json({ available: true, isCurrent: true });
+    }
+
+    // Check if username is taken
+    const existingUser = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.username, username))
+        .limit(1)
+        .then(res => res[0]);
+
+    return c.json({ available: !existingUser });
+})
+
+.patch("/username", getAuthUser, zValidator("json", updateUsernameSchema), async c => {
+    const dbUser = c.var.dbUser;
+    const { username } = c.req.valid("json");
+
+    // Check if username is already taken by another user
+    const existingUser = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.username, username))
+        .limit(1)
+        .then(res => res[0]);
+
+    if (existingUser && existingUser.id !== dbUser.id) {
+        return c.json({ error: "Username is already taken" }, 409);
+    }
+
+    // Update username
+    const updatedUser = await db
+        .update(usersTable)
+        .set({ username })
+        .where(eq(usersTable.id, dbUser.id))
+        .returning()
+        .then(res => res[0]);
+
+    return c.json({ account: updatedUser });
 })
 
 .post("/avatar", getAuthUser, async c => {
