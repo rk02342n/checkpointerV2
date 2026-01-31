@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2 } from 'lucide-react'
+import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/avatar"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { StarRating } from '@/components/StarRating'
 import Navbar from '@/components/Navbar'
 
@@ -140,6 +148,7 @@ function Profile() {
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [isEditingUsername, setIsEditingUsername] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean
@@ -198,6 +207,31 @@ function Profile() {
       toast.error(error.message || 'Failed to update username')
     },
   })
+
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/user', {
+        method: 'DELETE',
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to delete account')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('Account deleted')
+      window.location.href = '/api/logout'
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete account')
+    },
+  })
+
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate()
+  }
 
   const handleEditUsername = () => {
     setNewUsername(dbUserData?.account?.username || '')
@@ -575,14 +609,21 @@ function Profile() {
               </div>
             </div>
 
-            {/* Logout Button */}
-            <div className="shrink-0">
+            {/* Account Actions */}
+            <div className="shrink-0 flex flex-col gap-2">
               <Button
                 asChild
                 variant="destructive"
                 className="px-6"
               >
                 <a href='/api/logout'>Logout</a>
+              </Button>
+              <Button
+                variant="outline"
+                className="px-6 text-rose-600 border-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                Delete Account
               </Button>
             </div>
           </div>
@@ -682,6 +723,44 @@ function Profile() {
           )}
         </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-600">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Account
+            </DialogTitle>
+            <DialogDescription className="text-stone-600">
+              This action cannot be undone. This will permanently delete your account and remove all your data including your reviews.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleteAccountMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={deleteAccountMutation.isPending}
+            >
+              {deleteAccountMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Account'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

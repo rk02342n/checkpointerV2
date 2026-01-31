@@ -6,6 +6,7 @@ import { db } from "../db";
 import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
 import { gamesTable, gamesInsertSchema, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
+import { reviewsTable } from "../db/schema/reviews";
 import { eq, desc, sum, and, ilike, or } from "drizzle-orm";
 
 const updateUsernameSchema = z.object({
@@ -92,6 +93,23 @@ export const usersRoute = new Hono()
         .then(res => res[0]);
 
     return c.json({ account: updatedUser });
+})
+
+// Delete user account
+.delete("/", getAuthUser, async c => {
+    const dbUser = c.var.dbUser;
+
+    // Delete user's reviews first (review_likes will cascade from reviews)
+    await db
+        .delete(reviewsTable)
+        .where(eq(reviewsTable.userId, dbUser.id));
+
+    // Delete the user (review_likes from this user will cascade)
+    await db
+        .delete(usersTable)
+        .where(eq(usersTable.id, dbUser.id));
+
+    return c.json({ success: true });
 })
 
 .post("/avatar", getAuthUser, async c => {
