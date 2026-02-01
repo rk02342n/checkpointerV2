@@ -14,17 +14,35 @@ function AboutPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual form submission
-    console.log({ name, email, message })
-    setSubmitted(true)
-    setName('')
-    setEmail('')
-    setMessage('')
-    setTimeout(() => setSubmitted(false), 3000)
+    setStatus('loading')
+    setErrorMessage('')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to send message')
+      }
+
+      setStatus('success')
+      setName('')
+      setEmail('')
+      setMessage('')
+      setTimeout(() => setStatus('idle'), 5000)
+    } catch (error) {
+      setStatus('error')
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong')
+    }
   }
 
   return (
@@ -59,10 +77,18 @@ function AboutPage() {
               Send us a message
             </h2>
 
-            {submitted && (
+            {status === 'success' && (
               <div className="mb-6 bg-green-100 border-4 border-stone-900 p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
                 <p className="font-semibold text-stone-900">
                   Thanks for your message! We'll get back to you soon.
+                </p>
+              </div>
+            )}
+
+            {status === 'error' && (
+              <div className="mb-6 bg-rose-100 border-4 border-stone-900 p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
+                <p className="font-semibold text-stone-900">
+                  {errorMessage || 'Something went wrong. Please try again.'}
                 </p>
               </div>
             )}
@@ -110,8 +136,12 @@ function AboutPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full sm:w-auto px-8 py-5 text-base bg-lime-400/40 hover:bg-lime-300">
-                Send Message
+              <Button
+                type="submit"
+                disabled={status === 'loading'}
+                className="w-full sm:w-auto px-8 py-5 text-base bg-lime-400/40 hover:bg-lime-300"
+              >
+                {status === 'loading' ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
           </div>

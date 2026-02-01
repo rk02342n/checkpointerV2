@@ -9,6 +9,7 @@
     "flyctl": "^1.2.6",
     "hono": "^4.11.4",
     "postgres": "^3.4.8",
+    "resend": "^6.9.1",
     "zod": "^4.3.5"
   },
   "name": "checkpointerv2",
