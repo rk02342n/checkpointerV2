@@ -71,6 +71,13 @@
       "when": 1769903272517,
       "tag": "0009_aspiring_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769907875647,
+      "tag": "0010_normal_ikaris",
+      "breakpoints": true
     }
   ]
 }

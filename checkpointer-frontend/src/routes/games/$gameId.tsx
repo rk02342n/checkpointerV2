@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Eye, Clock, Heart, Maximize2, Minimize2, Gamepad2 } from "lucide-react";
+import { Heart, Maximize2, Minimize2, Gamepad2, Check, Clock, Pencil } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions, toggleReviewLike, type GameReview } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
-import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions } from "@/lib/gameSessionsQuery";
+import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions, type SessionStatus } from "@/lib/gameSessionsQuery";
 import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
 import { Label } from "@/components/ui/label"
@@ -24,6 +24,14 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
@@ -43,6 +51,8 @@ function GameView () {
     const [visibleCount, setVisibleCount] = useState(4);
     // Maximize review form state
     const [isFormMaximized, setIsFormMaximized] = useState(false);
+    // Switch game dialog state
+    const [showSwitchGameDialog, setShowSwitchGameDialog] = useState(false);
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
@@ -130,7 +140,7 @@ function GameView () {
       },
     });
 
-    // Stop playing mutation
+    // Stop playing mutation (for stopping current game without switching)
     const stopPlayingMutation = useMutation({
       mutationFn: stopPlaying,
       onSuccess: () => {
@@ -143,13 +153,40 @@ function GameView () {
       },
     });
 
+    // Switch game mutation (stop old game then start new one)
+    const switchGameMutation = useMutation({
+      mutationFn: async (status: SessionStatus) => {
+        await stopPlaying(status);
+        return setCurrentlyPlaying(gameId);
+      },
+      onSuccess: (_, status) => {
+        queryClient.invalidateQueries({ queryKey: ['currently-playing'] });
+        queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
+        queryClient.invalidateQueries({ queryKey: ['play-history'] });
+        setShowSwitchGameDialog(false);
+        toast.success(status === 'finished' ? 'Game completed! Now playing new game.' : 'Game stashed! Now playing new game.');
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Failed to switch games');
+      },
+    });
+
+    const handleSwitchGame = (status: SessionStatus) => {
+      switchGameMutation.mutate(status);
+    };
+
+    const isPlayingDifferentGame = currentlyPlayingData?.game && currentlyPlayingData.game.id !== gameId;
+
     const handlePlayClick = () => {
       if (!dbUserData?.account) {
         toast.error("Please log in to track what you're playing");
         return;
       }
       if (isCurrentlyPlayingThisGame) {
-        stopPlayingMutation.mutate();
+        stopPlayingMutation.mutate(undefined);
+      } else if (isPlayingDifferentGame) {
+        // User is playing a different game, show dialog to choose what to do with it
+        setShowSwitchGameDialog(true);
       } else {
         setPlayingMutation.mutate(gameId);
       }
@@ -237,7 +274,7 @@ const queryClient = useQueryClient();
   })
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+        <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
             <Navbar />
 
             {isPending ? (
@@ -253,23 +290,14 @@ const queryClient = useQueryClient();
                           <Poster game={data.game} size="xl" className="" />
                         </div>
 
-                        <div className="grid grid-cols-4 gap-2 w-full max-w-[280px] mt-4">
+                        <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
                                 onClick={()=>{}}
                                 className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-green-100 transition-all p-2"
                             >
-                                <Eye className="w-5 h-5" />
+                                <Pencil className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
                             </button>
-
-                            <button
-                                onClick={() => {}}
-                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-indigo-100 transition-all p-2"
-                            >
-                                <Clock className="w-5 h-5" />
-                                <span className="text-[10px] uppercase font-bold tracking-wider">Watch</span>
-                            </button>
-
                             <button
                                 onClick={() => {}}
                                 className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-rose-100 transition-all p-2"
@@ -338,7 +366,7 @@ const queryClient = useQueryClient();
                                                 <div className="bg-orange-50 border-4 border-stone-900 p-3 sm:p-4">
                                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                                         <div className="flex items-center gap-2 min-w-0">
-                                                            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-orange-50 to-amber-500 border-2 border-stone-900 shrink-0" />
+                                                            <div className="w-6 h-6 rounded-full bg-linear-to-tr from-orange-50 to-amber-500 border-2 border-stone-900 shrink-0" />
                                                             <span className="text-sm font-bold text-stone-900">You</span>
                                                         </div>
                                                         <StarRating rating={Number(loadingCreateReview?.review.rating)} size="sm" />
@@ -458,6 +486,55 @@ const queryClient = useQueryClient();
                 </div>
             </div>
             )}
+
+            {/* Switch Game Dialog */}
+            <Dialog open={showSwitchGameDialog} onOpenChange={setShowSwitchGameDialog}>
+              <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-stone-900">
+                    Switch Game
+                  </DialogTitle>
+                  <DialogDescription className="text-stone-600 mt-2">
+                    You're currently playing <span className="font-semibold">{currentlyPlayingData?.game?.name}</span>.
+                    {<br/>} {<br/>}
+                    How would you like to mark that session before starting <span className="font-semibold">{data?.game?.name}</span>?
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-3 py-4">
+                  <Button
+                    onClick={() => handleSwitchGame('finished')}
+                    disabled={switchGameMutation.isPending}
+                    className="bg-lime-100 hover:bg-lime-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                  >
+                    <Check className="w-5 h-5 mr-2" />
+                    <div className="text-left">
+                      <div className="font-bold">Finished</div>
+                      <div className="text-xs opacity-90">I completed it</div>
+                    </div>
+                  </Button>
+                  <Button
+                    onClick={() => handleSwitchGame('stashed')}
+                    disabled={switchGameMutation.isPending}
+                    className="bg-sky-100 hover:bg-sky-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                  >
+                    <Clock className="w-5 h-5 mr-2" />
+                    <div className="text-left">
+                      <div className="font-bold">Stash for now</div>
+                      <div className="text-xs opacity-90">I'll come back to it later maybe</div>
+                    </div>
+                  </Button>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSwitchGameDialog(false)}
+                    disabled={switchGameMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
         </div>
     );
 };
@@ -472,8 +549,7 @@ function GameDetailSkeleton() {
         <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
           <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-stone-200" />
         </div>
-        <div className="grid grid-cols-4 gap-2 w-full max-w-[280px] mt-4">
-          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
+        <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />

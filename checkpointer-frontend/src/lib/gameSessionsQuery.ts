@@ -1,11 +1,14 @@
 import { queryOptions } from "@tanstack/react-query";
 
+export type SessionStatus = "finished" | "stashed";
+
 export type GameSession = {
   id: string;
   userId: string;
   gameId: string;
   startedAt: string;
   endedAt: string | null;
+  status: SessionStatus | null;
 };
 
 export type GameSessionGame = {
@@ -67,9 +70,13 @@ export async function setCurrentlyPlaying(gameId: string): Promise<CurrentlyPlay
 }
 
 // Stop playing (end current session)
-export async function stopPlaying(): Promise<{ session: GameSession }> {
+export async function stopPlaying(status?: SessionStatus): Promise<{ session: GameSession }> {
   const res = await fetch("/api/game-sessions/current", {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
   });
   if (!res.ok) {
     const error = await res.json();

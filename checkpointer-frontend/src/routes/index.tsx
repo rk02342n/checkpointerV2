@@ -86,11 +86,11 @@ function BrutalistFeaturedGames({
                   <img
                     src={game.coverUrl}
                     alt={game.name}
-                    className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-all duration-300"
+                    className="w-full aspect-3/4 object-cover transition-all duration-300"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full aspect-[3/4] bg-stone-200" />
+                  <div className="w-full aspect-3/4 bg-stone-200" />
                 )}
                 {year && (
                   <Badge className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-amber-400 text-stone-900 font-medium text-[10px] sm:text-xs rounded-none border sm:border-2 border-stone-900">
@@ -190,7 +190,7 @@ export default function Checkpointer() {
                 <div className="inline-block bg-orange-300 text-white px-3 py-1 text-xs font-semibold rounded-none border-2 border-stone-900">
                   Game Tracking
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-serif">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt hover:text-blue-900">
                   Checkpointer
                   <br />
                   {/* <span className="text-orange-300">pointer</span> */}
@@ -210,7 +210,7 @@ export default function Checkpointer() {
                       <Button
                         onClick={() => navigate({ to: '/browse' })}
                         variant="outline"
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-amber-50"
                       >
                         Browse Games
                       </Button>

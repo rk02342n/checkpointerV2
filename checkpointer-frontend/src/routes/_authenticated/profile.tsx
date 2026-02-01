@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions } from '@/lib/gameSessionsQuery'
+import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle, Square, Clock, History } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -165,6 +165,7 @@ type SessionCardProps = {
       id: string
       startedAt: string
       endedAt: string | null
+      status?: SessionStatus | null
     }
     game: {
       id: string
@@ -228,6 +229,14 @@ function SessionCard({ session }: SessionCardProps) {
               <span className="bg-green-400 text-stone-900 px-2 py-1 text-xs font-bold uppercase border-2 border-stone-900">
                 Playing Now
               </span>
+            ) : session.session.status === 'finished' ? (
+              <span className="bg-green-200 text-green-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+                Finished
+              </span>
+            ) : session.session.status === 'stashed' ? (
+              <span className="bg-amber-200 text-amber-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+                Stashed
+              </span>
             ) : (
               <span className="bg-stone-200 text-stone-700 px-2 py-1 text-xs font-medium border-2 border-stone-900">
                 Ended
@@ -255,6 +264,7 @@ function Profile() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showStopPlayingDialog, setShowStopPlayingDialog] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean
@@ -274,18 +284,20 @@ function Profile() {
 
   // Stop playing mutation
   const stopPlayingMutation = useMutation({
-    mutationFn: stopPlaying,
-    onSuccess: () => {
+    mutationFn: (status: SessionStatus) => stopPlaying(status),
+    onSuccess: (_, status) => {
       queryClient.invalidateQueries({ queryKey: ['currently-playing'] })
-      toast.success('Stopped playing')
+      queryClient.invalidateQueries({ queryKey: ['play-history'] })
+      setShowStopPlayingDialog(false)
+      toast.success(status === 'finished' ? 'Game completed!' : 'Game stashed for later')
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to stop playing')
     },
   })
 
-  const handleStopPlaying = () => {
-    stopPlayingMutation.mutate()
+  const handleStopPlaying = (status: SessionStatus) => {
+    stopPlayingMutation.mutate(status)
   }
 
   // Avatar upload mutation
@@ -798,12 +810,11 @@ function Profile() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleStopPlaying}
+              onClick={() => setShowStopPlayingDialog(true)}
               disabled={stopPlayingMutation.isPending}
               className="shrink-0"
             >
-              <Square className="w-3 h-3 mr-1" />
-              Stop
+              Done with this game?
             </Button>
           </div>
         )}
@@ -1004,6 +1015,54 @@ function Profile() {
               ) : (
                 'Delete Account'
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stop Playing Dialog */}
+      <Dialog open={showStopPlayingDialog} onOpenChange={setShowStopPlayingDialog}>
+        <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-stone-900">
+              <Square className="w-5 h-5" />
+              End Session
+            </DialogTitle>
+            <DialogDescription className="text-stone-600">
+              How would you like to mark this session for {currentlyPlayingData?.game?.name}?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <Button
+              onClick={() => handleStopPlaying('finished')}
+              disabled={stopPlayingMutation.isPending}
+              className="bg-green-500 hover:bg-green-600 text-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              <div className="text-left">
+                <div className="font-bold">Finished</div>
+                <div className="text-xs opacity-90">I completed this game</div>
+              </div>
+            </Button>
+            <Button
+              onClick={() => handleStopPlaying('stashed')}
+              disabled={stopPlayingMutation.isPending}
+              className="bg-amber-400 hover:bg-amber-500 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3"
+            >
+              <Clock className="w-5 h-5 mr-2" />
+              <div className="text-left">
+                <div className="font-bold">Stashing for now</div>
+                <div className="text-xs opacity-90">I'll come back to this later</div>
+              </div>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowStopPlayingDialog(false)}
+              disabled={stopPlayingMutation.isPending}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

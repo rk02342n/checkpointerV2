@@ -1,4 +1,3 @@
-import { Eye } from 'lucide-react';
 import { type Game } from '@/lib/gameQuery';
 
 type PosterProps = {
@@ -19,7 +18,6 @@ const sizeClasses: Record<NonNullable<PosterProps["size"]>, string> = {
 export const Poster: React.FC<PosterProps> = ({
   game,
   size = "md",
-  showTitle = false,
   onClick,
   className = "",
 }) => {
@@ -33,16 +31,6 @@ export const Poster: React.FC<PosterProps> = ({
         src={game.coverUrl || ""}
         alt={game.name || "Game Poster"}
       />
-      {/* Hover Overlay */}
-      <div className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 backdrop-blur-[2px]">
-        <Eye className="w-6 h-6 text-white mb-1" />
-        {showTitle && 
-          <span className="text-white font-bold text-center text-xs">{game.name}</span>
-        }
-        {showTitle && 
-          <span className="text-white/70 text-[10px]">{String(game.releaseDate)}</span>
-        }
-      </div>
     </div>
   );
 };

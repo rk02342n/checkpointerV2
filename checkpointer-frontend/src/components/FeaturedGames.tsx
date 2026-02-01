@@ -63,7 +63,7 @@ export function FeaturedGames({
                   <img
                     src={game.coverUrl}
                     alt={game.name}
-                    className="w-full h-56 sm:h-64 object-cover group-hover:scale-105 transition-all duration-300"
+                    className="w-full h-56 sm:h-64 object-cover"
                     loading="lazy"
                   />
                 ) : (

@@ -113,6 +113,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
+  --font-alt: var(--font-alt);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -136,8 +137,9 @@
   body {
     @apply bg-background text-foreground;
   }
+
   :root {
-    --font-sans: "Merriweather Sans", system-ui, sans-serif;
+    --font-alt: "Bitcount prop single", system-ui, sans-serif;
     letter-spacing: 0.10em;
     font-weight: 400;
   }
@@ -147,4 +149,11 @@
     letter-spacing: 0.10em;
     font-weight: 300;
   }
+
+  :root {
+    --font-sans: "Merriweather Sans", system-ui, sans-serif;
+    letter-spacing: 0.10em;
+    font-weight: 300;
+  }
+ 
 }

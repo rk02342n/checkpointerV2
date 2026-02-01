@@ -60,14 +60,6 @@ const Navbar: React.FC<NavbarProps> = () => {
     return(
       <nav className="sticky top-0 z-40 bg-orange-300 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] mb-6 mx-4 mt-4">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <div
-          className="flex items-center gap-2 cursor-pointer group"
-          onClick={() => { navigate({to: `/`});}}
-        >
-          <Gamepad2 className="w-8 h-8 text-stone-900 group-hover:text-white transition-colors stroke-2" />
-          <span className="text-xl font-bold text-stone-900 tracking-tight hidden md:block font-serif">Checkpointer</span>
-        </div>
-
         {/* Mobile Search Button - navigates to browse page */}
         <button
           className="md:hidden flex items-center justify-center w-10 h-10 bg-white border-4 border-stone-900 hover:bg-stone-50 transition-colors"
@@ -76,6 +68,14 @@ const Navbar: React.FC<NavbarProps> = () => {
         >
           <Search className="w-5 h-5 text-stone-900" />
         </button>
+        <div
+          className="flex items-center gap-2 cursor-pointer group"
+          onClick={() => { navigate({to: `/`});}}
+        >
+          <span className="text-sm sm:text-2xl font-bold text-stone-900 tracking-tight font-alt hover:text-amber-950">Checkpointer</span>
+        </div>
+
+        
 
         {/* Search Component and Logic - Desktop only */}
         <div className="flex-1 max-w-lg relative hidden md:block text-stone-900">
@@ -162,6 +162,14 @@ const Navbar: React.FC<NavbarProps> = () => {
                   <User className="w-4 h-4" />
                   Profile
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-stone-300" />
+                {isAdmin && <DropdownMenuItem
+                  onClick={() => navigate({to: `/admin`})}
+                  className="cursor-pointer font-medium rounded-none hover:bg-orange-50"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </DropdownMenuItem>}
                 <DropdownMenuSeparator className="bg-stone-300" />
                 <DropdownMenuItem asChild variant="destructive" className="cursor-pointer font-medium rounded-none">
                   <a href="/api/logout">

@@ -11,6 +11,10 @@ const setCurrentlyPlayingSchema = z.object({
   gameId: z.string().uuid()
 });
 
+const stopPlayingSchema = z.object({
+  status: z.enum(["finished", "stashed"]).optional()
+});
+
 export const gameSessionsRoute = new Hono()
 // POST /current - Set currently playing game (ends previous session if any)
 .post('/current', zValidator("json", setCurrentlyPlayingSchema), getAuthUser, async (c) => {
@@ -58,13 +62,17 @@ export const gameSessionsRoute = new Hono()
 })
 
 // DELETE /current - Stop playing (end current session)
-.delete('/current', getAuthUser, async (c) => {
+.delete('/current', zValidator("json", stopPlayingSchema), getAuthUser, async (c) => {
   const user = c.var.dbUser;
+  const { status } = await c.req.valid("json");
 
   // End the active session
   const endedSession = await db
     .update(gameSessionsTable)
-    .set({ endedAt: new Date() })
+    .set({
+      endedAt: new Date(),
+      status: status ?? null
+    })
     .where(and(
       eq(gameSessionsTable.userId, user.id),
       isNull(gameSessionsTable.endedAt)
