@@ -1,0 +1,1 @@
+CREATE INDEX "game_sessions_active_game_idx" ON "game_sessions" USING btree ("game_id","ended_at");

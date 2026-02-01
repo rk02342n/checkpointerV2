@@ -3,7 +3,8 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle } from 'lucide-react'
+import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions } from '@/lib/gameSessionsQuery'
+import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle, Square, Clock, History } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -143,9 +144,114 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
   )
 }
 
+// Format duration between two dates
+function formatDuration(startedAt: string, endedAt: string | null): string {
+  const start = new Date(startedAt)
+  const end = endedAt ? new Date(endedAt) : new Date()
+  const diffMs = end.getTime() - start.getTime()
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
+}
+
+type SessionCardProps = {
+  session: {
+    session: {
+      id: string
+      startedAt: string
+      endedAt: string | null
+    }
+    game: {
+      id: string
+      name: string
+      coverUrl: string | null
+    }
+  }
+}
+
+function SessionCard({ session }: SessionCardProps) {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+  }
+
+  const isActive = !session.session.endedAt
+  const duration = formatDuration(session.session.startedAt, session.session.endedAt)
+
+  return (
+    <Link
+      to="/games/$gameId"
+      params={{ gameId: session.game.id }}
+      className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
+    >
+      <div className="flex gap-4">
+        {/* Game Cover */}
+        <div className="shrink-0">
+          {session.game.coverUrl ? (
+            <img
+              src={session.game.coverUrl}
+              alt={session.game.name}
+              className="w-16 h-20 object-cover border-2 border-stone-900"
+            />
+          ) : (
+            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-stone-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Session Content */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-stone-900 font-bold truncate" title={session.game.name}>
+                {session.game.name}
+              </h4>
+              <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
+                <Calendar className="w-3 h-3" />
+                <span>{formatDate(session.session.startedAt)}</span>
+              </div>
+            </div>
+            {isActive ? (
+              <span className="bg-green-400 text-stone-900 px-2 py-1 text-xs font-bold uppercase border-2 border-stone-900">
+                Playing Now
+              </span>
+            ) : (
+              <span className="bg-stone-200 text-stone-700 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+                Ended
+              </span>
+            )}
+          </div>
+
+          {/* Duration */}
+          <div className="flex items-center gap-2 mt-auto pt-2 border-t-2 border-stone-200">
+            <Clock className="w-4 h-4 text-stone-500" />
+            <span className="text-stone-700 text-sm font-medium">
+              {isActive ? `Playing for ${duration}` : duration}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<'reviews' | 'history'>('reviews')
   const [searchQuery, setSearchQuery] = useState('')
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -159,6 +265,28 @@ function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
+
+  // Currently playing query
+  const { data: currentlyPlayingData } = useQuery({
+    ...currentlyPlayingQueryOptions,
+    enabled: !!dbUserData?.account,
+  })
+
+  // Stop playing mutation
+  const stopPlayingMutation = useMutation({
+    mutationFn: stopPlaying,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currently-playing'] })
+      toast.success('Stopped playing')
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to stop playing')
+    },
+  })
+
+  const handleStopPlaying = () => {
+    stopPlayingMutation.mutate()
+  }
 
   // Avatar upload mutation
   const avatarMutation = useMutation({
@@ -340,8 +468,15 @@ function Profile() {
     enabled: !!dbUserId && !isUserPending
   })
 
+  // Get user's play history
+  const { data: playHistoryData, isPending: playHistoryPending } = useQuery({
+    ...playHistoryQueryOptions(dbUserId),
+    enabled: !!dbUserId && !isUserPending
+  })
+
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
+  const playSessions = playHistoryData?.sessions ?? []
 
   // Filter reviews based on search query
   const filteredReviews = userReviews.filter((review: Review) => {
@@ -629,98 +764,210 @@ function Profile() {
           </div>
         </div>
 
-        {/* Reviews Section */}
-        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
-          <h2 className="text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">
-            Your Reviews
-          </h2>
-
-          {/* Search Bar */}
-          {userReviews.length > 0 && (
-            <div className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
-                <Input
-                  type="text"
-                  placeholder="Search by game name or review..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
+        {/* Currently Playing Section */}
+        {currentlyPlayingData?.game && (
+          <div className="bg-green-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] px-4 py-3 mb-8 flex items-center gap-3">
+            <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
+              {currentlyPlayingData.game.coverUrl ? (
+                <img
+                  src={currentlyPlayingData.game.coverUrl}
+                  alt={currentlyPlayingData.game.name}
+                  className="w-12 h-16 object-cover border-2 border-stone-900"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              {searchQuery.trim() && (
-                <p className="text-stone-600 text-sm mt-2">
-                  Showing {filteredReviews.length} of {userReviews.length} reviews
-                </p>
+              ) : (
+                <div className="w-12 h-16 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-stone-500" />
+                </div>
+              )}
+            </Link>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Currently Playing</div>
+              <Link
+                to="/games/$gameId"
+                params={{ gameId: currentlyPlayingData.game.id }}
+                className="font-bold hover:underline truncate block text-stone-900"
+              >
+                {currentlyPlayingData.game.name}
+              </Link>
+              {currentlyPlayingData.session?.startedAt && (
+                <div className="text-xs text-stone-600">
+                  Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
+                </div>
               )}
             </div>
-          )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStopPlaying}
+              disabled={stopPlayingMutation.isPending}
+              className="shrink-0"
+            >
+              <Square className="w-3 h-3 mr-1" />
+              Stop
+            </Button>
+          </div>
+        )}
 
-          {reviewsPending ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
-                  <div className="flex gap-4">
-                    <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-5 w-32 bg-stone-200" />
-                      <div className="h-4 w-full bg-stone-200" />
-                      <div className="h-4 w-2/3 bg-stone-200" />
+        {/* Tabbed Content Section */}
+        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+          {/* Tab Headers */}
+          <div className="flex border-b-4 border-stone-900">
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${
+                activeTab === 'reviews'
+                  ? 'bg-amber-200 text-stone-900'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <Heart className="w-4 h-4" />
+              Reviews ({totalReviewCount})
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+                activeTab === 'history'
+                  ? 'bg-amber-200 text-stone-900'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Play History ({playSessions.length})
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'reviews' ? (
+              <>
+                {/* Search Bar */}
+                {userReviews.length > 0 && (
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
+                      <Input
+                        type="text"
+                        placeholder="Search by game name or review..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
+                    {searchQuery.trim() && (
+                      <p className="text-stone-600 text-sm mt-2">
+                        Showing {filteredReviews.length} of {userReviews.length} reviews
+                      </p>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : userReviews.length > 0 ? (
-            filteredReviews.length > 0 ? (
-              <div className="space-y-4">
-                {filteredReviews.map((review: Review) => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    onDelete={handleDeleteReview}
-                    isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
-                    onLike={handleLikeReview}
-                    isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
-                  />
-                ))}
-              </div>
+                )}
+
+                {reviewsPending ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                        <div className="flex gap-4">
+                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 w-32 bg-stone-200" />
+                            <div className="h-4 w-full bg-stone-200" />
+                            <div className="h-4 w-2/3 bg-stone-200" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : userReviews.length > 0 ? (
+                  filteredReviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {filteredReviews.map((review: Review) => (
+                        <ReviewCard
+                          key={review.id}
+                          review={review}
+                          onDelete={handleDeleteReview}
+                          isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
+                          onLike={handleLikeReview}
+                          isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                      <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
+                      <p className="text-stone-600 text-sm mb-4">
+                        Try a different search term
+                      </p>
+                      <Button
+                        onClick={() => setSearchQuery('')}
+                      >
+                        Clear Search
+                      </Button>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center py-12">
+                    <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                    <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
+                    <p className="text-stone-600 text-sm mb-4">
+                      Start playing games and share your thoughts!
+                    </p>
+                    <Button
+                      onClick={() => navigate({ to: '/' })}
+                    >
+                      Browse Games
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center py-12">
-                <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
-                <p className="text-stone-600 text-sm mb-4">
-                  Try a different search term
-                </p>
-                <Button
-                  onClick={() => setSearchQuery('')}
-                >
-                  Clear Search
-                </Button>
-              </div>
-            )
-          ) : (
-            <div className="text-center py-12">
-              <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-              <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
-              <p className="text-stone-600 text-sm mb-4">
-                Start playing games and share your thoughts!
-              </p>
-              <Button
-                onClick={() => navigate({ to: '/' })}
-              >
-                Browse Games
-              </Button>
-            </div>
-          )}
+              <>
+                {/* Play History Tab */}
+                {playHistoryPending ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                        <div className="flex gap-4">
+                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 w-32 bg-stone-200" />
+                            <div className="h-4 w-24 bg-stone-200" />
+                            <div className="h-4 w-20 bg-stone-200" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : playSessions.length > 0 ? (
+                  <div className="space-y-4">
+                    {playSessions.map((session) => (
+                      <SessionCard key={session.session.id} session={session} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <History className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                    <p className="text-stone-900 font-bold mb-2">No play history yet</p>
+                    <p className="text-stone-600 text-sm mb-4">
+                      Start tracking your gaming sessions by clicking "Play" on a game page!
+                    </p>
+                    <Button
+                      onClick={() => navigate({ to: '/' })}
+                    >
+                      Browse Games
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

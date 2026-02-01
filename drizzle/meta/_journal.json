@@ -57,6 +57,20 @@
       "when": 1769455871138,
       "tag": "0007_neat_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769902452114,
+      "tag": "0008_confused_black_bolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769903272517,
+      "tag": "0009_aspiring_titanium_man",
+      "breakpoints": true
     }
   ]
 }

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Eye, Clock, Heart, Maximize2, Minimize2 } from "lucide-react";
+import { Eye, Clock, Heart, Maximize2, Minimize2, Gamepad2 } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions, toggleReviewLike, type GameReview } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
+import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions } from "@/lib/gameSessionsQuery";
 import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
 import { Label } from "@/components/ui/label"
@@ -102,6 +103,57 @@ function GameView () {
 
     // Get the current user's database ID for optimistic updates on profile page
     const { data: dbUserData } = useQuery(dbUserQueryOptions);
+
+    // Currently playing state
+    const { data: currentlyPlayingData } = useQuery({
+      ...currentlyPlayingQueryOptions,
+      enabled: !!dbUserData?.account,
+    });
+
+    // Count of users currently playing this game
+    const { data: activePlayersData, isPending: activePlayersPending } = useQuery(
+      gameActivePlayersQueryOptions(gameId)
+    );
+
+    const isCurrentlyPlayingThisGame = currentlyPlayingData?.game?.id === gameId;
+
+    // Set currently playing mutation
+    const setPlayingMutation = useMutation({
+      mutationFn: setCurrentlyPlaying,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['currently-playing'] });
+        queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
+        toast.success('Now playing!');
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Failed to set currently playing');
+      },
+    });
+
+    // Stop playing mutation
+    const stopPlayingMutation = useMutation({
+      mutationFn: stopPlaying,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['currently-playing'] });
+        queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
+        toast.success('Stopped playing');
+      },
+      onError: (error) => {
+        toast.error(error.message || 'Failed to stop playing');
+      },
+    });
+
+    const handlePlayClick = () => {
+      if (!dbUserData?.account) {
+        toast.error("Please log in to track what you're playing");
+        return;
+      }
+      if (isCurrentlyPlayingThisGame) {
+        stopPlayingMutation.mutate();
+      } else {
+        setPlayingMutation.mutate(gameId);
+      }
+    };
 
     if (error) return 'An error has occurred: ' + error.message
 
@@ -201,7 +253,7 @@ const queryClient = useQueryClient();
                           <Poster game={data.game} size="xl" className="" />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
+                        <div className="grid grid-cols-4 gap-2 w-full max-w-[280px] mt-4">
                             <button
                                 onClick={()=>{}}
                                 className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-green-100 transition-all p-2"
@@ -225,11 +277,32 @@ const queryClient = useQueryClient();
                                 <Heart className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Like</span>
                             </button>
+
+                            <button
+                                onClick={handlePlayClick}
+                                disabled={setPlayingMutation.isPending || stopPlayingMutation.isPending}
+                                className={`flex flex-col items-center justify-center gap-1 text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                    isCurrentlyPlayingThisGame
+                                        ? 'bg-green-400 hover:bg-green-300'
+                                        : 'bg-white hover:bg-amber-100'
+                                } ${(setPlayingMutation.isPending || stopPlayingMutation.isPending) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <Gamepad2 className="w-5 h-5" />
+                                <span className="text-[10px] uppercase font-bold tracking-wider">
+                                    {isCurrentlyPlayingThisGame ? 'Playing' : 'Play'}
+                                </span>
+                            </button>
                         </div>
 
-                        <div className="w-full pt-4 border-t-4 border-stone-900 text-center lg:text-left">
-                            <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Total Logs</div>
-                            <div className="text-2xl font-bold text-stone-900">{reviewsLoading ? '—' : gameReviews.length}</div>
+                        <div className="w-full pt-4 border-t-4 border-stone-900 flex gap-4 justify-center lg:justify-start">
+                            <div className="text-center lg:text-left">
+                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Total Logs</div>
+                                <div className="text-2xl font-bold text-stone-900">{reviewsLoading ? '—' : gameReviews.length}</div>
+                            </div>
+                            <div className="text-center lg:text-left">
+                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Playing Now</div>
+                                <div className="text-2xl font-bold text-green-600">{activePlayersPending ? '—' : activePlayersData?.count ?? 0}</div>
+                            </div>
                         </div>
                     </div>
 
@@ -399,7 +472,8 @@ function GameDetailSkeleton() {
         <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
           <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-stone-200" />
         </div>
-        <div className="grid grid-cols-3 gap-2 w-full max-w-[250px] mt-4">
+        <div className="grid grid-cols-4 gap-2 w-full max-w-[280px] mt-4">
+          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
           <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdInfiniteOptions, toggleReviewLike } from '@/lib/reviewsQuery'
+import { userCurrentlyPlayingQueryOptions } from '@/lib/gameSessionsQuery'
 import { Gamepad2, Calendar, Heart } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -127,6 +128,12 @@ function PublicProfile() {
 
   const { isPending: isProfilePending, data: profileData, error: profileError } = useQuery(publicUserProfileQueryOptions(userId))
   const { data: dbUserData } = useQuery(dbUserQueryOptions)
+
+  // Get user's currently playing
+  const { data: currentlyPlayingData } = useQuery({
+    ...userCurrentlyPlayingQueryOptions(userId),
+    enabled: !!userId,
+  })
 
   // Get user's reviews
   const {
@@ -269,6 +276,40 @@ function PublicProfile() {
             </div>
           </div>
         </div>
+
+        {/* Currently Playing Section */}
+        {currentlyPlayingData?.game && (
+          <div className="bg-green-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] px-4 py-3 mb-8 flex items-center gap-3">
+            <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
+              {currentlyPlayingData.game.coverUrl ? (
+                <img
+                  src={currentlyPlayingData.game.coverUrl}
+                  alt={currentlyPlayingData.game.name}
+                  className="w-12 h-16 object-cover border-2 border-stone-900"
+                />
+              ) : (
+                <div className="w-12 h-16 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-stone-500" />
+                </div>
+              )}
+            </Link>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Currently Playing</div>
+              <Link
+                to="/games/$gameId"
+                params={{ gameId: currentlyPlayingData.game.id }}
+                className="font-bold hover:underline truncate block text-stone-900"
+              >
+                {currentlyPlayingData.game.name}
+              </Link>
+              {currentlyPlayingData.session?.startedAt && (
+                <div className="text-xs text-stone-600">
+                  Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reviews Section */}
         <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
