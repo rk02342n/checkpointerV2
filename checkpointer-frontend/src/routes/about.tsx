@@ -1,9 +1,137 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState, type FormEvent } from 'react'
+import Navbar from '@/components/Navbar'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 
 export const Route = createFileRoute('/about')({
-  component: RouteComponent,
+  component: AboutPage,
 })
 
-function RouteComponent() {
-  return <h2 className="m-auto mt-10 p-10 border-4 text-center font-bold font-serif max-w-md rounded-xl hover:bg-red-700 hover:text-white transition-colors: ease-in-out">About us</h2>
+function AboutPage() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    // TODO: Implement actual form submission
+    console.log({ name, email, message })
+    setSubmitted(true)
+    setName('')
+    setEmail('')
+    setMessage('')
+    setTimeout(() => setSubmitted(false), 3000)
+  }
+
+  return (
+    <div className="min-h-screen bg-rose-50 text-stone-900 selection:bg-green-300">
+      <Navbar />
+
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-4xl">
+        {/* Hero Section */}
+        <section className="mb-10 sm:mb-16">
+          <div className="bg-amber-400/40 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8 md:p-12">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6 font-alt">
+             Checkpointer
+            </h1>
+            <div className="space-y-4 text-base sm:text-lg text-stone-700 leading-relaxed">
+              <p>
+                Checkpointer is built by a small team that loves video games and wanted a simple way to track what we're playing. This project has grown to include community features where it welcomes discourse in a safe and respectful manner.
+              </p>
+              {/* <p>
+                {"We appreciate any and all feedback and since we're in our initial user seeding phase, you can get our pro plan for free for life if you're one of our first 4000 users."}
+              </p> */}
+              <p>
+                {"We'd love to hear from you. Please reach out to us with any questions/concerns or if you just wanna say hi! We promise that a real person will answer you back :-)"}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Form Section */}
+        <section className="mb-10 sm:mb-16">
+          <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8 md:p-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 mb-6">
+              Send us a message
+            </h2>
+
+            {submitted && (
+              <div className="mb-6 bg-green-100 border-4 border-stone-900 p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
+                <p className="font-semibold text-stone-900">
+                  Thanks for your message! We'll get back to you soon.
+                </p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-stone-900 font-semibold">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-stone-900 font-semibold">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message" className="text-stone-900 font-semibold">
+                  Message
+                </Label>
+                <Textarea
+                  id="message"
+                  placeholder="Your feedback, feature request, or just say hi..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                  className="min-h-32"
+                />
+              </div>
+
+              <Button type="submit" className="w-full sm:w-auto px-8 py-5 text-base bg-lime-400/40 hover:bg-lime-300">
+                Send Message
+              </Button>
+            </form>
+          </div>
+        </section>
+
+        {/* Email Section */}
+        <section>
+          <div className="bg-red-300 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 mb-3">
+              Or email us directly
+            </h2>
+            <a
+              href="mailto:hello@checkpointer.io"
+              className="text-lg sm:text-xl font-semibold text-stone-900 underline underline-offset-4 hover:text-stone-700 transition-colors"
+            >
+              hello@checkpointer.io
+            </a>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
 }
