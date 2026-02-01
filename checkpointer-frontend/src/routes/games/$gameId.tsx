@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Heart, Maximize2, Minimize2, Gamepad2, Check, Clock, Pencil, CalendarHeart, ConciergeBell } from "lucide-react";
+import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -33,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { se } from "date-fns/locale";
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
