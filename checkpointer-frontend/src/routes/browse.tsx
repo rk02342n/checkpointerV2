@@ -94,7 +94,7 @@ export default function BrowseGames() {
         </div>
 
         {/* Search & Filters Section */}
-        <section className="bg-orange-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
+        <section className="bg-sky-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
           {/* Search Input */}
           <div className="relative mb-4">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600" />
@@ -165,7 +165,7 @@ export default function BrowseGames() {
         </div>
 
         {/* Game Grid */}
-        <section className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <section className="bg-lime-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
           {isPending ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -242,7 +242,7 @@ export default function BrowseGames() {
                   <Button
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingNextPage}
-                    className="px-8 py-3"
+                    className="px-8 py-3 hover:bg-orange-200"
                   >
                     {isFetchingNextPage ? (
                       <>

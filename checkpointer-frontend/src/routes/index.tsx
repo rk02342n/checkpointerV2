@@ -271,7 +271,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Featured Games Section */}
-        <section className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 md:p-10">
+        <section className="bg-teal-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 md:p-10">
           {isPending ? (
             <BrutalistFeaturedGamesSkeleton count={4} />
           ) : (
