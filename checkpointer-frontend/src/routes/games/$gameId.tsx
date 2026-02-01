@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Heart, Maximize2, Minimize2, Gamepad2, Check, Clock, Pencil } from "lucide-react";
+import { Heart, Maximize2, Minimize2, Gamepad2, Check, Clock, Pencil, CalendarHeart, ConciergeBell } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions, toggleReviewLike, type GameReview } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions, type SessionStatus } from "@/lib/gameSessionsQuery";
+import { gameInWishlistQueryOptions, gameWantToPlayCountQueryOptions, addToWishlist, removeFromWishlist, type WishlistResponse } from "@/lib/wantToPlayQuery";
 import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
 import { Label } from "@/components/ui/label"
@@ -32,13 +33,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { se } from "date-fns/locale";
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
+  validateSearch: (search: Record<string, unknown>): { review?: boolean } => {
+    return {
+      review: search.review === true || search.review === 'true' ? true : undefined,
+    }
+  },
 })
 
 function GameView () {
     const { gameId } = Route.useParams()
+    const { review: openReviewForm } = Route.useSearch()
+    const navigate = useNavigate()
     const { isPending, error, data } = useQuery
     (getGameByIdQueryOptions(gameId))
 
@@ -49,8 +58,8 @@ function GameView () {
 
     // Load more state
     const [visibleCount, setVisibleCount] = useState(4);
-    // Maximize review form state
-    const [isFormMaximized, setIsFormMaximized] = useState(false);
+    // Maximize review form state - initialize based on URL search param
+    const [isFormMaximized, setIsFormMaximized] = useState(openReviewForm ?? false);
     // Switch game dialog state
     const [showSwitchGameDialog, setShowSwitchGameDialog] = useState(false);
     const reviewsPerPage = 4;
@@ -124,6 +133,101 @@ function GameView () {
     const { data: activePlayersData, isPending: activePlayersPending } = useQuery(
       gameActivePlayersQueryOptions(gameId)
     );
+
+    // Want to play (wishlist) state
+    const { data: wishlistStatus } = useQuery({
+      ...gameInWishlistQueryOptions(gameId),
+      enabled: !!dbUserData?.account,
+    });
+
+    const { data: wantToPlayCountData, isPending: wantToPlayCountPending } = useQuery(
+      gameWantToPlayCountQueryOptions(gameId)
+    );
+
+    const isInWishlist = wishlistStatus?.inWishlist ?? false;
+
+    // Want to play mutation with optimistic updates
+    const wantToPlayMutation = useMutation({
+      mutationFn: async () => {
+        if (isInWishlist) {
+          return removeFromWishlist(gameId);
+        } else {
+          return addToWishlist(gameId);
+        }
+      },
+      onMutate: async () => {
+        // Cancel any outgoing refetches
+        await queryClient.cancelQueries({ queryKey: ['want-to-play-check', gameId] });
+        await queryClient.cancelQueries({ queryKey: ['want-to-play-count', gameId] });
+        await queryClient.cancelQueries({ queryKey: ['want-to-play'] });
+
+        // Snapshot the previous values
+        const previousStatus = queryClient.getQueryData<{ inWishlist: boolean }>(
+          ['want-to-play-check', gameId]
+        );
+        const previousCount = queryClient.getQueryData<{ count: number }>(
+          ['want-to-play-count', gameId]
+        );
+        const previousWishlist = queryClient.getQueryData<WishlistResponse>(
+          ['want-to-play']
+        );
+
+        // Optimistically update
+        queryClient.setQueryData(['want-to-play-check', gameId], {
+          inWishlist: !isInWishlist,
+        });
+        queryClient.setQueryData(['want-to-play-count', gameId], {
+          count: (previousCount?.count ?? 0) + (isInWishlist ? -1 : 1),
+        });
+
+        // Update wishlist cache
+        if (previousWishlist) {
+          if (isInWishlist) {
+            // Remove from wishlist
+            queryClient.setQueryData(['want-to-play'], {
+              wishlist: previousWishlist.wishlist.filter(item => item.gameId !== gameId),
+            });
+          } else if (data?.game) {
+            // Add to wishlist
+            queryClient.setQueryData(['want-to-play'], {
+              wishlist: [
+                {
+                  gameId: gameId,
+                  createdAt: new Date().toISOString(),
+                  gameName: data.game.name,
+                  gameCoverUrl: data.game.coverUrl,
+                  gameSlug: data.game.slug,
+                },
+                ...previousWishlist.wishlist,
+              ],
+            });
+          }
+        }
+
+        return { previousStatus, previousCount, previousWishlist };
+      },
+      onError: (err, _, context) => {
+        // Rollback on error
+        if (context?.previousStatus) {
+          queryClient.setQueryData(['want-to-play-check', gameId], context.previousStatus);
+        }
+        if (context?.previousCount) {
+          queryClient.setQueryData(['want-to-play-count', gameId], context.previousCount);
+        }
+        if (context?.previousWishlist) {
+          queryClient.setQueryData(['want-to-play'], context.previousWishlist);
+        }
+        toast.error(err instanceof Error ? err.message : "Failed to update wishlist");
+      },
+    });
+
+    const handleWantClick = () => {
+      if (!dbUserData?.account) {
+        toast.error("Please log in to add games to your wishlist");
+        return;
+      }
+      wantToPlayMutation.mutate();
+    };
 
     const isCurrentlyPlayingThisGame = currentlyPlayingData?.game?.id === gameId;
 
@@ -265,6 +369,10 @@ const queryClient = useQueryClient();
         toast.success(`Review has been added: ID: ${newReview.id}`)
         setIsFormMaximized(false);
         formApi.reset();
+        // Clear the review search param if present to prevent form reopening on reload
+        if (openReviewForm) {
+          navigate({ to: '/games/$gameId', params: { gameId }, replace: true });
+        }
       } catch(error){
         toast.error("Failed to create new review")
       } finally{
@@ -292,18 +400,23 @@ const queryClient = useQueryClient();
 
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
-                                onClick={()=>{}}
+                                onClick={()=>{setIsFormMaximized(true)}}
                                 className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-green-100 transition-all p-2"
                             >
                                 <Pencil className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
                             </button>
                             <button
-                                onClick={() => {}}
-                                className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-rose-100 transition-all p-2"
+                                onClick={handleWantClick}
+                                disabled={wantToPlayMutation.isPending}
+                                className={`flex flex-col items-center justify-center gap-1 text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                    isInWishlist
+                                        ? 'bg-amber-400 hover:bg-amber-300'
+                                        : 'bg-white hover:bg-amber-100'
+                                } ${wantToPlayMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <Heart className="w-5 h-5" />
-                                <span className="text-[10px] uppercase font-bold tracking-wider">Like</span>
+                                <CalendarHeart className={`w-5 h-5 ${isInWishlist ? 'stroke-[3.5]' : ''}`} />
+                                <span className="text-[10px] uppercase font-bold tracking-wider">Want</span>
                             </button>
 
                             <button
@@ -315,20 +428,24 @@ const queryClient = useQueryClient();
                                         : 'bg-white hover:bg-amber-100'
                                 } ${(setPlayingMutation.isPending || stopPlayingMutation.isPending) ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <Gamepad2 className="w-5 h-5" />
+                                <ConciergeBell className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">
-                                    {isCurrentlyPlayingThisGame ? 'Playing' : 'Play'}
+                                    {isCurrentlyPlayingThisGame ? 'Playing' : 'Playing?'}
                                 </span>
                             </button>
                         </div>
 
                         <div className="w-full pt-4 border-t-4 border-stone-900 flex gap-4 justify-center lg:justify-start">
                             <div className="text-center lg:text-left">
-                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Total Logs</div>
+                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Reviews</div>
                                 <div className="text-2xl font-bold text-stone-900">{reviewsLoading ? '—' : gameReviews.length}</div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Playing Now</div>
+                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Wishlisted</div>
+                                <div className="text-2xl font-bold text-amber-600">{wantToPlayCountPending ? '—' : wantToPlayCountData?.count ?? 0}</div>
+                            </div>
+                            <div className="text-center lg:text-left">
+                                <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Playing</div>
                                 <div className="text-2xl font-bold text-green-600">{activePlayersPending ? '—' : activePlayersData?.count ?? 0}</div>
                             </div>
                         </div>
@@ -680,7 +797,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
 
         <h3 className={`font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4 ${
           isMaximized ? 'text-sm sm:text-base mb-6' : 'text-xs sm:text-sm pt-6 lg:pt-0'
-        }`}>Write a Review</h3>
+        }`}>Thoughts?</h3>
 
         <form
           onSubmit={(e) => {

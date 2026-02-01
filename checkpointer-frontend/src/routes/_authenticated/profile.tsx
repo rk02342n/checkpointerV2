@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
-import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle, Square, Clock, History } from 'lucide-react'
+import { wantToPlayQueryOptions, removeFromWishlist, type WishlistItem, type WishlistResponse } from '@/lib/wantToPlayQuery'
+import { Gamepad2, Calendar, Trash2, Search, X, Heart, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -257,10 +258,83 @@ function SessionCard({ session }: SessionCardProps) {
   )
 }
 
+function WishlistCard({ item, onRemove, isRemoving }: { item: WishlistItem, onRemove: (gameId: string) => void, isRemoving: boolean }) {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  return (
+    <Link
+      to="/games/$gameId"
+      params={{ gameId: item.gameId }}
+      className={`block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
+    >
+      <div className="flex gap-4">
+        {/* Game Cover */}
+        <div className="shrink-0">
+          {item.gameCoverUrl ? (
+            <img
+              src={item.gameCoverUrl}
+              alt={item.gameName}
+              className="w-16 h-20 object-cover border-2 border-stone-900"
+            />
+          ) : (
+            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-stone-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-stone-900 font-bold truncate" title={item.gameName}>
+                {item.gameName}
+              </h4>
+              <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
+                <Calendar className="w-3 h-3" />
+                <span>Added {formatDate(item.createdAt)}</span>
+              </div>
+            </div>
+            <span className="bg-amber-200 text-amber-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+              Want to Play
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end items-center gap-2 mt-auto pt-2 border-t-2 border-stone-200">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onRemove(item.gameId)
+              }}
+              disabled={isRemoving}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 p-1 h-auto"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              <span className="text-xs">Remove</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history'>('reviews')
+  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist'>('reviews')
   const [searchQuery, setSearchQuery] = useState('')
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -297,7 +371,11 @@ function Profile() {
   })
 
   const handleStopPlaying = (status: SessionStatus) => {
+    const gameId = currentlyPlayingData?.game?.id
     stopPlayingMutation.mutate(status)
+    if (gameId && status === 'finished') {
+      navigate({ to: '/games/$gameId', params: { gameId }, search: { review: true } })
+    }
   }
 
   // Avatar upload mutation
@@ -486,9 +564,16 @@ function Profile() {
     enabled: !!dbUserId && !isUserPending
   })
 
+  // Get user's wishlist
+  const { data: wishlistData, isPending: wishlistPending } = useQuery({
+    ...wantToPlayQueryOptions,
+    enabled: !!dbUserId && !isUserPending
+  })
+
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
   const playSessions = playHistoryData?.sessions ?? []
+  const wishlistItems = wishlistData?.wishlist ?? []
 
   // Filter reviews based on search query
   const filteredReviews = userReviews.filter((review: Review) => {
@@ -594,6 +679,58 @@ function Profile() {
 
   const handleLikeReview = (reviewId: string) => {
     likeMutation.mutate(reviewId)
+  }
+
+  // Remove from wishlist mutation with optimistic updates
+  const removeWishlistMutation = useMutation({
+    mutationFn: removeFromWishlist,
+    onMutate: async (gameId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['want-to-play'] })
+      await queryClient.cancelQueries({ queryKey: ['want-to-play-check', gameId] })
+      await queryClient.cancelQueries({ queryKey: ['want-to-play-count', gameId] })
+
+      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['want-to-play'])
+      const previousCheck = queryClient.getQueryData<{ inWishlist: boolean }>(['want-to-play-check', gameId])
+      const previousCount = queryClient.getQueryData<{ count: number }>(['want-to-play-count', gameId])
+
+      // Optimistically remove from wishlist
+      if (previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], {
+          wishlist: previousWishlist.wishlist.filter(item => item.gameId !== gameId)
+        })
+      }
+
+      // Update check status
+      queryClient.setQueryData(['want-to-play-check', gameId], { inWishlist: false })
+
+      // Update count
+      if (previousCount) {
+        queryClient.setQueryData(['want-to-play-count', gameId], {
+          count: Math.max(0, previousCount.count - 1)
+        })
+      }
+
+      return { previousWishlist, previousCheck, previousCount, gameId }
+    },
+    onError: (err, gameId, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], context.previousWishlist)
+      }
+      if (context?.previousCheck) {
+        queryClient.setQueryData(['want-to-play-check', gameId], context.previousCheck)
+      }
+      if (context?.previousCount) {
+        queryClient.setQueryData(['want-to-play-count', gameId], context.previousCount)
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to remove from wishlist')
+    },
+    onSuccess: () => {
+      toast.success('Removed from wishlist')
+    }
+  })
+
+  const handleRemoveFromWishlist = (gameId: string) => {
+    removeWishlistMutation.mutate(gameId)
   }
 
   if (isPending) {
@@ -845,6 +982,17 @@ function Profile() {
               <History className="w-4 h-4" />
               Play History ({playSessions.length})
             </button>
+            <button
+              onClick={() => setActiveTab('wishlist')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+                activeTab === 'wishlist'
+                  ? 'bg-amber-200 text-stone-900'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <CalendarHeart className="w-4 h-4" />
+              Want to Play ({wishlistItems.length})
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -938,7 +1086,7 @@ function Profile() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : activeTab === 'history' ? (
               <>
                 {/* Play History Tab */}
                 {playHistoryPending ? (
@@ -968,6 +1116,49 @@ function Profile() {
                     <p className="text-stone-900 font-bold mb-2">No play history yet</p>
                     <p className="text-stone-600 text-sm mb-4">
                       Start tracking your gaming sessions by clicking "Play" on a game page!
+                    </p>
+                    <Button
+                      onClick={() => navigate({ to: '/' })}
+                    >
+                      Browse Games
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Want to Play Tab */}
+                {wishlistPending ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                        <div className="flex gap-4">
+                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-5 w-32 bg-stone-200" />
+                            <div className="h-4 w-24 bg-stone-200" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : wishlistItems.length > 0 ? (
+                  <div className="space-y-4">
+                    {wishlistItems.map((item: WishlistItem) => (
+                      <WishlistCard
+                        key={item.gameId}
+                        item={item}
+                        onRemove={handleRemoveFromWishlist}
+                        isRemoving={removeWishlistMutation.isPending && removeWishlistMutation.variables === item.gameId}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <CalendarHeart className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                    <p className="text-stone-900 font-bold mb-2">No games in wishlist</p>
+                    <p className="text-stone-600 text-sm mb-4">
+                      Click "Want" on a game page to add it to your wishlist!
                     </p>
                     <Button
                       onClick={() => navigate({ to: '/' })}
@@ -1025,18 +1216,17 @@ function Profile() {
         <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-stone-900">
-              <Square className="w-5 h-5" />
               End Session
             </DialogTitle>
             <DialogDescription className="text-stone-600">
-              How would you like to mark this session for {currentlyPlayingData?.game?.name}?
+              How would you like to mark this session for <span className='font-bold'>{currentlyPlayingData?.game?.name}</span>?
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 py-4">
             <Button
               onClick={() => handleStopPlaying('finished')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-green-500 hover:bg-green-600 text-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3"
+              className="bg-lime-100 hover:bg-lime-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
             >
               <Check className="w-5 h-5 mr-2" />
               <div className="text-left">
@@ -1047,11 +1237,11 @@ function Profile() {
             <Button
               onClick={() => handleStopPlaying('stashed')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-amber-400 hover:bg-amber-500 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3"
+              className="bg-sky-100 hover:bg-sky-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
             >
               <Clock className="w-5 h-5 mr-2" />
               <div className="text-left">
-                <div className="font-bold">Stashing for now</div>
+                <div className="font-bold">Stash for now</div>
                 <div className="text-xs opacity-90">I'll come back to this later</div>
               </div>
             </Button>

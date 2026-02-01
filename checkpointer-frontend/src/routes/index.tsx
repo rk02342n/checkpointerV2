@@ -250,9 +250,9 @@ export default function Checkpointer() {
         <section className="mb-10 sm:mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
-              { label: "Games", value: data?.games?.length || "---", color: "bg-orange-50" },
+              { label: "Games", value:  "10K+", color: "bg-orange-50" },
               { label: "Reviews", value: "1.2K+", color: "bg-amber-100" },
-              { label: "Users", value: "500+", color: "bg-rose-100" },
+              { label: "Users", value: "100+", color: "bg-rose-100" },
               { label: "Logs", value: "5K+", color: "bg-sky-100" },
             ].map((stat) => (
               <div
