@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react'
+import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
@@ -656,13 +656,13 @@ function Profile() {
   const wishlistItems = wishlistData?.wishlist ?? []
 
   // Filter reviews based on search query
-  const filteredReviews = userReviews.filter((review: Review) => {
+  const filteredReviews = useMemo(() => userReviews.filter((review: Review) => {
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
     const gameName = (review.gameName || '').toLowerCase()
     const reviewText = (review.reviewText || '').toLowerCase()
     return gameName.includes(query) || reviewText.includes(query)
-  })
+  }), [userReviews, searchQuery])
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -717,9 +717,9 @@ function Profile() {
     }
   })
 
-  const handleDeleteReview = (reviewId: string) => {
+  const handleDeleteReview = useCallback((reviewId: string) => {
     deleteMutation.mutate(reviewId)
-  }
+  }, [])
 
   // Like mutation with optimistic updates
   const likeMutation = useMutation({
@@ -757,9 +757,9 @@ function Profile() {
     },
   })
 
-  const handleLikeReview = (reviewId: string) => {
+  const handleLikeReview = useCallback((reviewId: string) => {
     likeMutation.mutate(reviewId)
-  }
+  }, [])
 
   // Remove from wishlist mutation with optimistic updates
   const removeWishlistMutation = useMutation({
@@ -809,9 +809,9 @@ function Profile() {
     }
   })
 
-  const handleRemoveFromWishlist = (gameId: string) => {
+  const handleRemoveFromWishlist = useCallback((gameId: string) => {
     removeWishlistMutation.mutate(gameId)
-  }
+  }, [])
 
   if (isPending) {
     return (
@@ -1042,7 +1042,7 @@ function Profile() {
           <div className="flex border-b-4 border-stone-900">
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1053,7 +1053,7 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
                 activeTab === 'history'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1064,7 +1064,7 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
                 activeTab === 'wishlist'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1076,9 +1076,9 @@ function Profile() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-6 grid">
             {/* Reviews Tab */}
-            <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'reviews' ? 'opacity-0 pointer-events-none' : ''}`}>
               {/* Search Bar */}
               {userReviews.length > 0 && (
                 <div className="mb-4">
@@ -1168,7 +1168,7 @@ function Profile() {
             </div>
 
             {/* Play History Tab */}
-            <div className={activeTab !== 'history' ? 'hidden' : ''}>
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'history' ? 'opacity-0 pointer-events-none' : ''}`}>
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -1207,7 +1207,7 @@ function Profile() {
             </div>
 
             {/* Want to Play Tab */}
-            <div className={activeTab !== 'wishlist' ? 'hidden' : ''}>
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'wishlist' ? 'opacity-0 pointer-events-none' : ''}`}>
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
