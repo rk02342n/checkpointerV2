@@ -6,6 +6,7 @@ import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wantToPlayQueryOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart } from 'lucide-react'
+import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 
