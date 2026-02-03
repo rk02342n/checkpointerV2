@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
@@ -46,7 +46,7 @@ type Review = {
   userLiked: boolean
 }
 
-function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review: Review, onDelete: (id: string) => void, isDeleting: boolean, onLike: (id: string) => void, isLiking: boolean }) {
+const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review: Review, onDelete: (id: string) => void, isDeleting: boolean, onLike: (id: string) => void, isLiking: boolean }) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)
@@ -143,7 +143,7 @@ function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: { review
       </div>
     </Link>
   )
-}
+})
 
 // Format duration between two dates
 function formatDuration(startedAt: string, endedAt: string | null): string {
@@ -176,7 +176,7 @@ type SessionCardProps = {
   }
 }
 
-function SessionCard({ session }: SessionCardProps) {
+const SessionCard = memo(function SessionCard({ session }: SessionCardProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
@@ -256,7 +256,7 @@ function SessionCard({ session }: SessionCardProps) {
       </div>
     </Link>
   )
-}
+})
 
 // Compress image to be under target size (100KB default)
 async function compressImage(file: File, maxSizeKB = 100): Promise<File> {
@@ -331,7 +331,7 @@ async function compressImage(file: File, maxSizeKB = 100): Promise<File> {
   })
 }
 
-function WishlistCard({ item, onRemove, isRemoving }: { item: WishlistItem, onRemove: (gameId: string) => void, isRemoving: boolean }) {
+const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemoving }: { item: WishlistItem, onRemove: (gameId: string) => void, isRemoving: boolean }) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
@@ -402,7 +402,7 @@ function WishlistCard({ item, onRemove, isRemoving }: { item: WishlistItem, onRe
       </div>
     </Link>
   )
-}
+})
 
 function Profile() {
   const navigate = useNavigate()
@@ -656,13 +656,13 @@ function Profile() {
   const wishlistItems = wishlistData?.wishlist ?? []
 
   // Filter reviews based on search query
-  const filteredReviews = userReviews.filter((review: Review) => {
+  const filteredReviews = useMemo(() => userReviews.filter((review: Review) => {
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
     const gameName = (review.gameName || '').toLowerCase()
     const reviewText = (review.reviewText || '').toLowerCase()
     return gameName.includes(query) || reviewText.includes(query)
-  })
+  }), [userReviews, searchQuery])
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -717,9 +717,9 @@ function Profile() {
     }
   })
 
-  const handleDeleteReview = (reviewId: string) => {
+  const handleDeleteReview = useCallback((reviewId: string) => {
     deleteMutation.mutate(reviewId)
-  }
+  }, [])
 
   // Like mutation with optimistic updates
   const likeMutation = useMutation({
@@ -757,9 +757,9 @@ function Profile() {
     },
   })
 
-  const handleLikeReview = (reviewId: string) => {
+  const handleLikeReview = useCallback((reviewId: string) => {
     likeMutation.mutate(reviewId)
-  }
+  }, [])
 
   // Remove from wishlist mutation with optimistic updates
   const removeWishlistMutation = useMutation({
@@ -809,9 +809,9 @@ function Profile() {
     }
   })
 
-  const handleRemoveFromWishlist = (gameId: string) => {
+  const handleRemoveFromWishlist = useCallback((gameId: string) => {
     removeWishlistMutation.mutate(gameId)
-  }
+  }, [])
 
   if (isPending) {
     return (
@@ -1042,7 +1042,7 @@ function Profile() {
           <div className="flex border-b-4 border-stone-900">
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1053,7 +1053,7 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
                 activeTab === 'history'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1064,7 +1064,7 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
                 activeTab === 'wishlist'
                   ? 'bg-amber-200 text-stone-900'
                   : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
@@ -1076,179 +1076,178 @@ function Profile() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
-            {activeTab === 'reviews' ? (
-              <>
-                {/* Search Bar */}
-                {userReviews.length > 0 && (
-                  <div className="mb-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
-                      <Input
-                        type="text"
-                        placeholder="Search by game name or review..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    {searchQuery.trim() && (
-                      <p className="text-stone-600 text-sm mt-2">
-                        Showing {filteredReviews.length} of {userReviews.length} reviews
-                      </p>
+          <div className="p-6 grid">
+            {/* Reviews Tab */}
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'reviews' ? 'opacity-0 pointer-events-none' : ''}`}>
+              {/* Search Bar */}
+              {userReviews.length > 0 && (
+                <div className="mb-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
+                    <Input
+                      type="text"
+                      placeholder="Search by game name or review..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
-                )}
+                  {searchQuery.trim() && (
+                    <p className="text-stone-600 text-sm mt-2">
+                      Showing {filteredReviews.length} of {userReviews.length} reviews
+                    </p>
+                  )}
+                </div>
+              )}
 
-                {reviewsPending ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
-                        <div className="flex gap-4">
-                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-5 w-32 bg-stone-200" />
-                            <div className="h-4 w-full bg-stone-200" />
-                            <div className="h-4 w-2/3 bg-stone-200" />
-                          </div>
+              {reviewsPending ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                      <div className="flex gap-4">
+                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 w-32 bg-stone-200" />
+                          <div className="h-4 w-full bg-stone-200" />
+                          <div className="h-4 w-2/3 bg-stone-200" />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : userReviews.length > 0 ? (
-                  filteredReviews.length > 0 ? (
-                    <div className="space-y-4">
-                      {filteredReviews.map((review: Review) => (
-                        <ReviewCard
-                          key={review.id}
-                          review={review}
-                          onDelete={handleDeleteReview}
-                          isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
-                          onLike={handleLikeReview}
-                          isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
-                        />
-                      ))}
                     </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                      <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
-                      <p className="text-stone-600 text-sm mb-4">
-                        Try a different search term
-                      </p>
-                      <Button
-                        onClick={() => setSearchQuery('')}
-                      >
-                        Clear Search
-                      </Button>
-                    </div>
-                  )
-                ) : (
-                  <div className="text-center py-12">
-                    <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                    <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
-                    <p className="text-stone-600 text-sm mb-4">
-                      Start playing games and share your thoughts!
-                    </p>
-                    <Button
-                      onClick={() => navigate({ to: '/' })}
-                    >
-                      Browse Games
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : activeTab === 'history' ? (
-              <>
-                {/* Play History Tab */}
-                {playHistoryPending ? (
+                  ))}
+                </div>
+              ) : userReviews.length > 0 ? (
+                filteredReviews.length > 0 ? (
                   <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
-                        <div className="flex gap-4">
-                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-5 w-32 bg-stone-200" />
-                            <div className="h-4 w-24 bg-stone-200" />
-                            <div className="h-4 w-20 bg-stone-200" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : playSessions.length > 0 ? (
-                  <div className="space-y-4">
-                    {playSessions.map((session) => (
-                      <SessionCard key={session.session.id} session={session} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <History className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                    <p className="text-stone-900 font-bold mb-2">No play history yet</p>
-                    <p className="text-stone-600 text-sm mb-4">
-                      Start tracking your gaming sessions by clicking "Play" on a game page!
-                    </p>
-                    <Button
-                      onClick={() => navigate({ to: '/' })}
-                    >
-                      Browse Games
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {/* Want to Play Tab */}
-                {wishlistPending ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
-                        <div className="flex gap-4">
-                          <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-5 w-32 bg-stone-200" />
-                            <div className="h-4 w-24 bg-stone-200" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : wishlistItems.length > 0 ? (
-                  <div className="space-y-4">
-                    {wishlistItems.map((item: WishlistItem) => (
-                      <WishlistCard
-                        key={item.gameId}
-                        item={item}
-                        onRemove={handleRemoveFromWishlist}
-                        isRemoving={removeWishlistMutation.isPending && removeWishlistMutation.variables === item.gameId}
+                    {filteredReviews.map((review: Review) => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        onDelete={handleDeleteReview}
+                        isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
+                        onLike={handleLikeReview}
+                        isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
                       />
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <CalendarHeart className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                    <p className="text-stone-900 font-bold mb-2">No games in wishlist</p>
+                    <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                    <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
                     <p className="text-stone-600 text-sm mb-4">
-                      Click "Want" on a game page to add it to your wishlist!
+                      Try a different search term
                     </p>
                     <Button
-                      onClick={() => navigate({ to: '/' })}
+                      onClick={() => setSearchQuery('')}
                     >
-                      Browse Games
+                      Clear Search
                     </Button>
                   </div>
-                )}
-              </>
-            )}
+                )
+              ) : (
+                <div className="text-center py-12">
+                  <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
+                  <p className="text-stone-600 text-sm mb-4">
+                    Start playing games and share your thoughts!
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: '/' })}
+                  >
+                    Browse Games
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Play History Tab */}
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'history' ? 'opacity-0 pointer-events-none' : ''}`}>
+              {playHistoryPending ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                      <div className="flex gap-4">
+                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 w-32 bg-stone-200" />
+                          <div className="h-4 w-24 bg-stone-200" />
+                          <div className="h-4 w-20 bg-stone-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : playSessions.length > 0 ? (
+                <div className="space-y-4">
+                  {playSessions.map((session) => (
+                    <SessionCard key={session.session.id} session={session} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-900 font-bold mb-2">No play history yet</p>
+                  <p className="text-stone-600 text-sm mb-4">
+                    Start tracking your gaming sessions by clicking "Play" on a game page!
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: '/' })}
+                  >
+                    Browse Games
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Want to Play Tab */}
+            <div className={`col-start-1 row-start-1 ${activeTab !== 'wishlist' ? 'opacity-0 pointer-events-none' : ''}`}>
+              {wishlistPending ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                      <div className="flex gap-4">
+                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 w-32 bg-stone-200" />
+                          <div className="h-4 w-24 bg-stone-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : wishlistItems.length > 0 ? (
+                <div className="space-y-4">
+                  {wishlistItems.map((item: WishlistItem) => (
+                    <WishlistCard
+                      key={item.gameId}
+                      item={item}
+                      onRemove={handleRemoveFromWishlist}
+                      isRemoving={removeWishlistMutation.isPending && removeWishlistMutation.variables === item.gameId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <CalendarHeart className="w-12 h-12 text-stone-400 mx-auto mb-4" />
+                  <p className="text-stone-900 font-bold mb-2">No games in wishlist</p>
+                  <p className="text-stone-600 text-sm mb-4">
+                    Click "Want" on a game page to add it to your wishlist!
+                  </p>
+                  <Button
+                    onClick={() => navigate({ to: '/' })}
+                  >
+                    Browse Games
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
