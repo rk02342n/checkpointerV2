@@ -27,6 +27,22 @@ export const wantToPlayQueryOptions = queryOptions({
   staleTime: 1000 * 60 * 5, // 5 minutes
 });
 
+// Get any user's wishlist (public)
+async function getUserWishlist(userId: string): Promise<WishlistResponse> {
+  const res = await fetch(`/api/want-to-play/user/${userId}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch user wishlist");
+  }
+  return res.json();
+}
+
+export const userWantToPlayQueryOptions = (userId: string) =>
+  queryOptions({
+    queryKey: ['user-want-to-play', userId],
+    queryFn: () => getUserWishlist(userId),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
 // Check if game is in wishlist
 async function checkGameInWishlist(gameId: string): Promise<{ inWishlist: boolean }> {
   const res = await fetch(`/api/want-to-play/check/${gameId}`);

@@ -45,6 +45,26 @@ export const wantToPlayRoute = new Hono()
   return c.json({ inWishlist: existing.length > 0 });
 })
 
+// GET /user/:userId - Get user's public wishlist
+.get('/user/:userId', async (c) => {
+  const userId = c.req.param('userId');
+
+  const wishlist = await db
+    .select({
+      gameId: wantToPlayTable.gameId,
+      createdAt: wantToPlayTable.createdAt,
+      gameName: gamesTable.name,
+      gameCoverUrl: gamesTable.coverUrl,
+      gameSlug: gamesTable.slug,
+    })
+    .from(wantToPlayTable)
+    .innerJoin(gamesTable, eq(wantToPlayTable.gameId, gamesTable.id))
+    .where(eq(wantToPlayTable.userId, userId))
+    .orderBy(desc(wantToPlayTable.createdAt));
+
+  return c.json({ wishlist });
+})
+
 // GET /game/:gameId/count - Get count of users who want to play (public)
 .get('/game/:gameId/count', async (c) => {
   const gameId = c.req.param('gameId');
