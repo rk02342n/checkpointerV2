@@ -8,7 +8,6 @@ import { getSearchGamesQueryOptions } from "@/lib/gameQuery";
 import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
 import { dbUserQueryOptions } from "@/lib/api";
-import LogModal from "./LogModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +24,6 @@ const Navbar: React.FC<NavbarProps> = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
-    const [showLogModal, setShowLogModal] = useState<boolean>(false);
 
     // Debounce search query to avoid excessive API calls
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -208,10 +206,6 @@ const Navbar: React.FC<NavbarProps> = () => {
             <Plus className="w-4 h-4" />
             <span>Log Game</span>
           </Button>
-          <LogModal
-            isOpen={showLogModal}
-            onClose={() => setShowLogModal(false)}
-          />
         </div>
       </div>
     </nav>

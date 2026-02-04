@@ -18,7 +18,7 @@ const Login = () => {
                     </div>
 
                     {/* Branding */}
-                    <h1 className="text-4xl md:text-5xl font-black text-black font-serif tracking-tight mb-2">
+                    <h1 className="text-4xl md:text-5xl font-semibold text-black font-alt tracking-tight mb-2">
                         Checkpointer
                     </h1>
                     <p className="text-lg text-black font-medium mb-8">
