@@ -4,7 +4,7 @@ import { Gamepad2, Calendar, Trash2, Heart, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StarRating } from '@/components/StarRating'
 import type { WishlistItem } from '@/lib/wantToPlayQuery'
-import type { GameSession, GameSessionGame, SessionStatus } from '@/lib/gameSessionsQuery'
+import type { SessionStatus } from '@/lib/gameSessionsQuery'
 
 export type Review = {
   id: string | number
