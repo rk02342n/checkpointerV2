@@ -110,6 +110,22 @@ export const playHistoryQueryOptions = (userId: string) =>
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+// Log a past game (creates an already-completed session)
+export async function logPastGame(gameId: string, status: SessionStatus = "finished"): Promise<CurrentlyPlayingResponse> {
+  const res = await fetch("/api/game-sessions/history", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ gameId, status }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to log past game");
+  }
+  return res.json();
+}
+
 // Get count of users currently playing a game
 async function getGameActivePlayers(gameId: string): Promise<{ count: number }> {
   const res = await fetch(`/api/game-sessions/game/${gameId}/active-players`);

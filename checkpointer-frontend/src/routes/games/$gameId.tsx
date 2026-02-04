@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { LogGameModal } from '@/components/LogGameModal'
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
@@ -61,6 +62,8 @@ function GameView () {
     const [isFormMaximized, setIsFormMaximized] = useState(openReviewForm ?? false);
     // Switch game dialog state
     const [showSwitchGameDialog, setShowSwitchGameDialog] = useState(false);
+    // Log game modal state
+    const [showLogGameModal, setShowLogGameModal] = useState(false);
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
@@ -399,7 +402,7 @@ const queryClient = useQueryClient();
 
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
-                                onClick={()=>{setIsFormMaximized(true)}}
+                                onClick={() => setShowLogGameModal(true)}
                                 className="flex flex-col items-center justify-center gap-1 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-green-100 transition-all p-2"
                             >
                                 <Pencil className="w-5 h-5" />
@@ -459,7 +462,7 @@ const queryClient = useQueryClient();
                                     {new Date(data.game.releaseDate).getFullYear()}
                                 </span>
                                 <span className="bg-sky-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium truncate max-w-[120px] sm:max-w-none">{data.game?.name?.split(':')[0]}</span>
-                                <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium shrink-0">IGDB: {Math.round(data.game.igdbRating)}</span>
+                                <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium shrink-0">IGDB: {data.game.igdbRating}</span>
                             </div>
                         </div>
 
@@ -602,6 +605,18 @@ const queryClient = useQueryClient();
                 </div>
             </div>
             )}
+
+            {/* Log Game Modal */}
+            <LogGameModal
+              open={showLogGameModal}
+              onOpenChange={setShowLogGameModal}
+              preselectedGame={data?.game ? {
+                id: data.game.id,
+                name: data.game.name,
+                coverUrl: data.game.coverUrl,
+                releaseDate: data.game.releaseDate,
+              } : null}
+            />
 
             {/* Switch Game Dialog */}
             <Dialog open={showSwitchGameDialog} onOpenChange={setShowSwitchGameDialog}>

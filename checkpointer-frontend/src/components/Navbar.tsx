@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { LogGameModal } from "./LogGameModal";
 
 interface NavbarProps {
   logModalTrigger?: boolean;
@@ -22,6 +23,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [logGameModalOpen, setLogGameModalOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
@@ -201,13 +203,16 @@ const Navbar: React.FC<NavbarProps> = () => {
           <Button
             variant="outline"
             className="hidden md:flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 px-4 py-2 font-semibold transition-all text-sm"
-            onClick={() => inputRef?.current?.focus()}
+            onClick={() => setLogGameModalOpen(true)}
           >
             <Plus className="w-4 h-4" />
             <span>Log Game</span>
           </Button>
         </div>
       </div>
+
+      {/* Log Game Modal */}
+      <LogGameModal open={logGameModalOpen} onOpenChange={setLogGameModalOpen} />
     </nav>
     );
 }

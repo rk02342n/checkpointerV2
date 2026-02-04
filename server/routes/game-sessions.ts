@@ -15,6 +15,11 @@ const stopPlayingSchema = z.object({
   status: z.enum(["finished", "stashed"]).optional()
 });
 
+const logPastGameSchema = z.object({
+  gameId: z.string().uuid(),
+  status: z.enum(["finished", "stashed"]).default("finished")
+});
+
 export const gameSessionsRoute = new Hono()
 // POST /current - Set currently playing game (ends previous session if any)
 .post('/current', zValidator("json", setCurrentlyPlayingSchema), getAuthUser, async (c) => {
@@ -189,4 +194,44 @@ export const gameSessionsRoute = new Hono()
     hasMore,
     nextOffset: hasMore ? offset + limit : null
   });
+})
+
+// POST /history - Log a past game (creates an already-completed session)
+.post('/history', zValidator("json", logPastGameSchema), getAuthUser, async (c) => {
+  const user = c.var.dbUser;
+  const { gameId, status } = await c.req.valid("json");
+
+  // Verify game exists
+  const game = await db
+    .select()
+    .from(gamesTable)
+    .where(eq(gamesTable.id, gameId))
+    .then(res => res[0]);
+
+  if (!game) {
+    return c.json({ error: "Game not found" }, 404);
+  }
+
+  const now = new Date();
+  // Create a completed session (does not affect currently playing)
+  const newSession = await db
+    .insert(gameSessionsTable)
+    .values({
+      userId: user.id,
+      gameId: gameId,
+      startedAt: now,
+      endedAt: now,
+      status: status,
+    })
+    .returning()
+    .then(res => res[0]);
+
+  return c.json({
+    session: newSession,
+    game: {
+      id: game.id,
+      name: game.name,
+      coverUrl: game.coverUrl,
+    }
+  }, 201);
 });
