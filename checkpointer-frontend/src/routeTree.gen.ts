@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
+import { Route as ListsListIdRouteImport } from './routes/lists/$listId'
 import { Route as GamesGameIdRouteImport } from './routes/games/$gameId'
 import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authenticated/totalspent'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const UsersUserIdRoute = UsersUserIdRouteImport.update({
   id: '/users/$userId',
   path: '/users/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListsListIdRoute = ListsListIdRouteImport.update({
+  id: '/lists/$listId',
+  path: '/lists/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesGameIdRoute = GamesGameIdRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
+  '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
+  '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
 }
 export interface FileRoutesById {
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
+  '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
 }
 export interface FileRouteTypes {
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/totalspent'
     | '/games/$gameId'
+    | '/lists/$listId'
     | '/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/totalspent'
     | '/games/$gameId'
+    | '/lists/$listId'
     | '/users/$userId'
   id:
     | '__root__'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/totalspent'
     | '/games/$gameId'
+    | '/lists/$listId'
     | '/users/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   BrowseRoute: typeof BrowseRoute
   GamesGameIdRoute: typeof GamesGameIdRoute
+  ListsListIdRoute: typeof ListsListIdRoute
   UsersUserIdRoute: typeof UsersUserIdRoute
 }
 
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       path: '/users/$userId'
       fullPath: '/users/$userId'
       preLoaderRoute: typeof UsersUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lists/$listId': {
+      id: '/lists/$listId'
+      path: '/lists/$listId'
+      fullPath: '/lists/$listId'
+      preLoaderRoute: typeof ListsListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games/$gameId': {
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   BrowseRoute: BrowseRoute,
   GamesGameIdRoute: GamesGameIdRoute,
+  ListsListIdRoute: ListsListIdRoute,
   UsersUserIdRoute: UsersUserIdRoute,
 }
 export const routeTree = rootRouteImport

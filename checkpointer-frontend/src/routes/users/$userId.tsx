@@ -5,9 +5,11 @@ import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { userCurrentlyPlayingQueryOptions, playHistoryQueryOptions } from '@/lib/gameSessionsQuery'
 import { userWantToPlayQueryOptions } from '@/lib/wantToPlayQuery'
-import { Gamepad2, Heart, History, CalendarHeart } from 'lucide-react'
+import { Gamepad2, Heart, History, CalendarHeart, ListPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
+import { ListsSection } from '@/components/ListsSection'
+import { userGameListsQueryOptions } from '@/lib/gameListsQuery'
 
 export const Route = createFileRoute('/users/$userId')({
   component: PublicProfile,
@@ -27,7 +29,7 @@ const REVIEWS_PER_PAGE = 10
 function PublicProfile() {
   const { userId } = Route.useParams()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist'>('reviews')
+  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists'>('reviews')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
 
   const { isPending: isProfilePending, data: profileData, error: profileError } = useQuery(publicUserProfileQueryOptions(userId))
@@ -57,9 +59,16 @@ function PublicProfile() {
     enabled: !!userId
   })
 
+  // Get user's public game lists
+  const { data: gameListsData } = useQuery({
+    ...userGameListsQueryOptions(userId),
+    enabled: !!userId
+  })
+
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
   const playSessions = playHistoryData?.sessions ?? []
+  const gameLists = gameListsData?.lists ?? []
   const wishlistItems = wishlistData?.wishlist ?? []
 
   // Client-side pagination for reviews
@@ -259,6 +268,17 @@ function PublicProfile() {
               <CalendarHeart className="w-4 h-4" />
               Want to Play ({wishlistItems.length})
             </button>
+            <button
+              onClick={() => setActiveTab('lists')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+                activeTab === 'lists'
+                  ? 'bg-amber-200 text-stone-900'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <ListPlus className="w-4 h-4" />
+              Lists ({gameLists.length})
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -376,6 +396,11 @@ function PublicProfile() {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Lists Tab */}
+            <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
+              <ListsSection userId={userId} isOwnProfile={false} />
             </div>
           </div>
         </div>
