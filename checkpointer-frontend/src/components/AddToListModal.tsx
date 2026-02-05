@@ -4,8 +4,10 @@ import { Loader2, Plus, Check, Lock, Gamepad2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import {
@@ -209,7 +211,7 @@ export function AddToListModal({
                               {list.name}
                             </span>
                             {list.visibility === "private" && (
-                              <Lock className="w-3 h-3 text-stone-500 flex-shrink-0" />
+                              <Lock className="w-3 h-3 text-stone-500 shrink-0" />
                             )}
                           </div>
                           <span className="text-stone-600 text-xs">
@@ -235,6 +237,11 @@ export function AddToListModal({
               </Button>
             )}
           </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant='pop' className="mb-4 mr-6 bg-black text-white">Close</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
