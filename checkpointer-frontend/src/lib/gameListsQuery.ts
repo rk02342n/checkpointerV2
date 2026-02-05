@@ -6,11 +6,12 @@ export type GameListSummary = {
   id: string;
   name: string;
   description: string | null;
+  coverUrl: string | null;
   visibility: GameListVisibility;
   createdAt: string;
   updatedAt: string;
   gameCount: number;
-  coverUrls: (string | null)[];
+  gameCoverUrls: (string | null)[];
 };
 
 export type GameListGame = {
@@ -28,6 +29,7 @@ export type GameListDetail = {
   userId: string;
   name: string;
   description: string | null;
+  coverUrl: string | null;
   visibility: GameListVisibility;
   createdAt: string;
   updatedAt: string;
@@ -228,4 +230,42 @@ export async function reorderListGames(
     throw new Error(error.error || "Failed to reorder games");
   }
   return res.json();
+}
+
+// Upload cover image for list
+export async function uploadListCover(
+  listId: string,
+  file: File
+): Promise<{ coverUrl: string; key: string }> {
+  const formData = new FormData();
+  formData.append("cover", file);
+
+  const res = await fetch(`/api/game-lists/${listId}/cover`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to upload cover");
+  }
+  return res.json();
+}
+
+// Remove cover image from list
+export async function removeListCover(
+  listId: string
+): Promise<{ removed: boolean }> {
+  const res = await fetch(`/api/game-lists/${listId}/cover`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to remove cover");
+  }
+  return res.json();
+}
+
+// Get cover URL for a list
+export function getListCoverUrl(listId: string): string {
+  return `/api/game-lists/${listId}/cover`;
 }

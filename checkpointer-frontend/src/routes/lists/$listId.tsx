@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -6,7 +6,9 @@ import {
   gameListAuthQueryOptions,
   deleteList,
   removeGameFromList,
-  reorderListGames,
+  uploadListCover,
+  removeListCover,
+  getListCoverUrl,
   type GameListDetail,
   type GameListGame,
 } from "@/lib/gameListsQuery";
@@ -16,10 +18,10 @@ import {
   Lock,
   Globe,
   Trash2,
-  GripVertical,
-  Pencil,
   ArrowLeft,
   Loader2,
+  Camera,
+  X,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,7 @@ function ListDetailView() {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [gameToRemove, setGameToRemove] = useState<GameListGame | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Get current user
   const { data: dbUserData } = useQuery(dbUserQueryOptions);
@@ -91,6 +94,55 @@ function ListDetailView() {
       toast.error(err.message || "Failed to remove game");
     },
   });
+
+  // Upload cover mutation
+  const uploadCoverMutation = useMutation({
+    mutationFn: (file: File) => uploadListCover(listId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game-list", listId] });
+      queryClient.invalidateQueries({ queryKey: ["game-list-auth", listId] });
+      queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      toast.success("Cover uploaded!");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to upload cover");
+    },
+  });
+
+  // Remove cover mutation
+  const removeCoverMutation = useMutation({
+    mutationFn: () => removeListCover(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["game-list", listId] });
+      queryClient.invalidateQueries({ queryKey: ["game-list-auth", listId] });
+      queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      toast.success("Cover removed");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to remove cover");
+    },
+  });
+
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Use jpeg, png, webp, or gif.");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large. Max size is 5MB.");
+      return;
+    }
+
+    uploadCoverMutation.mutate(file);
+    e.target.value = "";
+  };
 
   if (isLoading) {
     return (
@@ -140,6 +192,76 @@ function ListDetailView() {
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">Back</span>
         </button>
+
+        {/* Hidden file input for cover upload */}
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleCoverChange}
+          className="hidden"
+        />
+
+        {/* Cover Image Section */}
+        {(list.coverUrl || isOwner) && (
+          <div className="mb-6">
+            {list.coverUrl ? (
+              <div className="relative">
+                <img
+                  src={getListCoverUrl(listId)}
+                  alt={`${list.name} cover`}
+                  className="w-full aspect-[21/9] object-cover border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]"
+                />
+                {isOwner && (
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    <button
+                      onClick={() => coverInputRef.current?.click()}
+                      disabled={uploadCoverMutation.isPending}
+                      className="p-2 bg-stone-900 text-white hover:bg-stone-700 transition-colors disabled:opacity-50"
+                      title="Change cover"
+                    >
+                      {uploadCoverMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => removeCoverMutation.mutate()}
+                      disabled={removeCoverMutation.isPending}
+                      className="p-2 bg-rose-600 text-white hover:bg-rose-500 transition-colors disabled:opacity-50"
+                      title="Remove cover"
+                    >
+                      {removeCoverMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <X className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : isOwner ? (
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadCoverMutation.isPending}
+                className="w-full aspect-[21/9] border-4 border-dashed border-stone-300 hover:border-stone-400 bg-stone-50 flex flex-col items-center justify-center gap-2 transition-colors"
+              >
+                {uploadCoverMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-8 h-8 text-stone-400 animate-spin" />
+                    <span className="text-sm text-stone-600">Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-8 h-8 text-stone-400" />
+                    <span className="text-sm text-stone-600">Add a cover image</span>
+                  </>
+                )}
+              </button>
+            ) : null}
+          </div>
+        )}
 
         {/* List Header */}
         <div className="bg-orange-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
