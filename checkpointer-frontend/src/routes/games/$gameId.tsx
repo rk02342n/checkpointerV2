@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell } from "lucide-react";
+import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { LogGameModal } from '@/components/LogGameModal'
+import { AddToListModal } from '@/components/AddToListModal'
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
@@ -64,6 +65,8 @@ function GameView () {
     const [showSwitchGameDialog, setShowSwitchGameDialog] = useState(false);
     // Log game modal state
     const [showLogGameModal, setShowLogGameModal] = useState(false);
+    // Add to list modal state
+    const [showAddToListModal, setShowAddToListModal] = useState(false);
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
@@ -437,6 +440,17 @@ const queryClient = useQueryClient();
                             </button>
                         </div>
 
+                        {/* Add to List Button */}
+                        {dbUserData?.account && (
+                            <button
+                                onClick={() => setShowAddToListModal(true)}
+                                className="w-full max-w-[280px] flex items-center justify-center gap-2 bg-white text-stone-900 border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 transition-all p-2"
+                            >
+                                <ListPlus className="w-5 h-5" />
+                                <span className="text-xs uppercase font-bold tracking-wider">Add to List</span>
+                            </button>
+                        )}
+
                         <div className="w-full pt-4 border-t-4 border-stone-900 flex gap-4 justify-center lg:justify-start">
                             <div className="text-center lg:text-left">
                                 <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Reviews</div>
@@ -616,6 +630,15 @@ const queryClient = useQueryClient();
                 coverUrl: data.game.coverUrl,
                 releaseDate: data.game.releaseDate,
               } : null}
+            />
+
+            {/* Add to List Modal */}
+            <AddToListModal
+              open={showAddToListModal}
+              onOpenChange={setShowAddToListModal}
+              gameId={gameId}
+              gameName={data?.game?.name || ""}
+              gameCoverUrl={data?.game?.coverUrl}
             />
 
             {/* Switch Game Dialog */}

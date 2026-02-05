@@ -5,10 +5,12 @@ import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wantToPlayQueryOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
-import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart } from 'lucide-react'
+import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus } from 'lucide-react'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
+import { ListsSection } from '@/components/ListsSection'
+import { myGameListsQueryOptions } from '@/lib/gameListsQuery'
 import { compressImage } from '@/lib/compressImage'
 import {
   Avatar,
@@ -36,7 +38,7 @@ const REVIEWS_PER_PAGE = 10
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist'>('reviews')
+  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists'>('reviews')
   const [searchQuery, setSearchQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
@@ -280,10 +282,17 @@ function Profile() {
     enabled: !!dbUserId && !isUserPending
   })
 
+  // Get user's game lists
+  const { data: gameListsData } = useQuery({
+    ...myGameListsQueryOptions,
+    enabled: !!dbUserId && !isUserPending
+  })
+
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
   const playSessions = playHistoryData?.sessions ?? []
   const wishlistItems = wishlistData?.wishlist ?? []
+  const gameLists = gameListsData?.lists ?? []
 
   // Filter reviews based on search query
   const filteredReviews = useMemo(() => userReviews.filter((review: Review) => {
@@ -710,6 +719,17 @@ function Profile() {
               <CalendarHeart className="w-4 h-4" />
               Want to Play ({wishlistItems.length})
             </button>
+            <button
+              onClick={() => setActiveTab('lists')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+                activeTab === 'lists'
+                  ? 'bg-amber-200 text-stone-900'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              }`}
+            >
+              <ListPlus className="w-4 h-4" />
+              Lists ({gameLists.length})
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -891,6 +911,11 @@ function Profile() {
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* Lists Tab */}
+            <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
+              <ListsSection isOwnProfile={true} />
             </div>
           </div>
         </div>
