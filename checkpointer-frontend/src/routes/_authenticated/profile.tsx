@@ -482,7 +482,7 @@ function Profile() {
       <Navbar />
       <div className="container mx-auto max-w-4xl px-6 py-8 bg-white">
         {/* Profile Header */}
-        <div className="bg-orange-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
+        <div className="bg-blue-600/40 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <input

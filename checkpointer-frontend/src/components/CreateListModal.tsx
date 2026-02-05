@@ -151,6 +151,9 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               className="bg-white border-4 border-stone-900 text-stone-900 rounded-none focus:ring-2 focus:ring-stone-900 min-h-20"
               maxLength={500}
             />
+            <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-amber-600' : 'text-stone-500'}`}>
+              {description.length} / 500
+            </p>
           </div>
 
           {/* Cover Image */}
@@ -250,7 +253,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
             </Button>
             <Button
               type="submit"
-              disabled={!name.trim() || createMutation.isPending}
+              disabled={!name.trim() || description.length > 500 || createMutation.isPending}
               className="bg-stone-900 hover:bg-stone-800 text-white border-4 border-stone-900 rounded-none"
             >
               {createMutation.isPending ? (

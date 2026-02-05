@@ -29,7 +29,7 @@ const updateListSchema = z.object({
 });
 
 const reorderSchema = z.object({
-  gameIds: z.array(z.string().uuid()),
+  gameIds: z.array(z.uuid()),
 });
 
 export const gameListsRoute = new Hono()

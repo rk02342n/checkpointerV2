@@ -157,7 +157,7 @@ function ListDetailView() {
 
   if (error || !list) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+      <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-rose-50">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="bg-rose-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
@@ -180,18 +180,19 @@ function ListDetailView() {
     : "??";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+    <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
       <Navbar />
 
       <div className="container mx-auto max-w-4xl px-6 py-8">
         {/* Back Button */}
-        <button
+        <Button
+          variant='ghost'
           onClick={() => navigate({ to: '/profile' })}
           className="flex items-center gap-2 text-stone-600 hover:text-stone-900 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">Back</span>
-        </button>
+        </Button>
 
         {/* Hidden file input for cover upload */}
         <input
@@ -210,7 +211,7 @@ function ListDetailView() {
                 <img
                   src={getListCoverUrl(listId)}
                   alt={`${list.name} cover`}
-                  className="w-full aspect-[21/9] object-cover border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]"
+                  className="w-full aspect-21/9 object-cover border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]"
                 />
                 {isOwner && (
                   <div className="absolute top-3 right-3 flex gap-2">
@@ -245,7 +246,7 @@ function ListDetailView() {
               <button
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploadCoverMutation.isPending}
-                className="w-full aspect-[21/9] border-4 border-dashed border-stone-300 hover:border-stone-400 bg-stone-50 flex flex-col items-center justify-center gap-2 transition-colors"
+                className="w-full aspect-21/9 border-4 border-dashed border-stone-300 hover:border-stone-400 bg-stone-50 flex flex-col items-center justify-center gap-2 transition-colors"
               >
                 {uploadCoverMutation.isPending ? (
                   <>
@@ -264,7 +265,7 @@ function ListDetailView() {
         )}
 
         {/* List Header */}
-        <div className="bg-orange-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
+        <div className="bg-sky-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -338,7 +339,7 @@ function ListDetailView() {
         <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
           <div className="border-b-4 border-stone-900 p-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-900">
-              Games in this List
+              Games
             </h2>
           </div>
 
@@ -360,7 +361,7 @@ function ListDetailView() {
                   className="flex items-center gap-4 p-4 hover:bg-orange-50 transition-colors"
                 >
                   {/* Position Number */}
-                  <div className="w-8 h-8 flex items-center justify-center bg-stone-900 text-white font-bold text-sm flex-shrink-0">
+                  <div className="w-8 h-8 flex items-center justify-center bg-stone-900 text-white font-bold text-sm shrink-0">
                     {index + 1}
                   </div>
 
@@ -368,7 +369,7 @@ function ListDetailView() {
                   <Link
                     to="/games/$gameId"
                     params={{ gameId: game.gameId }}
-                    className="flex-shrink-0"
+                    className="shrink-0"
                   >
                     {game.gameCoverUrl ? (
                       <img
