@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Lock, Gamepad2 } from "lucide-react";
-import { type GameListSummary } from "@/lib/gameListsQuery";
+import { type GameListSummary, getListCoverUrl } from "@/lib/gameListsQuery";
 
 interface GameListCardProps {
   list: GameListSummary;
@@ -8,16 +8,27 @@ interface GameListCardProps {
 }
 
 export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps) {
+  const hasCustomCover = !!list.coverUrl;
+
   return (
     <Link
       to={`${linkPrefix}/${list.id}`}
       className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
-      {/* Cover Images Grid */}
+      {/* Cover Image */}
       <div className="aspect-[16/9] bg-stone-200 relative">
-        {list.coverUrls.length > 0 ? (
+        {hasCustomCover ? (
+          // Custom cover image
+          <img
+            src={getListCoverUrl(list.id)}
+            alt={list.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : list.gameCoverUrls.length > 0 ? (
+          // Game cover grid
           <div className="grid grid-cols-2 h-full">
-            {list.coverUrls.slice(0, 4).map((url, i) => (
+            {list.gameCoverUrls.slice(0, 4).map((url, i) => (
               <div key={i} className="relative overflow-hidden">
                 {url ? (
                   <img
@@ -34,13 +45,14 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
               </div>
             ))}
             {/* Fill remaining slots if less than 4 */}
-            {Array.from({ length: Math.max(0, 4 - list.coverUrls.length) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, 4 - list.gameCoverUrls.length) }).map((_, i) => (
               <div key={`empty-${i}`} className="bg-stone-300 flex items-center justify-center">
                 <Gamepad2 className="w-6 h-6 text-stone-400" />
               </div>
             ))}
           </div>
         ) : (
+          // Empty state
           <div className="w-full h-full flex items-center justify-center">
             <Gamepad2 className="w-12 h-12 text-stone-400" />
           </div>
@@ -69,29 +81,41 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
 
 // Compact version for profile sidebar or smaller spaces
 export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCardProps) {
+  const hasCustomCover = !!list.coverUrl;
+
   return (
     <Link
       to={`${linkPrefix}/${list.id}`}
       className="flex items-center gap-3 p-3 bg-stone-50 border-4 border-stone-900 hover:bg-orange-100 transition-colors"
     >
-      {/* Mini cover grid */}
-      <div className="w-16 h-16 bg-stone-200 border-2 border-stone-900 flex-shrink-0 grid grid-cols-2 overflow-hidden">
-        {list.coverUrls.slice(0, 4).map((url, i) => (
-          <div key={i} className="relative overflow-hidden">
-            {url ? (
-              <img
-                src={url}
-                alt=""
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full bg-stone-300" />
-            )}
+      {/* Cover thumbnail */}
+      <div className="w-16 h-16 bg-stone-200 border-2 border-stone-900 flex-shrink-0 overflow-hidden">
+        {hasCustomCover ? (
+          <img
+            src={getListCoverUrl(list.id)}
+            alt={list.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : list.gameCoverUrls.length > 0 ? (
+          <div className="grid grid-cols-2 h-full">
+            {list.gameCoverUrls.slice(0, 4).map((url, i) => (
+              <div key={i} className="relative overflow-hidden">
+                {url ? (
+                  <img
+                    src={url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-stone-300" />
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-        {list.coverUrls.length === 0 && (
-          <div className="col-span-2 row-span-2 flex items-center justify-center">
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
             <Gamepad2 className="w-6 h-6 text-stone-400" />
           </div>
         )}

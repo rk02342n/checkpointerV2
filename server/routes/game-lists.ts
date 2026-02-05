@@ -8,6 +8,7 @@ import { usersTable } from "../db/schema/users";
 import { eq, and, desc, asc, count, sql, or } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
 
 const LIST_LIMITS = {
   free: 10,
@@ -42,6 +43,7 @@ export const gameListsRoute = new Hono()
       id: gameListsTable.id,
       name: gameListsTable.name,
       description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
       visibility: gameListsTable.visibility,
       createdAt: gameListsTable.createdAt,
       updatedAt: gameListsTable.updatedAt,
@@ -53,9 +55,17 @@ export const gameListsRoute = new Hono()
     .groupBy(gameListsTable.id)
     .orderBy(desc(gameListsTable.updatedAt));
 
-  // Get first 4 game covers for each list
+  // Get first 4 game covers for each list (only if no custom cover)
   const listsWithCovers = await Promise.all(
     lists.map(async (list) => {
+      // If list has custom cover, don't fetch game covers
+      if (list.coverUrl) {
+        return {
+          ...list,
+          gameCoverUrls: [],
+        };
+      }
+
       const covers = await db
         .select({
           coverUrl: gamesTable.coverUrl,
@@ -68,7 +78,7 @@ export const gameListsRoute = new Hono()
 
       return {
         ...list,
-        coverUrls: covers.map(c => c.coverUrl).filter(Boolean),
+        gameCoverUrls: covers.map(c => c.coverUrl).filter(Boolean),
       };
     })
   );
@@ -85,6 +95,7 @@ export const gameListsRoute = new Hono()
       id: gameListsTable.id,
       name: gameListsTable.name,
       description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
       visibility: gameListsTable.visibility,
       createdAt: gameListsTable.createdAt,
       updatedAt: gameListsTable.updatedAt,
@@ -99,9 +110,16 @@ export const gameListsRoute = new Hono()
     .groupBy(gameListsTable.id)
     .orderBy(desc(gameListsTable.updatedAt));
 
-  // Get first 4 game covers for each list
+  // Get first 4 game covers for each list (only if no custom cover)
   const listsWithCovers = await Promise.all(
     lists.map(async (list) => {
+      if (list.coverUrl) {
+        return {
+          ...list,
+          gameCoverUrls: [],
+        };
+      }
+
       const covers = await db
         .select({
           coverUrl: gamesTable.coverUrl,
@@ -114,7 +132,7 @@ export const gameListsRoute = new Hono()
 
       return {
         ...list,
-        coverUrls: covers.map(c => c.coverUrl).filter(Boolean),
+        gameCoverUrls: covers.map(c => c.coverUrl).filter(Boolean),
       };
     })
   );
@@ -142,6 +160,7 @@ export const gameListsRoute = new Hono()
       userId: gameListsTable.userId,
       name: gameListsTable.name,
       description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
       visibility: gameListsTable.visibility,
       createdAt: gameListsTable.createdAt,
       updatedAt: gameListsTable.updatedAt,
@@ -202,6 +221,7 @@ export const gameListsRoute = new Hono()
       userId: gameListsTable.userId,
       name: gameListsTable.name,
       description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
       visibility: gameListsTable.visibility,
       createdAt: gameListsTable.createdAt,
       updatedAt: gameListsTable.updatedAt,
@@ -526,4 +546,144 @@ export const gameListsRoute = new Hono()
   }));
 
   return c.json({ lists: listsWithStatus });
+})
+
+// POST /:listId/cover - Upload cover image for list (authenticated, owner only)
+.post('/:listId/cover', getAuthUser, async (c) => {
+  const listId = c.req.param('listId');
+  const user = c.var.dbUser;
+
+  // Check ownership
+  const list = await db
+    .select()
+    .from(gameListsTable)
+    .where(and(
+      eq(gameListsTable.id, listId),
+      eq(gameListsTable.userId, user.id)
+    ))
+    .limit(1)
+    .then(res => res[0]);
+
+  if (!list) {
+    return c.json({ error: "List not found" }, 404);
+  }
+
+  const formData = await c.req.formData();
+  const fileEntry = formData.get("cover");
+
+  if (!fileEntry || typeof fileEntry === "string") {
+    return c.json({ error: "No file provided" }, 400);
+  }
+
+  const file = fileEntry as File;
+
+  // Validate file type
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!allowedTypes.includes(file.type)) {
+    return c.json({ error: "Invalid file type. Allowed: jpeg, png, webp, gif" }, 400);
+  }
+
+  // Validate file size (5MB max)
+  if (file.size > 5 * 1024 * 1024) {
+    return c.json({ error: "File too large. Max size: 5MB" }, 400);
+  }
+
+  // Generate unique filename
+  const ext = file.name.split(".").pop() || "jpg";
+  const key = `list-covers/${listId}/${Date.now()}.${ext}`;
+
+  // Upload to R2 via S3 API
+  await s3Client.send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: Buffer.from(await file.arrayBuffer()),
+    ContentType: file.type,
+  }));
+
+  // Update list's cover URL in database
+  await db
+    .update(gameListsTable)
+    .set({ coverUrl: key, updatedAt: new Date() })
+    .where(eq(gameListsTable.id, listId));
+
+  return c.json({ coverUrl: `/api/game-lists/${listId}/cover`, key });
+})
+
+// DELETE /:listId/cover - Remove cover image from list (authenticated, owner only)
+.delete('/:listId/cover', getAuthUser, async (c) => {
+  const listId = c.req.param('listId');
+  const user = c.var.dbUser;
+
+  // Check ownership
+  const list = await db
+    .select({ coverUrl: gameListsTable.coverUrl })
+    .from(gameListsTable)
+    .where(and(
+      eq(gameListsTable.id, listId),
+      eq(gameListsTable.userId, user.id)
+    ))
+    .limit(1)
+    .then(res => res[0]);
+
+  if (!list) {
+    return c.json({ error: "List not found" }, 404);
+  }
+
+  if (!list.coverUrl) {
+    return c.json({ error: "No cover to remove" }, 400);
+  }
+
+  // Remove list's cover URL from database (don't delete from R2 to avoid orphan issues)
+  await db
+    .update(gameListsTable)
+    .set({ coverUrl: null, updatedAt: new Date() })
+    .where(eq(gameListsTable.id, listId));
+
+  return c.json({ removed: true });
+})
+
+// GET /:listId/cover - Serve cover image for list (public)
+.get('/:listId/cover', async (c) => {
+  const listId = c.req.param('listId');
+
+  // Get list's cover key from database
+  const list = await db
+    .select({ coverUrl: gameListsTable.coverUrl })
+    .from(gameListsTable)
+    .where(eq(gameListsTable.id, listId))
+    .limit(1)
+    .then(res => res[0]);
+
+  if (!list?.coverUrl) {
+    return c.notFound();
+  }
+
+  // Fetch from R2 via S3 API
+  try {
+    const response = await s3Client.send(new GetObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: list.coverUrl,
+    }));
+
+    if (!response.Body) {
+      return c.notFound();
+    }
+
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
+    // Return image with appropriate content type
+    return new Response(buffer, {
+      headers: {
+        "Content-Type": response.ContentType || "image/jpeg",
+        "Cache-Control": "public, max-age=31536000",
+      },
+    });
+  } catch {
+    return c.notFound();
+  }
 });
