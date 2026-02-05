@@ -64,7 +64,7 @@ export function AddToListModal({
 
       return { previous };
     },
-    onError: (error, { listId }, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["lists-for-game", gameId], context.previous);
       }
@@ -99,7 +99,7 @@ export function AddToListModal({
 
       return { previous };
     },
-    onError: (error, { listId }, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["lists-for-game", gameId], context.previous);
       }

@@ -12,7 +12,7 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
 
   return (
     <Link
-      to={`${linkPrefix}/${list.id}`}
+      to={`${linkPrefix}/${list.id}` as string}
       className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
@@ -85,7 +85,7 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
 
   return (
     <Link
-      to={`${linkPrefix}/${list.id}`}
+      to={`${linkPrefix}/${list.id}` as string}
       className="flex items-center gap-3 p-3 bg-stone-50 border-4 border-stone-900 hover:bg-orange-100 transition-colors"
     >
       {/* Cover thumbnail */}
