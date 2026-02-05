@@ -25,24 +25,24 @@ export default function Checkpointer() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br bg-rose-50 text-stone-900 selection:bg-green-300">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Navbar />
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-7xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-sky-300 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8 md:p-12 lg:p-16">
+          <div className="bg-secondary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
-                <div className="inline-block bg-orange-300 text-white px-3 py-1 text-xs font-semibold rounded-none border-2 border-stone-900">
+                <div className="inline-block bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
                   Game Tracking
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt hover:text-blue-900">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-secondary-foreground hover:opacity-80">
                   Checkpointer
                   <br />
                   {/* <span className="text-orange-300">pointer</span> */}
                 </h2>
-                <p className="text-base sm:text-lg md:text-xl text-stone-600 max-w-md leading-relaxed">
+                <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/70 max-w-md leading-relaxed">
                   Track, log, and review games as you play. Build your personal gaming history.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
@@ -83,10 +83,10 @@ export default function Checkpointer() {
               </div>
               <div className="hidden md:block">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-amber-100 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-black border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-black border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-amber-100 border-4 border-stone-900 h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-primary/30 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
+                  <div className="bg-foreground border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
+                  <div className="bg-foreground border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
+                  <div className="bg-primary/30 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
                 </div>
               </div>
             </div>
@@ -97,19 +97,19 @@ export default function Checkpointer() {
         <section className="mb-10 sm:mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
-              { label: "Games", value:  "10K+", color: "bg-orange-50" },
-              { label: "Reviews", value: "1.2K+", color: "bg-amber-100" },
-              { label: "Users", value: "100+", color: "bg-rose-100" },
-              { label: "Logs", value: "5K+", color: "bg-sky-100" },
+              { label: "Games", value:  "10K+", color: "bg-primary/20" },
+              { label: "Reviews", value: "1.2K+", color: "bg-primary/30" },
+              { label: "Users", value: "100+", color: "bg-secondary/50" },
+              { label: "Logs", value: "5K+", color: "bg-secondary/30" },
             ].map((stat) => (
               <div
                 key={stat.label}
-                className={`${stat.color} border-4 border-stone-900 p-4 sm:p-6 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]`}
+                className={`${stat.color} border-4 border-border p-4 sm:p-6 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]`}
               >
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-stone-900">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
                   {stat.value}
                 </div>
-                <div className="text-xs sm:text-sm text-stone-600 font-medium mt-1">
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
                   {stat.label}
                 </div>
               </div>
@@ -118,7 +118,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Featured Games Section */}
-        <section className="bg-teal-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 md:p-10">
+        <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : (
@@ -134,7 +134,7 @@ export default function Checkpointer() {
         <br/>
         <br/>
         {/*Trending games or other lists of games*/}
-        <section className="bg-teal-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 md:p-10">
+        <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : (
@@ -149,13 +149,13 @@ export default function Checkpointer() {
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
-          <div className="bg-orange-300 text-white border-4 border-stone-900 p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)]">
+          <div className="bg-primary text-primary-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
                   Ready to track your games?
                 </h2>
-                <p className="text-orange-50 mt-2 text-sm sm:text-base">
+                <p className="text-primary-foreground/80 mt-2 text-sm sm:text-base">
                   Join the community and start building your gaming history.
                 </p>
               </div>
@@ -163,7 +163,7 @@ export default function Checkpointer() {
                 <Button
                   onClick={() => navigate({ to: '/browse' })}
                   variant="outline"
-                  className="bg-white text-orange-400 hover:bg-stone-50 px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full md:w-auto"
+                  className="bg-card text-primary hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full md:w-auto"
                 >
                   Get Started
                 </Button>
@@ -172,7 +172,7 @@ export default function Checkpointer() {
                   <Button
                     asChild
                     variant="outline"
-                    className="bg-white text-orange-400 hover:bg-stone-50 px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-card text-primary hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/login">Login</a>
                   </Button>

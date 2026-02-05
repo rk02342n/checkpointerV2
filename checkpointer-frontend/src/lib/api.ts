@@ -120,3 +120,29 @@ export async function deleteExpense({id}: {id: number}) {
   const data = await res.json();
   return data;
 }
+
+// App Settings
+export type AppSettings = {
+  darkModeEnabled: boolean;
+}
+
+export async function getAppSettings(): Promise<AppSettings> {
+  const res = await fetch("/api/settings");
+  if (!res.ok) {
+    throw new Error("Failed to fetch settings");
+  }
+  return res.json();
+}
+
+export async function updateAppSetting(key: string, value: unknown): Promise<void> {
+  const res = await fetch("/api/admin/settings", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ key, value }),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to update setting");
+  }
+}

@@ -27,7 +27,10 @@ import {
   ChevronRight,
   UserCog,
   Clock,
+  Settings,
+  Moon,
 } from 'lucide-react'
+import { useSettings } from '@/lib/settingsContext'
 import { toast } from 'sonner'
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
@@ -36,7 +39,7 @@ export const Route = createFileRoute('/_authenticated/admin')({
   component: AdminDashboard,
 })
 
-type Tab = 'stats' | 'users' | 'reviews' | 'audit'
+type Tab = 'stats' | 'users' | 'reviews' | 'audit' | 'settings'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -77,6 +80,7 @@ function AdminDashboard() {
     { id: 'users' as Tab, label: 'Users', icon: Users },
     { id: 'reviews' as Tab, label: 'Reviews', icon: MessageSquare },
     { id: 'audit' as Tab, label: 'Audit Log', icon: ScrollText },
+    { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ]
 
   return (
@@ -129,6 +133,7 @@ function AdminDashboard() {
         {activeTab === 'audit' && (
           <AuditPanel offset={logsOffset} onOffsetChange={setLogsOffset} />
         )}
+        {activeTab === 'settings' && <SettingsPanel />}
       </div>
     </div>
   )
@@ -618,6 +623,87 @@ function Pagination({
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
+      </div>
+    </div>
+  )
+}
+
+function SettingsPanel() {
+  const { settings, isLoading, updateSettings } = useSettings()
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleToggle = async () => {
+    setIsSaving(true)
+    try {
+      await updateSettings({ darkModeEnabled: !settings.darkModeEnabled })
+      toast.success('Setting updated')
+    } catch {
+      toast.error('Failed to update setting')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return <LoadingCard />
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Appearance Settings */}
+      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Moon className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Appearance</h3>
+        </div>
+
+        <div className="space-y-4">
+          {/* Dark Mode Toggle */}
+          <div className="flex items-center justify-between p-4 bg-stone-50 border-4 border-stone-900">
+            <div>
+              <h4 className="font-bold text-stone-900">Dark Mode Toggle</h4>
+              <p className="text-sm text-stone-600 mt-1">
+                Allow users to switch between light and dark themes
+              </p>
+            </div>
+            <button
+              onClick={handleToggle}
+              disabled={isSaving}
+              className={`relative w-14 h-8 border-4 border-stone-900 transition-colors ${
+                settings.darkModeEnabled ? 'bg-green-400' : 'bg-stone-300'
+              } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label={settings.darkModeEnabled ? 'Disable dark mode' : 'Enable dark mode'}
+            >
+              <span
+                className={`absolute top-0.5 w-5 h-5 bg-white border-2 border-stone-900 transition-transform ${
+                  settings.darkModeEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Status indicator */}
+          <div className="text-sm text-stone-600">
+            Status:{' '}
+            <span className={`font-bold ${settings.darkModeEnabled ? 'text-green-700' : 'text-stone-500'}`}>
+              {settings.darkModeEnabled ? 'Enabled' : 'Disabled'}
+            </span>
+            {' '}- Users {settings.darkModeEnabled ? 'can' : 'cannot'} see the theme toggle button
+          </div>
+        </div>
+      </div>
+
+      {/* Info Card */}
+      <div className="bg-sky-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <div className="flex items-start gap-3">
+          <Settings className="w-5 h-5 text-stone-900 mt-0.5" />
+          <div>
+            <h4 className="font-bold text-stone-900">About Settings</h4>
+            <p className="text-sm text-stone-700 mt-1">
+              Settings apply globally to all users. Changes are saved to the server and take effect immediately for everyone.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

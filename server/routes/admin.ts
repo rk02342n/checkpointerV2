@@ -7,7 +7,8 @@ import { usersTable, userRoles, type UserRole } from "../db/schema/users";
 import { reviewsTable } from "../db/schema/reviews";
 import { gamesTable } from "../db/schema/games";
 import { auditLogsTable } from "../db/schema/audit-logs";
-import { eq, desc, count, sql, isNull, isNotNull } from "drizzle-orm";
+import { eq, desc, count, sql } from "drizzle-orm";
+import { appSettingsTable } from "../db/schema/app-settings";
 
 // Validation schemas
 const updateRoleSchema = z.object({
@@ -17,6 +18,11 @@ const updateRoleSchema = z.object({
 const paginationSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
+});
+
+const updateSettingSchema = z.object({
+  key: z.string().min(1),
+  value: z.unknown(),
 });
 
 export const adminRoute = new Hono()
@@ -380,4 +386,56 @@ export const adminRoute = new Hono()
       nextOffset: hasMore ? offset + limit : null,
       totalCount: totalResult,
     });
-  });
+  })
+
+  // PATCH /admin/settings - Update an app setting
+  .patch(
+    "/settings",
+    zValidator("json", updateSettingSchema),
+    async (c) => {
+      const { key, value } = c.req.valid("json");
+      const admin = c.var.dbUser;
+
+      // Get existing setting to log the change
+      const existing = await db
+        .select()
+        .from(appSettingsTable)
+        .where(eq(appSettingsTable.key, key))
+        .then((res) => res[0]);
+
+      const previousValue = existing?.value;
+
+      // Upsert the setting
+      await db
+        .insert(appSettingsTable)
+        .values({
+          key,
+          value,
+          updatedAt: new Date(),
+          updatedBy: admin.id,
+        })
+        .onConflictDoUpdate({
+          target: appSettingsTable.key,
+          set: {
+            value,
+            updatedAt: new Date(),
+            updatedBy: admin.id,
+          },
+        });
+
+      // Log the action (using a UUID placeholder for resourceId since settings use text keys)
+      await db.insert(auditLogsTable).values({
+        adminId: admin.id,
+        action: "UPDATE_SETTING",
+        resourceType: "setting",
+        resourceId: admin.id, // Use admin's ID as placeholder since resourceId requires UUID
+        details: {
+          settingKey: key,
+          previousValue,
+          newValue: value,
+        },
+      });
+
+      return c.json({ success: true, key, value });
+    }
+  );

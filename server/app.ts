@@ -11,6 +11,7 @@ import { gameSessionsRoute } from './routes/game-sessions'
 import { contactRoute } from './routes/contact'
 import { wantToPlayRoute } from './routes/want-to-play'
 import { gameListsRoute } from './routes/game-lists'
+import { settingsRoute } from './routes/settings'
 
 const app = new Hono()
 
@@ -27,7 +28,8 @@ const apiRoutes = app
   .route("/game-sessions", gameSessionsRoute)
   .route("/contact", contactRoute)
   .route("/want-to-play", wantToPlayRoute)
-  .route("/game-lists", gameListsRoute);
+  .route("/game-lists", gameListsRoute)
+  .route("/settings", settingsRoute);
 
 app.use('*', serveStatic({ root: './checkpointer-frontend/dist' }))  // change path accordingly to point to dist folder in frontend
 app.get('*', serveStatic({ path: './checkpointer-frontend/dist/index.html' })) // change path accordingly

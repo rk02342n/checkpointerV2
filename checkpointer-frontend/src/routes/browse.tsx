@@ -79,7 +79,7 @@ export default function BrowseGames() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Navbar />
 
       <main className="container mx-auto px-6 py-8 max-w-7xl">
@@ -88,22 +88,22 @@ export default function BrowseGames() {
           <h1 className="text-4xl md:text-5xl font-bold">
             Browse Games
           </h1>
-          <p className="text-lg text-stone-600 mt-2">
+          <p className="text-lg text-muted-foreground mt-2">
             Discover your next adventure
           </p>
         </div>
 
         {/* Search & Filters Section */}
-        <section className="bg-sky-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-8">
+        <section className="bg-secondary border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6 mb-8">
           {/* Search Input */}
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-600" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search games..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border-4 border-stone-900 py-3 pl-12 pr-4 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 rounded-none"
+              className="w-full bg-input border-4 border-border py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-border rounded-none"
             />
           </div>
 
@@ -111,7 +111,7 @@ export default function BrowseGames() {
           <div className="flex flex-wrap gap-4 items-center">
             {/* Sort By */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-bold text-white">
+              <label className="text-sm font-bold text-secondary-foreground">
                 Sort:
               </label>
               <select
@@ -121,7 +121,7 @@ export default function BrowseGames() {
                   setSortBy(newSortBy)
                   setSortOrder(newSortOrder)
                 }}
-                className="bg-white border-4 border-stone-900 px-3 py-2 text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-stone-900 rounded-none"
+                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="rating-desc">Rating (High to Low)</option>
                 <option value="rating-asc">Rating (Low to High)</option>
@@ -134,13 +134,13 @@ export default function BrowseGames() {
 
             {/* Year Filter */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-bold text-white">
+              <label className="text-sm font-bold text-secondary-foreground">
                 Year:
               </label>
               <select
                 value={yearFilter}
                 onChange={(e) => setYearFilter(e.target.value)}
-                className="bg-white border-4 border-stone-900 px-3 py-2 text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-stone-900 rounded-none"
+                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Years</option>
                 {years.map(year => (
@@ -153,7 +153,7 @@ export default function BrowseGames() {
 
         {/* Results Count */}
         <div className="mb-4">
-          <p className="text-sm font-medium text-stone-600">
+          <p className="text-sm font-medium text-muted-foreground">
             {isPending ? (
               "Loading games..."
             ) : error ? (
@@ -165,7 +165,7 @@ export default function BrowseGames() {
         </div>
 
         {/* Game Grid */}
-        <section className="bg-lime-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <section className="bg-muted border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6">
           {isPending ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -180,7 +180,7 @@ export default function BrowseGames() {
             </div>
           ) : allGames.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-lg font-semibold text-stone-500">
+              <p className="text-lg font-semibold text-muted-foreground">
                 No games found matching your criteria
               </p>
             </div>
@@ -195,7 +195,7 @@ export default function BrowseGames() {
                     <button
                       key={game.id}
                       onClick={() => handleGameClick(game)}
-                      className="group text-left bg-stone-50 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
+                      className="group text-left bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
                     >
                       <div className="relative overflow-hidden">
                         {game.coverUrl ? (
@@ -206,28 +206,28 @@ export default function BrowseGames() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-full h-48 sm:h-56 bg-stone-200 flex items-center justify-center">
-                            <span className="text-stone-400 text-sm">No Image</span>
+                          <div className="w-full h-48 sm:h-56 bg-muted flex items-center justify-center">
+                            <span className="text-muted-foreground text-sm">No Image</span>
                           </div>
                         )}
-                        <Badge className="absolute top-2 right-2 bg-amber-400 text-stone-900 font-medium text-xs rounded-none border-2 border-stone-900">
+                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground font-medium text-xs rounded-none border-2 border-border">
                           {year}
                         </Badge>
                       </div>
 
-                      <div className="p-4 border-t-4 border-stone-900">
-                        <h3 className="font-semibold text-stone-900 truncate">
+                      <div className="p-4 border-t-4 border-border">
+                        <h3 className="font-semibold text-foreground truncate">
                           {game.name.split(':')[0]}
                         </h3>
                         {rating !== null && (
                           <div className="mt-2 flex items-center gap-2">
-                            <div className="h-2 flex-1 bg-stone-200 border border-stone-900">
+                            <div className="h-2 flex-1 bg-muted border border-border">
                               <div
-                                className="h-full bg-orange-300"
+                                className="h-full bg-primary"
                                 style={{ width: `${rating}%` }}
                               />
                             </div>
-                            <span className="text-xs text-stone-600 font-medium">{rating}</span>
+                            <span className="text-xs text-muted-foreground font-medium">{rating}</span>
                           </div>
                         )}
                       </div>
@@ -242,7 +242,7 @@ export default function BrowseGames() {
                   <Button
                     onClick={() => fetchNextPage()}
                     disabled={isFetchingNextPage}
-                    className="px-8 py-3 hover:bg-orange-200"
+                    className="px-8 py-3"
                   >
                     {isFetchingNextPage ? (
                       <>
@@ -265,13 +265,13 @@ export default function BrowseGames() {
 
 function GameCardSkeleton() {
   return (
-    <div className="bg-stone-50 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
-      <Skeleton className="w-full h-48 sm:h-56 rounded-none bg-stone-200" />
-      <div className="p-4 border-t-4 border-stone-900">
-        <Skeleton className="h-5 w-3/4 bg-stone-200 rounded-none" />
+    <div className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]">
+      <Skeleton className="w-full h-48 sm:h-56 rounded-none bg-muted" />
+      <div className="p-4 border-t-4 border-border">
+        <Skeleton className="h-5 w-3/4 bg-muted rounded-none" />
         <div className="mt-2 flex items-center gap-2">
-          <Skeleton className="h-2 flex-1 bg-stone-200 rounded-none" />
-          <Skeleton className="h-4 w-8 bg-stone-200 rounded-none" />
+          <Skeleton className="h-2 flex-1 bg-muted rounded-none" />
+          <Skeleton className="h-4 w-8 bg-muted rounded-none" />
         </div>
       </div>
     </div>
