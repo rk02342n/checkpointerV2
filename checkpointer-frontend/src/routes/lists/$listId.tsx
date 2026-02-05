@@ -393,11 +393,19 @@ function ListDetailView() {
                     >
                       {game.gameName}
                     </Link>
-                    {game.gameReleaseDate && (
-                      <p className="text-stone-600 text-sm">
-                        {new Date(game.gameReleaseDate).getFullYear()}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 text-stone-600 text-sm">
+                      {game.gameReleaseDate && (
+                        <span>{new Date(game.gameReleaseDate).getFullYear()}</span>
+                      )}
+                      {game.gameReleaseDate && game.addedAt && (
+                        <span className="text-stone-400">•</span>
+                      )}
+                      {game.addedAt && (
+                        <span className="text-stone-500">
+                          Added {new Date(game.addedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Remove Button (Owner only) */}
