@@ -16,7 +16,7 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
       className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
-      <div className="aspect-[16/9] bg-stone-200 relative">
+      <div className="aspect-16/9 bg-stone-200 relative">
         {hasCustomCover ? (
           // Custom cover image
           <img

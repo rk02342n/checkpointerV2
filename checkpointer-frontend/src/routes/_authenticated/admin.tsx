@@ -89,10 +89,10 @@ function AdminDashboard() {
 
       <div className="container mx-auto max-w-6xl mt-6">
         {/* Header */}
-        <div className="bg-amber-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-6">
+        <div className="bg-amber-200/10 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-6">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-stone-900" />
-            <h1 className="text-3xl font-black text-stone-900 font-serif">Admin Dashboard</h1>
+            <h1 className="text-3xl font-black text-stone-900">Admin Dashboard</h1>
           </div>
         </div>
 
@@ -666,7 +666,7 @@ function SettingsPanel() {
                 Allow users to switch between light and dark themes
               </p>
             </div>
-            <button
+            <Button
               onClick={handleToggle}
               disabled={isSaving}
               className={`relative w-14 h-8 border-4 border-stone-900 transition-colors ${
@@ -675,11 +675,11 @@ function SettingsPanel() {
               aria-label={settings.darkModeEnabled ? 'Disable dark mode' : 'Enable dark mode'}
             >
               <span
-                className={`absolute top-0.5 w-5 h-5 bg-white border-2 border-stone-900 transition-transform ${
-                  settings.darkModeEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border-2 border-stone-900 transition-transform ${
+                  settings.darkModeEnabled ? 'translate-x-6' : 'translate-x-0'
                 }`}
               />
-            </button>
+            </Button>
           </div>
 
           {/* Status indicator */}
