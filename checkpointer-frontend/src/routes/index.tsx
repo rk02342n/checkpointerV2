@@ -138,7 +138,7 @@ export default function Checkpointer() {
         <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {!isTopRatedPending && topRatedData && (
             <FeaturedGames
-              title="Top rated games"
+              title="Top rated on Checkpointer"
               games={topRatedData.games}
               limit={4}
               onGameClick={handleGameClick}
