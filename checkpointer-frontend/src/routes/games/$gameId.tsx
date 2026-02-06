@@ -67,6 +67,8 @@ function GameView () {
     const [showLogGameModal, setShowLogGameModal] = useState(false);
     // Add to list modal state
     const [showAddToListModal, setShowAddToListModal] = useState(false);
+    // Synopsis expand state
+    const [isSynopsisExpanded, setIsSynopsisExpanded] = useState(false);
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
@@ -503,8 +505,18 @@ const queryClient = useQueryClient();
                                 <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">Synopsis</h3>
                                     <p className="text-stone-700 leading-relaxed">
-                                      {data.game?.summary}
+                                      {data.game?.summary && data.game.summary.length > 600 && !isSynopsisExpanded
+                                        ? data.game.summary.slice(0, 600) + '...'
+                                        : data.game?.summary}
                                     </p>
+                                    {data.game?.summary && data.game.summary.length > 600 && (
+                                      <button
+                                        onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
+                                        className="mt-2 text-sm font-bold text-stone-900 underline underline-offset-2 hover:text-orange-600 transition-colors"
+                                      >
+                                        {isSynopsisExpanded ? 'Show less' : 'Read more'}
+                                      </button>
+                                    )}
                                 </div>
 
                                 {/* Image Gallery */}

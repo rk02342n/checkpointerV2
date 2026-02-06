@@ -94,7 +94,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Stats Section */}
-        <section className="mb-10 sm:mb-16">
+        {/* <section className="mb-10 sm:mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
               { label: "Games", value:  "10K+", color: "bg-amber-600/50" },
@@ -115,7 +115,7 @@ export default function Checkpointer() {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* Featured Games Section */}
         <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
@@ -125,7 +125,7 @@ export default function Checkpointer() {
             <FeaturedGames
               title="Featured games"
               games={data.games}
-              limit={8}
+              limit={4}
               onGameClick={handleGameClick}
             />
           )}
