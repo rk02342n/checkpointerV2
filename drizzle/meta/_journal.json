@@ -120,6 +120,13 @@
       "when": 1770354921234,
       "tag": "0016_tan_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1770408476913,
+      "tag": "0017_purple_ezekiel_stane",
+      "breakpoints": true
     }
   ]
 }

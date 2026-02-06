@@ -4,11 +4,30 @@ import { getAuthUser, kindeClient, sessionManager } from "../kinde"; // pass in 
 import { db } from "../db";
 import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema, createReviewSchema } from "../db/schema/reviews";
 import { reviewLikesTable } from "../db/schema/review-likes";
-import { eq, desc, sum, and, count, sql } from "drizzle-orm";
+import { eq, desc, sum, and, count, sql, avg } from "drizzle-orm";
 import { usersTable } from "../db/schema/users";
 import { gamesTable } from "../db/schema/games";
 
 import { createExpenseSchema } from "../sharedTypes";
+
+async function recalcGameRatingCache(gameId: string) {
+  const result = await db
+    .select({
+      avg: avg(reviewsTable.rating),
+      count: sql<number>`count(${reviewsTable.id})`,
+    })
+    .from(reviewsTable)
+    .where(and(eq(reviewsTable.gameId, gameId), sql`${reviewsTable.rating} IS NOT NULL`))
+    .then(res => res[0]);
+
+  await db
+    .update(gamesTable)
+    .set({
+      avgUserRating: result?.avg ?? null,
+      userReviewCount: Number(result?.count ?? 0),
+    })
+    .where(eq(gamesTable.id, gameId));
+}
 
 export const reviewsRoute = new Hono()
 // GET /reviews - Get all reviews (with optional filtering)
@@ -242,6 +261,7 @@ export const reviewsRoute = new Hono()
     .values(validatedReview)
     .returning()
     .then(res => res[0]);
+    await recalcGameRatingCache(validatedReview.gameId);
     c.status(201)
     return c.json(result);
 })
@@ -269,6 +289,7 @@ export const reviewsRoute = new Hono()
         .where(eq(reviewsTable.id, id))
         .returning()
         .then(res => res[0]);
+    await recalcGameRatingCache(existingReview.gameId);
 
     return c.json({ review: deletedReview });
 })

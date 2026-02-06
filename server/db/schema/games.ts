@@ -1,4 +1,4 @@
-import { uuid, pgTable, index, timestamp, serial, text, numeric } from "drizzle-orm/pg-core";
+import { uuid, pgTable, index, timestamp, serial, text, numeric, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod'
 
@@ -13,6 +13,8 @@ export const gamesTable = pgTable("games", {
   rating: numeric("rating", { precision: 3, scale: 2 }).default("0"),
   ratingCount: serial("rating_count"),
   igdbRating: numeric("igdb_rating", { precision: 3, scale: 2 }).default("0"),
+  avgUserRating: numeric("avg_user_rating", { precision: 2, scale: 1 }),
+  userReviewCount: integer("user_review_count").default(0).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 }, (games) => [
   index("games_name_idx").on(games.name),

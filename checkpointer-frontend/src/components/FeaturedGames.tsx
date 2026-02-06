@@ -52,7 +52,7 @@ function FeaturedGames({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-        {items.slice(2, limit + 2).map((game: Game) => (
+        {items.slice(0, limit).map((game: Game) => (
           <StandardGameCard key={game.id} game={game} onGameClick={onGameClick} />
         ))}
       </div>

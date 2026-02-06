@@ -134,6 +134,20 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
     return data
 }
 
+export async function getTopRatedGames(limit = 4): Promise<{ games: Game[] }> {
+  const res = await fetch(`/api/games/top-rated?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error("Server error fetching top rated games");
+  }
+  return res.json();
+}
+
+export const getTopRatedGamesQueryOptions = queryOptions({
+  queryKey: ["top-rated-games"],
+  queryFn: () => getTopRatedGames(),
+  staleTime: 1000 * 60 * 5,
+});
+
 export interface BrowseGamesParams {
   q?: string
   sortBy?: 'rating' | 'year' | 'name'

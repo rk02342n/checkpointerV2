@@ -218,7 +218,40 @@ export const gamesRoute = new Hono()
     }
   });
 })
-.get("/:id", zValidator('param', gameParamsSchema), async c => {  // regex makes sure we get a number as a request
+// Top rated games by cached average user review rating
+.get("/top-rated", async (c) => {
+  const limit = Math.min(parseInt(c.req.query("limit") || "4"), 20);
+
+  const topRated = await db
+    .select()
+    .from(gamesTable)
+    .where(gte(gamesTable.userReviewCount, 1))
+    .orderBy(
+      desc(gamesTable.avgUserRating),
+      desc(gamesTable.userReviewCount),
+    )
+    .limit(limit);
+
+  const platformMap = await getPlatformsForGames(topRated.map(g => g.id));
+  const games = topRated.map(g => ({
+    ...g,
+    platforms: platformMap.get(g.id) ?? [],
+  }));
+
+  return c.json({ games });
+})
+
+// Average rating for a game by its ID
+.get("/rating/:id", async c => {
+    const id = c.req.param('id');
+    const result = await db.select({ total: avg(reviewsTable.rating) })
+        .from(reviewsTable)
+        .where(eq(reviewsTable.gameId, id))
+        .then(res => res[0]);
+    return c.json(result);
+})
+
+.get("/:id", zValidator('param', gameParamsSchema), async c => {
   const id = c.req.param('id');
 
   const [gameResult, genres, platforms, keywords, images, links] = await Promise.all([
@@ -243,32 +276,6 @@ export const gamesRoute = new Hono()
     return c.json({ error: 'Game not found' }, 404)
   }
   return c.json({ game: gameResult, genres, platforms, keywords, images, links });
-})
-
-// .post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function
-//     const user = c.var.user
-//     const expense = await c.req.valid("json");
-//     const validatedExpense = expensesInsertSchema.parse({
-//         ...expense,
-//         userId: user.id,
-//     })
-
-//     const result = await db
-//     .insert(expensesTable)
-//     .values(validatedExpense)
-//     .returning()
-//     .then(res => res[0]);
-//     c.status(201)
-//     return c.json(result);
-// })
-// Average rating for a game by its ID
-.get("/rating/:id", async c => {
-    const id = c.req.param('id');
-    const result = await db.select({ total: avg(reviewsTable.rating) })
-        .from(reviewsTable)
-        .where(eq(reviewsTable.gameId, id))
-        .then(res => res[0]);
-    return c.json(result);
 })
 
 // })
