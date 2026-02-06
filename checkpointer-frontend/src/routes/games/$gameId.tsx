@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus } from "lucide-react";
+import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { getGameByIdQueryOptions, getGameRating } from "@/lib/gameQuery";
+import { getGameByIdQueryOptions, getGameRating, type GameImage } from "@/lib/gameQuery";
 import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loadingCreateReviewQueryOptions, toggleReviewLike, type GameReview } from "@/lib/reviewsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
 import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions, type SessionStatus } from "@/lib/gameSessionsQuery";
@@ -473,11 +473,28 @@ const queryClient = useQueryClient();
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 mb-2 font-serif">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
                                 <span className="bg-amber-200 px-2 sm:px-3 py-1 font-semibold border-2 border-stone-900 text-xs sm:text-sm shrink-0">
-                                    {new Date(data.game.releaseDate).getFullYear()}
+                                    {data.game.releaseDate ? new Date(data.game.releaseDate).getFullYear() : "N/A"}
                                 </span>
-                                <span className="bg-sky-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium truncate max-w-[120px] sm:max-w-none">{data.game?.name?.split(':')[0]}</span>
                                 <span className="bg-green-200 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-stone-900 font-medium shrink-0">IGDB: {data.game.igdbRating}</span>
+                                {/* Genre Badges */}
+                                {data.genres && data.genres.length > 0 && 
+                                data.genres.map((genre) => (
+                                        <span key={genre.id} className="bg-violet-200 px-2 py-0.5 text-xs border-2 border-stone-900 font-medium">
+                                            {genre.name}
+                                        </span>
+                                    ))}
                             </div>
+                            
+                            {/* Platform Badges */}
+                            {data.platforms && data.platforms.length > 0 && (
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 mt-2">
+                                    {data.platforms.map((platform) => (
+                                        <span key={platform.id} className="bg-stone-200 px-2 py-0.5 text-xs border-2 border-stone-900 font-medium">
+                                            {platform.abbreviation || platform.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
@@ -489,6 +506,40 @@ const queryClient = useQueryClient();
                                       {data.game?.summary}
                                     </p>
                                 </div>
+
+                                {/* Image Gallery */}
+                                {data.images && data.images.length > 0 && (
+                                    <ImageGallery images={data.images} />
+                                )}
+
+                                {/* External Links */}
+                                {data.links && data.links.length > 0 && (
+                                    <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">Links</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {data.links.map((link) => (
+                                                <a
+                                                    key={link.id}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 text-xs font-medium border-2 border-stone-900 transition-colors"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    <span className="capitalize">
+                                                        {link.label || (link.category === 'other' ? (() => {
+                                                            try {
+                                                                return new URL(link.url).hostname.split('.')[1];
+                                                            } catch {
+                                                                return link.url;
+                                                            }
+                                                        })() : link.category)}
+                                                    </span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="bg-blue-400 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">
@@ -758,6 +809,65 @@ function ReviewsSkeleton() {
       ))}
     </div>
   )
+}
+
+function ImageGallery({ images }: { images: GameImage[] }) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const current = images[currentIdx];
+
+  return (
+    <div className="bg-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
+      {/* Main image */}
+      {current && (
+        <div className="relative">
+          <img
+            src={current.url}
+            alt={`${current.imageType} ${currentIdx + 1}`}
+            className="w-full h-48 sm:h-64 lg:h-80 object-cover"
+            loading="lazy"
+          />
+          <span className="absolute top-2 left-2 bg-stone-900/80 text-white px-2 py-0.5 text-xs font-medium uppercase">
+            {current.imageType}
+          </span>
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={() => setCurrentIdx((prev) => (prev - 1 + images.length) % images.length)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-stone-900/70 hover:bg-stone-900/90 text-white p-1.5 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setCurrentIdx((prev) => (prev + 1) % images.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-stone-900/70 hover:bg-stone-900/90 text-white p-1.5 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+          <span className="absolute bottom-2 right-2 bg-stone-900/80 text-white px-2 py-0.5 text-xs font-medium">
+            {currentIdx + 1} / {images.length}
+          </span>
+        </div>
+      )}
+      {/* Thumbnail strip */}
+      {images.length > 1 && (
+        <div className="flex gap-1 p-2 overflow-x-auto">
+          {images.map((img, idx) => (
+            <button
+              key={img.id}
+              onClick={() => setCurrentIdx(idx)}
+              className={`shrink-0 w-16 h-10 overflow-hidden border-2 transition-colors ${
+                idx === currentIdx ? 'border-amber-400' : 'border-transparent hover:border-stone-500'
+              }`}
+            >
+              <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface ReviewFormBoxProps {

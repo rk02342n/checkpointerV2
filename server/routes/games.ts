@@ -3,8 +3,16 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { db } from "../db";
 import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
-import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql } from "drizzle-orm";
+import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists } from "drizzle-orm";
 import { reviewsTable } from "../db/schema/reviews";
+import { genresTable } from "../db/schema/genres";
+import { platformsTable } from "../db/schema/platforms";
+import { keywordsTable } from "../db/schema/keywords";
+import { gameGenresTable } from "../db/schema/game-genres";
+import { gamePlatformsTable } from "../db/schema/game-platforms";
+import { gameKeywordsTable } from "../db/schema/game-keywords";
+import { gameImagesTable } from "../db/schema/game-images";
+import { gameLinksTable } from "../db/schema/game-links";
 
 export const gamesRoute = new Hono()
 
@@ -34,12 +42,32 @@ export const gamesRoute = new Hono()
   return c.json({ games });
 })
 
+// List all genres
+.get("/genres", async (c) => {
+  const genres = await db.select().from(genresTable).orderBy(asc(genresTable.name));
+  return c.json({ genres });
+})
+
+// List all platforms
+.get("/platforms", async (c) => {
+  const platforms = await db.select().from(platformsTable).orderBy(asc(platformsTable.name));
+  return c.json({ platforms });
+})
+
+// List all keywords
+.get("/keywords", async (c) => {
+  const keywords = await db.select().from(keywordsTable).orderBy(asc(keywordsTable.name));
+  return c.json({ keywords });
+})
+
 // Browse games with filtering and sorting
 .get("/browse", async (c) => {
   const searchQuery = c.req.query("q") || "";
   const sortBy = c.req.query("sortBy") || "rating"; // rating, year, name
   const sortOrder = c.req.query("sortOrder") || "desc"; // asc, desc
   const yearFilter = c.req.query("year") || "all";
+  const genreFilter = c.req.query("genre") || "";
+  const platformFilter = c.req.query("platform") || "";
   const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
   const offset = parseInt(c.req.query("offset") || "0");
 
@@ -60,6 +88,36 @@ export const gamesRoute = new Hono()
       conditions.push(gte(gamesTable.releaseDate, startOfYear));
       conditions.push(lt(gamesTable.releaseDate, startOfNextYear));
     }
+  }
+
+  // Genre filter (by slug) using EXISTS subquery
+  if (genreFilter.trim()) {
+    conditions.push(
+      exists(
+        db.select({ one: sql`1` })
+          .from(gameGenresTable)
+          .innerJoin(genresTable, eq(gameGenresTable.genreId, genresTable.id))
+          .where(and(
+            eq(gameGenresTable.gameId, gamesTable.id),
+            eq(genresTable.slug, genreFilter.trim())
+          ))
+      )
+    );
+  }
+
+  // Platform filter (by slug) using EXISTS subquery
+  if (platformFilter.trim()) {
+    conditions.push(
+      exists(
+        db.select({ one: sql`1` })
+          .from(gamePlatformsTable)
+          .innerJoin(platformsTable, eq(gamePlatformsTable.platformId, platformsTable.id))
+          .where(and(
+            eq(gamePlatformsTable.gameId, gamesTable.id),
+            eq(platformsTable.slug, platformFilter.trim())
+          ))
+      )
+    );
   }
 
   // Determine sort column and order
@@ -111,10 +169,18 @@ export const gamesRoute = new Hono()
     .filter(y => y != null)
     .map(y => String(Math.floor(y)));
 
+  // Get all genres and platforms for filter dropdowns
+  const [genres, platforms] = await Promise.all([
+    db.select().from(genresTable).orderBy(asc(genresTable.name)),
+    db.select().from(platformsTable).orderBy(asc(platformsTable.name)),
+  ]);
+
   return c.json({
     games,
     totalCount: Number(totalCount),
     years,
+    genres,
+    platforms,
     pagination: {
       limit,
       offset,
@@ -124,15 +190,29 @@ export const gamesRoute = new Hono()
 })
 .get("/:id", zValidator('param', gameParamsSchema), async c => {  // regex makes sure we get a number as a request
   const id = c.req.param('id');
-  const game = await db
-    .select()
-    .from(gamesTable)
-    .where(eq(gamesTable.id, id))
-    .then(res => res[0]);
-  if (!game) {
+
+  const [gameResult, genres, platforms, keywords, images, links] = await Promise.all([
+    db.select().from(gamesTable).where(eq(gamesTable.id, id)).then(res => res[0]),
+    db.select({ id: genresTable.id, name: genresTable.name, slug: genresTable.slug })
+      .from(genresTable)
+      .innerJoin(gameGenresTable, eq(genresTable.id, gameGenresTable.genreId))
+      .where(eq(gameGenresTable.gameId, id)),
+    db.select({ id: platformsTable.id, name: platformsTable.name, slug: platformsTable.slug, abbreviation: platformsTable.abbreviation })
+      .from(platformsTable)
+      .innerJoin(gamePlatformsTable, eq(platformsTable.id, gamePlatformsTable.platformId))
+      .where(eq(gamePlatformsTable.gameId, id)),
+    db.select({ id: keywordsTable.id, name: keywordsTable.name, slug: keywordsTable.slug })
+      .from(keywordsTable)
+      .innerJoin(gameKeywordsTable, eq(keywordsTable.id, gameKeywordsTable.keywordId))
+      .where(eq(gameKeywordsTable.gameId, id)),
+    db.select().from(gameImagesTable).where(eq(gameImagesTable.gameId, id)).orderBy(asc(gameImagesTable.position)),
+    db.select().from(gameLinksTable).where(eq(gameLinksTable.gameId, id)),
+  ]);
+
+  if (!gameResult) {
     return c.json({ error: 'Game not found' }, 404)
   }
-  return c.json({ game });
+  return c.json({ game: gameResult, genres, platforms, keywords, images, links });
 })
 
 // .post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function
@@ -170,7 +250,7 @@ export const gamesRoute = new Hono()
 //     .where(and(eq(expensesTable.userId, user.id), eq(expensesTable.id, id)))
 //     .returning()
 //     .then(res => res[0])
-    
+
 //     if (!expense){
 //         return c.notFound();
 //     }

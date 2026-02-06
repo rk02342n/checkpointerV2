@@ -36,6 +36,8 @@ export default function BrowseGames() {
   const [sortBy, setSortBy] = useState<SortBy>("rating")
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
   const [yearFilter, setYearFilter] = useState<string>("all")
+  const [genreFilter, setGenreFilter] = useState<string>("all")
+  const [platformFilter, setPlatformFilter] = useState<string>("all")
 
   const navigate = useNavigate()
 
@@ -47,13 +49,15 @@ export default function BrowseGames() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['browse-games-infinite', { q: searchQuery || undefined, sortBy, sortOrder, year: yearFilter !== "all" ? yearFilter : undefined }],
+    queryKey: ['browse-games-infinite', { q: searchQuery || undefined, sortBy, sortOrder, year: yearFilter !== "all" ? yearFilter : undefined, genre: genreFilter !== "all" ? genreFilter : undefined, platform: platformFilter !== "all" ? platformFilter : undefined }],
     queryFn: async ({ pageParam = 0 }) => {
       const params: BrowseGamesParams = {
         q: searchQuery || undefined,
         sortBy,
         sortOrder,
         year: yearFilter !== "all" ? yearFilter : undefined,
+        genre: genreFilter !== "all" ? genreFilter : undefined,
+        platform: platformFilter !== "all" ? platformFilter : undefined,
         limit: ITEMS_PER_PAGE,
         offset: pageParam,
       }
@@ -72,6 +76,8 @@ export default function BrowseGames() {
   const allGames = data?.pages.flatMap(page => page.games) ?? []
   const totalCount = data?.pages[0]?.totalCount ?? 0
   const years = data?.pages[0]?.years ?? []
+  const genres = data?.pages[0]?.genres ?? []
+  const platforms = data?.pages[0]?.platforms ?? []
 
   const handleGameClick = (game: Game) => {
     window.scrollTo(0, 0)
@@ -145,6 +151,40 @@ export default function BrowseGames() {
                 <option value="all">All Years</option>
                 {years.map(year => (
                   <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Genre Filter */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-bold text-secondary-foreground">
+                Genre:
+              </label>
+              <select
+                value={genreFilter}
+                onChange={(e) => setGenreFilter(e.target.value)}
+                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+              >
+                <option value="all">All Genres</option>
+                {genres.map(genre => (
+                  <option key={genre.id} value={genre.slug}>{genre.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Platform Filter */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-bold text-secondary-foreground">
+                Platform:
+              </label>
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+              >
+                <option value="all">All Platforms</option>
+                {platforms.map(platform => (
+                  <option key={platform.id} value={platform.slug}>{platform.name}</option>
                 ))}
               </select>
             </div>
