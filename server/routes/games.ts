@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { db } from "../db";
 import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
-import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists } from "drizzle-orm";
+import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists, inArray } from "drizzle-orm";
 import { reviewsTable } from "../db/schema/reviews";
 import { genresTable } from "../db/schema/genres";
 import { platformsTable } from "../db/schema/platforms";
@@ -14,6 +14,29 @@ import { gameKeywordsTable } from "../db/schema/game-keywords";
 import { gameImagesTable } from "../db/schema/game-images";
 import { gameLinksTable } from "../db/schema/game-links";
 
+async function getPlatformsForGames(gameIds: string[]) {
+  if (gameIds.length === 0) return new Map<string, { id: string; name: string; slug: string; abbreviation: string | null }[]>();
+  const rows = await db
+    .select({
+      gameId: gamePlatformsTable.gameId,
+      id: platformsTable.id,
+      name: platformsTable.name,
+      slug: platformsTable.slug,
+      abbreviation: platformsTable.abbreviation,
+    })
+    .from(gamePlatformsTable)
+    .innerJoin(platformsTable, eq(gamePlatformsTable.platformId, platformsTable.id))
+    .where(inArray(gamePlatformsTable.gameId, gameIds));
+
+  const map = new Map<string, { id: string; name: string; slug: string; abbreviation: string | null }[]>();
+  for (const row of rows) {
+    const list = map.get(row.gameId) ?? [];
+    list.push({ id: row.id, name: row.name, slug: row.slug, abbreviation: row.abbreviation });
+    map.set(row.gameId, list);
+  }
+  return map;
+}
+
 export const gamesRoute = new Hono()
 
 .get("/", async (c) => {
@@ -22,7 +45,11 @@ export const gamesRoute = new Hono()
     .from(gamesTable)
     .orderBy(desc(gamesTable.igdbRating))
     .limit(40);
-  return c.json({ games });
+
+  const platformMap = await getPlatformsForGames(games.map(g => g.id));
+  const gamesWithPlatforms = games.map(g => ({ ...g, platforms: platformMap.get(g.id) ?? [] }));
+
+  return c.json({ games: gamesWithPlatforms });
 })
 
 // Search games
@@ -144,10 +171,13 @@ export const gamesRoute = new Hono()
     query = query.where(and(...conditions)) as typeof query;
   }
 
-  const games = await query
+  const gamesRaw = await query
     .orderBy(orderFn(orderByColumn))
     .limit(limit)
     .offset(offset);
+
+  const platformMap = await getPlatformsForGames(gamesRaw.map(g => g.id));
+  const games = gamesRaw.map(g => ({ ...g, platforms: platformMap.get(g.id) ?? [] }));
 
   // Get total count for pagination
   let countQuery = db.select({ count: sql<number>`count(*)` }).from(gamesTable);

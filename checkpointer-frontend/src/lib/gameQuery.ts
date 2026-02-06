@@ -1,11 +1,19 @@
 import { queryOptions } from "@tanstack/react-query";
 
+export interface GamePlatform {
+  id: string;
+  name: string;
+  slug: string;
+  abbreviation?: string | null;
+}
+
 export interface Game {
   id: string | number;
   name: string;
   coverUrl: string | null;
   releaseDate: string | Date | null;
   igdbRating?: string | null;
+  platforms?: GamePlatform[];
 }
 
 export interface Genre {

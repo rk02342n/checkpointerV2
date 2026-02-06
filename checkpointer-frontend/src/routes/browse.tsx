@@ -3,29 +3,15 @@ import { useState } from "react"
 import { Search, Loader2 } from "lucide-react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StandardGameCard } from "@/components/StandardGameCard"
 import { browseGames, type Game, type BrowseGamesParams } from "@/lib/gameQuery"
 
 type SortBy = "rating" | "year" | "name"
 type SortOrder = "asc" | "desc"
 
 const ITEMS_PER_PAGE = 24
-
-function getYear(dateStr: string | Date | null): string {
-  if (!dateStr) return "N/A"
-  const d = typeof dateStr === "string" ? new Date(dateStr) : dateStr
-  const y = d.getFullYear()
-  return Number.isFinite(y) ? y.toString() : "N/A"
-}
-
-function formatRating(value: Game["igdbRating"]): number | null {
-  if (value === null || value === undefined) return null
-  const n = typeof value === "number" ? value : Number(value)
-  if (Number.isNaN(n)) return null
-  return Math.round(n)
-}
 
 export const Route = createFileRoute("/browse")({
   component: BrowseGames,
@@ -227,53 +213,14 @@ export default function BrowseGames() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {allGames.map((game) => {
-                  const rating = formatRating(game.igdbRating)
-                  const year = getYear(game.releaseDate)
-
-                  return (
-                    <button
-                      key={game.id}
-                      onClick={() => handleGameClick(game)}
-                      className="group text-left bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
-                    >
-                      <div className="relative overflow-hidden">
-                        {game.coverUrl ? (
-                          <img
-                            src={game.coverUrl}
-                            alt={game.name}
-                            className="w-full h-48 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-48 sm:h-56 bg-muted flex items-center justify-center">
-                            <span className="text-muted-foreground text-sm">No Image</span>
-                          </div>
-                        )}
-                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground font-medium text-xs rounded-none border-2 border-border">
-                          {year}
-                        </Badge>
-                      </div>
-
-                      <div className="p-4 border-t-4 border-border">
-                        <h3 className="font-semibold text-foreground truncate">
-                          {game.name.split(':')[0]}
-                        </h3>
-                        {rating !== null && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="h-2 flex-1 bg-muted border border-border">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${rating}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-muted-foreground font-medium">{rating}</span>
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
+                {allGames.map((game) => (
+                  <StandardGameCard
+                    key={game.id}
+                    game={game}
+                    variant="browse"
+                    onGameClick={handleGameClick}
+                  />
+                ))}
               </div>
 
               {/* Load More Button */}
