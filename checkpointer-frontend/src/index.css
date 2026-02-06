@@ -6,7 +6,7 @@
 @layer{
   :root {
     --radius: 0.65rem;
-    --background: oklch(1 0 0);           /* white */
+    --background: oklch(.987 .022 95.277); /* amber-50 */
     --foreground: oklch(0.216 0.006 56);  /* stone-900 */
     --card: oklch(1 0 0);                 /* white */
     --card-foreground: oklch(0.216 0.006 56);

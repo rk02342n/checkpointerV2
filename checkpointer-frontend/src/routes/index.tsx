@@ -83,10 +83,10 @@ export default function Checkpointer() {
               </div>
               <div className="hidden md:block">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-primary/30 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
-                  <div className="bg-foreground border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
-                  <div className="bg-foreground border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
-                  <div className="bg-primary/30 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]" />
+                  <div className="bg-amber-100 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-stone-900 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-stone-900 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-amber-100 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
                 </div>
               </div>
             </div>
@@ -97,10 +97,10 @@ export default function Checkpointer() {
         <section className="mb-10 sm:mb-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {[
-              { label: "Games", value:  "10K+", color: "bg-primary/20" },
-              { label: "Reviews", value: "1.2K+", color: "bg-primary/30" },
-              { label: "Users", value: "100+", color: "bg-secondary/50" },
-              { label: "Logs", value: "5K+", color: "bg-secondary/30" },
+              { label: "Games", value:  "10K+", color: "bg-amber-600/50" },
+              { label: "Reviews", value: "1.2K+", color: "bg-red-600/50" },
+              { label: "Users", value: "100+", color: "bg-green-600/50" },
+              { label: "Logs", value: "5K+", color: "bg-blue-600/50" },
             ].map((stat) => (
               <div
                 key={stat.label}
