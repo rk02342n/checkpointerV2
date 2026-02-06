@@ -67,7 +67,6 @@ function FeaturedGames({
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {items.slice(2, limit + 2).map((game: Game) => {
-          const rating = formatRating(game.igdbRating)
           const year = formatYear(game.releaseDate)
           return (
             <button
@@ -96,15 +95,13 @@ function FeaturedGames({
                 <h3 className="font-semibold text-stone-900 text-sm sm:text-lg leading-tight truncate">
                   {game.name.split(':')[0]}
                 </h3>
-                {rating !== null && (
+                {game.releaseDate !== null && (
                   <div className="mt-1 sm:mt-2 flex items-center gap-1 sm:gap-2">
-                    <div className="h-1.5 sm:h-2 w-full bg-stone-200 border border-stone-900">
-                      <div
-                        className="h-full bg-orange-300"
-                        style={{ width: `${rating}%` }}
-                      />
-                    </div>
-                    <span className="text-xs sm:text-sm text-stone-600">{rating}</span>
+                    <span className="text-xs sm:text-sm text-stone-600">
+                      {game.releaseDate instanceof Date
+                        ? game.releaseDate.getFullYear()
+                        : new Date(game.releaseDate).getFullYear()}
+                    </span>
                   </div>
                 )}
               </div>
