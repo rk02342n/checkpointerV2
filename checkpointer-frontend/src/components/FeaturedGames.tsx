@@ -28,7 +28,7 @@ function FeaturedGames({
   return (
     <section className="w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-stone-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
           {title}
         </h2>
         {isLoggedIn ? (

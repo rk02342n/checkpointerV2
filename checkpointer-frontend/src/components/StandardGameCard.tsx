@@ -18,7 +18,7 @@ interface StandardGameCardProps {
 
 const cardClasses: Record<Variant, string> = {
   featured:
-    "group text-left bg-white border-2 sm:border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] sm:hover:shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:translate-x-px sm:hover:translate-x-[3px] hover:translate-y-px sm:hover:translate-y-[3px] transition-all duration-100",
+    "group text-left bg-white dark:bg-stone-900 border-2 sm:border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] sm:hover:shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:translate-x-px sm:hover:translate-x-[3px] hover:translate-y-px sm:hover:translate-y-[3px] transition-all duration-100",
   browse:
     "group text-left bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100",
 }
@@ -77,7 +77,7 @@ export const StandardGameCard = ({
         <h3
           className={
             variant === "featured"
-              ? "font-semibold text-stone-900 text-sm sm:text-lg leading-tight truncate"
+              ? "font-semibold text-foreground text-sm sm:text-lg leading-tight truncate"
               : "font-semibold text-foreground truncate"
           }
         >
@@ -97,8 +97,8 @@ export const StandardGameCard = ({
                 variant="outline"
                 className={
                   variant === "featured"
-                    ? "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 rounded-none border border-stone-300 text-stone-600 font-normal"
-                    : "text-[10px] px-1.5 py-0 rounded-none border border-border text-muted-foreground font-normal"
+                    ? "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 rounded-none border border-stone-300 text-stone-600 dark:bg-stone-700 dark:text-stone-200 font-normal"
+                    : "text-[10px] px-1.5 py-0 rounded-none border border-stone-300 font-normal text-stone-600 dark:bg-stone-700 dark:text-stone-200"
                 }
               >
                 {p.abbreviation || p.name}
