@@ -65,13 +65,15 @@ const Navbar: React.FC<NavbarProps> = () => {
       <nav className="sticky top-0 z-40 bg-primary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] mb-6 mx-4 mt-4">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
-        <button
-          className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-4 border-border hover:bg-muted transition-colors"
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          className="md:hidden bg-card border-4 border-border hover:bg-muted transition-colors"
           onClick={() => navigate({to: `/browse`})}
           aria-label="Search games"
         >
           <Search className="w-5 h-5 text-foreground" />
-        </button>
+        </Button>
         <div
           className="flex items-center gap-2 cursor-pointer group"
           onClick={() => { navigate({to: `/`});}}
@@ -135,26 +137,15 @@ const Navbar: React.FC<NavbarProps> = () => {
         </div>
 
         <div className="flex items-center gap-4 md:gap-6">
-          {/* Theme Toggle - only show if enabled by admin */}
-          {settings.darkModeEnabled && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex items-center justify-center w-10 h-10 bg-card border-4 border-border hover:bg-muted transition-colors"
-              aria-label="Toggle theme"
-            >
-              <Sun className="w-5 h-5 text-foreground hidden dark:block" />
-              <Moon className="w-5 h-5 text-foreground dark:hidden" />
-            </button>
-          )}
-
           {isAdmin && (
-            <button
+            <Button
+              variant="ghost"
               className="hidden md:flex items-center gap-2 text-primary-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
               onClick={() => { navigate({to: `/admin`});}}
             >
               <Shield className="w-4 h-4" />
               <span>Admin</span>
-            </button>
+            </Button>
           )}
           {isLoggedIn ? (
             <DropdownMenu>
@@ -173,7 +164,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               <DropdownMenuContent align="end" className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
                 <DropdownMenuItem
                   onClick={() => navigate({to: `/profile`})}
-                  className="cursor-pointer font-medium rounded-none hover:bg-primary/20"
+                  className="font-medium rounded-none hover:bg-primary/20"
                 >
                   <User className="w-4 h-4" />
                   Profile
@@ -181,13 +172,24 @@ const Navbar: React.FC<NavbarProps> = () => {
                 <DropdownMenuSeparator className="bg-border/50" />
                 {isAdmin && <DropdownMenuItem
                   onClick={() => navigate({to: `/admin`})}
-                  className="cursor-pointer font-medium rounded-none hover:bg-primary/20"
+                  className="font-medium rounded-none hover:bg-primary/20"
                 >
                   <Shield className="w-4 h-4" />
                   Admin
                 </DropdownMenuItem>}
+                {isAdmin && <DropdownMenuSeparator className="bg-border/50" />}
+                {settings.darkModeEnabled && (
+                  <DropdownMenuItem
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="font-medium rounded-none hover:bg-primary/20"
+                  >
+                    <Sun className="w-4 h-4 hidden dark:block" />
+                    <Moon className="w-4 h-4 dark:hidden" />
+                    {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-border/50" />
-                <DropdownMenuItem asChild variant="destructive" className="cursor-pointer font-medium rounded-none">
+                <DropdownMenuItem asChild variant="destructive" className="font-medium rounded-none">
                   <a href="/api/logout">
                     <LogOut className="w-4 h-4" />
                     Logout
