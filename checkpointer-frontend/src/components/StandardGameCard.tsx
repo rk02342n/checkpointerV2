@@ -1,5 +1,20 @@
+import { useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { type Game } from "@/lib/gameQuery"
+import { dbUserQueryOptions } from "@/lib/api"
+import { addToWishlist, type WishlistResponse } from "@/lib/wantToPlayQuery"
+import { LogGameModal } from "@/components/LogGameModal"
+import { AddToListModal } from "@/components/AddToListModal"
+import { EllipsisVertical, ListPlus, CalendarHeart, BookOpen, PenLine } from "lucide-react"
+import { toast } from "sonner"
 
 type Variant = "featured" | "browse"
 
@@ -30,8 +45,89 @@ export const StandardGameCard = ({
 }: StandardGameCardProps) => {
   const year = formatYear(game.releaseDate)
   const platforms = game.platforms ?? []
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const gameId = String(game.id)
+
+  const [showLogModal, setShowLogModal] = useState(false)
+  const [showAddToListModal, setShowAddToListModal] = useState(false)
+
+  const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false })
+  const isLoggedIn = !!dbUserData?.account
+
+  const wishlistMutation = useMutation({
+    mutationFn: () => addToWishlist(gameId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['want-to-play-check', gameId] })
+      await queryClient.cancelQueries({ queryKey: ['want-to-play'] })
+
+      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['want-to-play'])
+
+      queryClient.setQueryData(['want-to-play-check', gameId], { inWishlist: true })
+
+      if (previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], {
+          wishlist: [
+            {
+              gameId: gameId,
+              createdAt: new Date().toISOString(),
+              gameName: game.name,
+              gameCoverUrl: game.coverUrl,
+              gameSlug: null,
+            },
+            ...previousWishlist.wishlist,
+          ],
+        })
+      }
+
+      return { previousWishlist }
+    },
+    onError: (_err, _, context) => {
+      queryClient.setQueryData(['want-to-play-check', gameId], { inWishlist: false })
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], context.previousWishlist)
+      }
+      toast.error("Failed to add to wishlist")
+    },
+    onSuccess: () => {
+      toast.success(`${game.name} added to wishlist`)
+    },
+  })
+
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isLoggedIn) {
+      toast.error("Please log in to add games to your wishlist")
+      return
+    }
+    wishlistMutation.mutate()
+  }
+
+  const handleLog = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isLoggedIn) {
+      toast.error("Please log in to log games")
+      return
+    }
+    setShowLogModal(true)
+  }
+
+  const handleReview = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate({ to: "/games/$gameId", params: { gameId }, search: { review: true } })
+  }
+
+  const handleAddToList = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isLoggedIn) {
+      toast.error("Please log in to add games to lists")
+      return
+    }
+    setShowAddToListModal(true)
+  }
 
   return (
+    <>
     <button
       onClick={() => onGameClick?.(game)}
       className={cardClasses[variant]}
@@ -70,15 +166,15 @@ export const StandardGameCard = ({
       <div
         className={
           variant === "featured"
-            ? "p-2 sm:p-4 border-t-2 sm:border-t-4 border-stone-900"
-            : "p-4 border-t-4 border-border"
+            ? "p-2 sm:p-4 border-t-2 sm:border-t-4 border-stone-900 relative"
+            : "p-4 border-t-4 border-border relative"
         }
       >
         <h3
           className={
             variant === "featured"
-              ? "font-semibold text-foreground text-sm sm:text-lg leading-tight truncate"
-              : "font-semibold text-foreground truncate"
+              ? "font-semibold text-foreground text-sm sm:text-lg leading-tight truncate pr-6"
+              : "font-semibold text-foreground truncate pr-6"
           }
         >
           {game.name.split(':')[0]}
@@ -117,7 +213,57 @@ export const StandardGameCard = ({
             )}
           </div>
         )}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger
+            onClick={(e) => e.stopPropagation()}
+            className={
+              variant === "featured"
+                ? "absolute top-2 right-1 sm:top-3 sm:right-2 p-1 rounded-sm text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+                : "absolute top-3 right-2 p-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+            }
+          >
+            <EllipsisVertical className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top">
+            <DropdownMenuItem onClick={handleReview}>
+              <PenLine className="size-4" />
+              Review
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddToWishlist}>
+              <CalendarHeart className="size-4" />
+              Add to Wishlist
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLog}>
+              <BookOpen className="size-4" />
+              Log
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAddToList}>
+              <ListPlus className="size-4" />
+              Add to List
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </button>
+
+    <LogGameModal
+      open={showLogModal}
+      onOpenChange={setShowLogModal}
+      preselectedGame={{
+        id: gameId,
+        name: game.name,
+        coverUrl: game.coverUrl,
+        releaseDate: game.releaseDate,
+      }}
+    />
+
+    <AddToListModal
+      open={showAddToListModal}
+      onOpenChange={setShowAddToListModal}
+      gameId={gameId}
+      gameName={game.name}
+      gameCoverUrl={game.coverUrl}
+    />
+    </>
   )
 }
