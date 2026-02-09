@@ -981,7 +981,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
         className={`bg-orange-300 dark:bg-cyan-950 border-4 border-border text-foreground transition-all duration-300 ease-out ${
           isMaximized
             ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-6 sm:p-8'
-            : 'relative shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6'
+            : 'relative group shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6'
         }`}
       >
         {/* Maximize Button - top right on mobile, outer left edge on desktop */}
@@ -990,14 +990,14 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
             {/* Mobile: top right corner */}
             <button
               onClick={onMaximize}
-              className="lg:hidden absolute top-2 right-2 z-10 bg-stone-900 text-white border-2 border-stone-900 p-1.5"
+              className="lg:hidden absolute top-2 right-2 z-10 bg-stone-900 text-white border-2 border-stone-900 p-1.5 transition-opacity opacity-0 group-hover:opacity-100"
             >
               <Maximize2 className="w-4 h-4" />
             </button>
             {/* Desktop: outer left edge */}
             <button
               onClick={onMaximize}
-              className="hidden lg:flex group absolute top-1/2 -translate-y-1/2 right-full mr-0 z-10 items-center flex-row-reverse"
+              className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-full mr-0 z-10 items-center flex-row-reverse transition-opacity opacity-0 group-hover:opacity-100"
             >
               <div className="flex items-center flex-row-reverse bg-stone-900 text-white border-2 border-stone-900 transition-all duration-200 ease-out overflow-hidden group-hover:pl-3">
                 <div className="p-2">
