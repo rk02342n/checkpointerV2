@@ -854,22 +854,30 @@ function ReviewsSkeleton() {
 
 function ImageGallery({ images }: { images: GameImage[] }) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
   const current = images[currentIdx];
 
   return (
     <div className="bg-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
       {/* Main image */}
       {current && (
-        <div className="relative">
+        <div className="relative group">
           <img
             src={current.url}
             alt={`${current.imageType} ${currentIdx + 1}`}
-            className="w-full h-48 sm:h-64 lg:h-80 object-cover"
+            className="w-full h-48 sm:h-64 lg:h-80 object-cover cursor-pointer"
             loading="lazy"
+            onClick={() => setIsExpanded(true)}
           />
           <span className="absolute top-2 left-2 bg-stone-900/80 text-white px-2 py-0.5 text-xs font-medium uppercase">
             {current.imageType}
           </span>
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="absolute top-2 right-2 bg-stone-900/80 hover:bg-stone-900/90 text-white p-1.5 transition-opacity opacity-0 group-hover:opacity-100"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
           {images.length > 1 && (
             <>
               <button
@@ -907,6 +915,43 @@ function ImageGallery({ images }: { images: GameImage[] }) {
           ))}
         </div>
       )}
+
+      {/* Lightbox dialog */}
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent
+          className="max-w-[95vw] sm:max-w-[90vw] max-h-[95vh] p-0 bg-stone-900 border-stone-700 overflow-hidden"
+          showCloseButton
+        >
+          {current && (
+            <div className="relative flex items-center justify-center">
+              <img
+                src={current.url}
+                alt={`${current.imageType} ${currentIdx + 1}`}
+                className="max-w-full max-h-[85vh] object-contain"
+              />
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentIdx((prev) => (prev - 1 + images.length) % images.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-stone-900/70 hover:bg-stone-900/90 text-white p-2 transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentIdx((prev) => (prev + 1) % images.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-stone-900/70 hover:bg-stone-900/90 text-white p-2 transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </>
+              )}
+              <span className="absolute bottom-2 right-2 bg-stone-900/80 text-white px-2 py-0.5 text-xs font-medium">
+                {currentIdx + 1} / {images.length}
+              </span>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
