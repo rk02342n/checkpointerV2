@@ -389,7 +389,7 @@ const queryClient = useQueryClient();
   })
 
     return (
-        <div className="min-h-screen bg-background  text-stone-900 selection:bg-orange-300/30">
+        <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
             <Navbar />
 
             {isPending ? (
@@ -401,7 +401,7 @@ const queryClient = useQueryClient();
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Left Column: Poster & Actions */}
                     <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-                        <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+                        <div className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
                           <Poster game={data.game} size="xl" className="" />
                         </div>
 
@@ -472,7 +472,7 @@ const queryClient = useQueryClient();
                     {/* Right Column: Info & Reviews */}
                     <div className="flex-1 pt-0 text-center lg:text-left min-w-0">
                         <div className="mb-6">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 mb-2 font-serif">{data.game?.name}</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 font-serif">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
                                 <span className="bg-amber-200 dark:bg-amber-950 px-2 sm:px-3 py-1 font-semibold border-2 border-border text-foreground text-xs sm:text-sm shrink-0">
                                     {data.game.releaseDate ? new Date(data.game.releaseDate).getFullYear() : "N/A"}
@@ -512,7 +512,7 @@ const queryClient = useQueryClient();
                                     {data.game?.summary && data.game.summary.length > 600 && (
                                       <button
                                         onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)}
-                                        className="mt-2 text-sm font-bold text-stone-900 underline underline-offset-2 hover:text-orange-600 transition-colors"
+                                        className="mt-2 text-sm font-bold text-muted-foreground underline underline-offset-2 hover:text-blue-600 transition-colors"
                                       >
                                         {isSynopsisExpanded ? 'Show less' : 'Read more'}
                                       </button>
@@ -563,7 +563,7 @@ const queryClient = useQueryClient();
                                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                                         <div className="flex items-center gap-2 min-w-0">
                                                             <div className="w-6 h-6 rounded-full bg-linear-to-tr from-orange-50 to-amber-500 border-2 border-stone-900 shrink-0" />
-                                                            <span className="text-sm font-bold text-stone-900">You</span>
+                                                            <span className="text-sm font-bold text-foreground">You</span>
                                                         </div>
                                                         <StarRating rating={Number(loadingCreateReview?.review.rating)} size="sm" />
                                                     </div>
@@ -708,7 +708,7 @@ const queryClient = useQueryClient();
             <Dialog open={showSwitchGameDialog} onOpenChange={setShowSwitchGameDialog}>
               <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-stone-900">
+                  <DialogTitle className="flex items-center gap-2 text-foreground">
                     Switch Game
                   </DialogTitle>
                   <DialogDescription className="text-foreground mt-2">

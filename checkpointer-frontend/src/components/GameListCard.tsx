@@ -16,7 +16,7 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
       className="block bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
-      <div className="aspect-16/9 bg-muted relative">
+      <div className="aspect-video bg-muted relative">
         {hasCustomCover ? (
           // Custom cover image
           <img
@@ -68,7 +68,7 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-foreground truncate flex-1">{list.name}</h3>
           {list.visibility === "private" && (
-            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
         </div>
         {list.description && (
@@ -89,7 +89,7 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
       className="flex items-center gap-3 p-3 bg-muted border-4 border-border hover:bg-orange-100 dark:hover:bg-muted/80 transition-colors"
     >
       {/* Cover thumbnail */}
-      <div className="w-16 h-16 bg-muted border-2 border-border flex-shrink-0 overflow-hidden">
+      <div className="w-16 h-16 bg-muted border-2 border-border shrink-0 overflow-hidden">
         {hasCustomCover ? (
           <img
             src={getListCoverUrl(list.id)}
@@ -125,7 +125,7 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-foreground text-sm truncate">{list.name}</h3>
           {list.visibility === "private" && (
-            <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+            <Lock className="w-3 h-3 text-muted-foreground shrink-0" />
           )}
         </div>
         <p className="text-muted-foreground text-xs">
