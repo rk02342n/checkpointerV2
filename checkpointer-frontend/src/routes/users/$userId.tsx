@@ -400,7 +400,7 @@ function PublicProfile() {
 
             {/* Lists Tab */}
             <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
-              <ListsSection userId={userId} isOwnProfile={false} />
+              <ListsSection userId={userId} isOwnProfile={false} showSaveButtons={!!dbUserData?.account} />
             </div>
           </div>
         </div>

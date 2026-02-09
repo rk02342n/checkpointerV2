@@ -5,6 +5,7 @@ import { gameListsTable } from "../db/schema/game-lists";
 import { gameListItemsTable } from "../db/schema/game-list-items";
 import { gamesTable } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
+import { savedGameListsTable } from "../db/schema/saved-game-lists";
 import { eq, and, desc, asc, count, sql, or } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
@@ -59,6 +60,66 @@ export const gameListsRoute = new Hono()
   const listsWithCovers = await Promise.all(
     lists.map(async (list) => {
       // If list has custom cover, don't fetch game covers
+      if (list.coverUrl) {
+        return {
+          ...list,
+          gameCoverUrls: [],
+        };
+      }
+
+      const covers = await db
+        .select({
+          coverUrl: gamesTable.coverUrl,
+        })
+        .from(gameListItemsTable)
+        .innerJoin(gamesTable, eq(gameListItemsTable.gameId, gamesTable.id))
+        .where(eq(gameListItemsTable.listId, list.id))
+        .orderBy(asc(gameListItemsTable.position))
+        .limit(4);
+
+      return {
+        ...list,
+        gameCoverUrls: covers.map(c => c.coverUrl).filter(Boolean),
+      };
+    })
+  );
+
+  return c.json({ lists: listsWithCovers });
+})
+
+// GET /saved - Get user's saved lists (authenticated)
+.get('/saved', getAuthUser, async (c) => {
+  const user = c.var.dbUser;
+
+  const savedLists = await db
+    .select({
+      id: gameListsTable.id,
+      name: gameListsTable.name,
+      description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
+      visibility: gameListsTable.visibility,
+      createdAt: gameListsTable.createdAt,
+      updatedAt: gameListsTable.updatedAt,
+      gameCount: count(gameListItemsTable.gameId),
+      ownerUsername: usersTable.username,
+      ownerDisplayName: usersTable.displayName,
+      ownerAvatarUrl: usersTable.avatarUrl,
+      ownerId: usersTable.id,
+    })
+    .from(savedGameListsTable)
+    .innerJoin(gameListsTable, eq(savedGameListsTable.listId, gameListsTable.id))
+    .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
+    .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
+    .where(and(
+      eq(savedGameListsTable.userId, user.id),
+      eq(gameListsTable.visibility, 'public')
+    ))
+    .groupBy(gameListsTable.id, usersTable.id, savedGameListsTable.createdAt)
+    .orderBy(desc(savedGameListsTable.createdAt));
+
+  // Get first 4 game covers for each list (only if no custom cover)
+  const listsWithCovers = await Promise.all(
+    savedLists.map(async (list) => {
       if (list.coverUrl) {
         return {
           ...list,
@@ -686,4 +747,98 @@ export const gameListsRoute = new Hono()
   } catch {
     return c.notFound();
   }
+})
+
+// GET /:listId/save - Check if list is saved + save count (authenticated)
+.get('/:listId/save', getAuthUser, async (c) => {
+  const listId = c.req.param('listId');
+  const user = c.var.dbUser;
+
+  const [saved, saveCountResult] = await Promise.all([
+    db
+      .select()
+      .from(savedGameListsTable)
+      .where(and(
+        eq(savedGameListsTable.userId, user.id),
+        eq(savedGameListsTable.listId, listId)
+      ))
+      .limit(1),
+    db
+      .select({ count: count() })
+      .from(savedGameListsTable)
+      .where(eq(savedGameListsTable.listId, listId))
+      .then(res => res[0]?.count ?? 0),
+  ]);
+
+  return c.json({
+    isSaved: saved.length > 0,
+    saveCount: saveCountResult,
+  });
+})
+
+// POST /:listId/save - Save a list (authenticated)
+.post('/:listId/save', getAuthUser, async (c) => {
+  const listId = c.req.param('listId');
+  const user = c.var.dbUser;
+
+  // Check list exists and is public
+  const list = await db
+    .select({ id: gameListsTable.id, userId: gameListsTable.userId, visibility: gameListsTable.visibility })
+    .from(gameListsTable)
+    .where(eq(gameListsTable.id, listId))
+    .limit(1)
+    .then(res => res[0]);
+
+  if (!list) {
+    return c.json({ error: "List not found" }, 404);
+  }
+
+  if (list.visibility !== 'public') {
+    return c.json({ error: "Cannot save a private list" }, 400);
+  }
+
+  if (list.userId === user.id) {
+    return c.json({ error: "Cannot save your own list" }, 400);
+  }
+
+  // Check if already saved
+  const existing = await db
+    .select()
+    .from(savedGameListsTable)
+    .where(and(
+      eq(savedGameListsTable.userId, user.id),
+      eq(savedGameListsTable.listId, listId)
+    ))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return c.json({ error: "List already saved" }, 409);
+  }
+
+  await db.insert(savedGameListsTable).values({
+    userId: user.id,
+    listId,
+  });
+
+  return c.json({ saved: true }, 201);
+})
+
+// DELETE /:listId/save - Unsave a list (authenticated)
+.delete('/:listId/save', getAuthUser, async (c) => {
+  const listId = c.req.param('listId');
+  const user = c.var.dbUser;
+
+  const deleted = await db
+    .delete(savedGameListsTable)
+    .where(and(
+      eq(savedGameListsTable.userId, user.id),
+      eq(savedGameListsTable.listId, listId)
+    ))
+    .returning();
+
+  if (deleted.length === 0) {
+    return c.json({ error: "List not saved" }, 404);
+  }
+
+  return c.json({ unsaved: true });
 });

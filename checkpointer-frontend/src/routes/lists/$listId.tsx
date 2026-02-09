@@ -9,6 +9,9 @@ import {
   uploadListCover,
   removeListCover,
   getListCoverUrl,
+  listSavedQueryOptions,
+  saveList,
+  unsaveList,
   type GameListDetail,
   type GameListGame,
 } from "@/lib/gameListsQuery";
@@ -22,6 +25,7 @@ import {
   Loader2,
   Camera,
   X,
+  Bookmark,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -66,6 +70,39 @@ function ListDetailView() {
 
   const list = data?.list;
   const isOwner = (list as GameListDetail & { isOwner?: boolean })?.isOwner ?? false;
+
+  // Save status query (only when logged in, not owner, public list)
+  const canSave = isLoggedIn && !isOwner && list?.visibility === 'public';
+  const { data: saveData } = useQuery({
+    ...listSavedQueryOptions(listId),
+    enabled: canSave,
+  });
+
+  // Save list mutation
+  const saveMutation = useMutation({
+    mutationFn: () => saveList(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["list-saved", listId] });
+      queryClient.invalidateQueries({ queryKey: ["my-saved-lists"] });
+      toast.success("List saved!");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to save list");
+    },
+  });
+
+  // Unsave list mutation
+  const unsaveMutation = useMutation({
+    mutationFn: () => unsaveList(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["list-saved", listId] });
+      queryClient.invalidateQueries({ queryKey: ["my-saved-lists"] });
+      toast.success("List unsaved");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to unsave list");
+    },
+  });
 
   // Delete list mutation
   const deleteMutation = useMutation({
@@ -330,6 +367,41 @@ function ListDetailView() {
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
+              </div>
+            )}
+
+            {/* Save Button (non-owner, public list) */}
+            {canSave && saveData && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    saveData.isSaved
+                      ? unsaveMutation.mutate()
+                      : saveMutation.mutate()
+                  }
+                  disabled={saveMutation.isPending || unsaveMutation.isPending}
+                  className={`border-2 border-border rounded-none gap-1.5 ${
+                    saveData.isSaved
+                      ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800"
+                      : "hover:bg-accent"
+                  }`}
+                >
+                  {saveMutation.isPending || unsaveMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Bookmark
+                      className={`w-4 h-4 ${saveData.isSaved ? "fill-current" : ""}`}
+                    />
+                  )}
+                  {saveData.isSaved ? "Saved" : "Save List"}
+                </Button>
+                {saveData.saveCount > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {saveData.saveCount}
+                  </span>
+                )}
               </div>
             )}
           </div>

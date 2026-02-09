@@ -1,14 +1,58 @@
 import { Link } from "@tanstack/react-router";
-import { Lock, Gamepad2 } from "lucide-react";
-import { type GameListSummary, getListCoverUrl } from "@/lib/gameListsQuery";
+import { Lock, Gamepad2, Bookmark } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { type GameListSummary, getListCoverUrl, listSavedQueryOptions, saveList, unsaveList } from "@/lib/gameListsQuery";
+import { toast } from "sonner";
 
 interface GameListCardProps {
   list: GameListSummary;
   linkPrefix?: string; // "/lists" for public routes
+  showSaveButton?: boolean;
 }
 
-export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps) {
+export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = false }: GameListCardProps) {
   const hasCustomCover = !!list.coverUrl;
+  const queryClient = useQueryClient();
+
+  const { data: saveData } = useQuery({
+    ...listSavedQueryOptions(list.id),
+    enabled: showSaveButton,
+  });
+
+  const isSaved = saveData?.isSaved ?? false;
+
+  const saveMutation = useMutation({
+    mutationFn: () => saveList(list.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['list-saved', list.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-saved-lists'] });
+      toast.success('List saved!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to save list');
+    },
+  });
+
+  const unsaveMutation = useMutation({
+    mutationFn: () => unsaveList(list.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['list-saved', list.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-saved-lists'] });
+      toast.success('List unsaved');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to unsave list');
+    },
+  });
+
+  const handleToggleSave = () => {
+    if (saveMutation.isPending || unsaveMutation.isPending) return;
+    if (isSaved) {
+      unsaveMutation.mutate();
+    } else {
+      saveMutation.mutate();
+    }
+  };
 
   return (
     <Link
@@ -61,6 +105,23 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
         <div className="absolute bottom-2 right-2 bg-stone-900 dark:bg-stone-700 text-white text-xs font-bold px-2 py-1">
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </div>
+        {/* Save button */}
+        {showSaveButton && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleToggleSave();
+            }}
+            disabled={saveMutation.isPending || unsaveMutation.isPending}
+            className="absolute top-2 right-2 z-10 p-1.5 bg-background/80 hover:bg-background border-2 border-border transition-all disabled:opacity-50"
+            title={isSaved ? "Unsave list" : "Save list"}
+          >
+            <Bookmark
+              className={`w-4 h-4 ${isSaved ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground hover:text-foreground'}`}
+            />
+          </button>
+        )}
       </div>
 
       {/* List Info */}

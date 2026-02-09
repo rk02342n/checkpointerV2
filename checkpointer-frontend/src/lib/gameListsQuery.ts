@@ -49,6 +49,13 @@ export type GameListWithStatus = {
   hasGame: boolean;
 };
 
+export type SavedGameListSummary = GameListSummary & {
+  ownerUsername: string;
+  ownerDisplayName: string | null;
+  ownerAvatarUrl: string | null;
+  ownerId: string;
+};
+
 // Get own lists
 async function getMyGameLists(): Promise<{ lists: GameListSummary[] }> {
   const res = await fetch("/api/game-lists");
@@ -268,4 +275,59 @@ export async function removeListCover(
 // Get cover URL for a list
 export function getListCoverUrl(listId: string): string {
   return `/api/game-lists/${listId}/cover`;
+}
+
+// Get saved lists
+async function getMySavedLists(): Promise<{ lists: SavedGameListSummary[] }> {
+  const res = await fetch("/api/game-lists/saved");
+  if (!res.ok) {
+    throw new Error("Failed to fetch saved lists");
+  }
+  return res.json();
+}
+
+export const mySavedListsQueryOptions = queryOptions({
+  queryKey: ['my-saved-lists'],
+  queryFn: getMySavedLists,
+  staleTime: 1000 * 60 * 5, // 5 minutes
+});
+
+// Check if a list is saved
+async function getListSaved(listId: string): Promise<{ isSaved: boolean; saveCount: number }> {
+  const res = await fetch(`/api/game-lists/${listId}/save`);
+  if (!res.ok) {
+    throw new Error("Failed to check list saved status");
+  }
+  return res.json();
+}
+
+export const listSavedQueryOptions = (listId: string) =>
+  queryOptions({
+    queryKey: ['list-saved', listId],
+    queryFn: () => getListSaved(listId),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+
+// Save a list
+export async function saveList(listId: string): Promise<{ saved: boolean }> {
+  const res = await fetch(`/api/game-lists/${listId}/save`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to save list");
+  }
+  return res.json();
+}
+
+// Unsave a list
+export async function unsaveList(listId: string): Promise<{ unsaved: boolean }> {
+  const res = await fetch(`/api/game-lists/${listId}/save`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Failed to unsave list");
+  }
+  return res.json();
 }

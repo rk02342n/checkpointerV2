@@ -14,9 +14,10 @@ import { Skeleton } from "./ui/skeleton";
 interface ListsSectionProps {
   userId?: string; // If provided, show user's public lists; otherwise show own lists
   isOwnProfile?: boolean;
+  showSaveButtons?: boolean;
 }
 
-export function ListsSection({ userId, isOwnProfile = false }: ListsSectionProps) {
+export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = false }: ListsSectionProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Use appropriate query based on whether viewing own profile or someone else's
@@ -81,7 +82,7 @@ export function ListsSection({ userId, isOwnProfile = false }: ListsSectionProps
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {lists.map((list) => (
-          <GameListCard key={list.id} list={list} />
+          <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} />
         ))}
       </div>
 

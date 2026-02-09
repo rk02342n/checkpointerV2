@@ -5,12 +5,13 @@ import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wantToPlayQueryOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
-import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus } from 'lucide-react'
+import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark } from 'lucide-react'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ListsSection } from '@/components/ListsSection'
-import { myGameListsQueryOptions } from '@/lib/gameListsQuery'
+import { GameListCard } from '@/components/GameListCard'
+import { myGameListsQueryOptions, mySavedListsQueryOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
 import { compressImage } from '@/lib/compressImage'
 import {
   Avatar,
@@ -38,7 +39,7 @@ const REVIEWS_PER_PAGE = 10
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists'>('reviews')
+  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists' | 'saved'>('reviews')
   const [searchQuery, setSearchQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
@@ -288,11 +289,18 @@ function Profile() {
     enabled: !!dbUserId && !isUserPending
   })
 
+  // Get user's saved lists
+  const { data: savedListsData, isPending: savedListsPending } = useQuery({
+    ...mySavedListsQueryOptions,
+    enabled: !!dbUserId && !isUserPending
+  })
+
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
   const playSessions = playHistoryData?.sessions ?? []
   const wishlistItems = wishlistData?.wishlist ?? []
   const gameLists = gameListsData?.lists ?? []
+  const savedLists = savedListsData?.lists ?? []
 
   // Filter reviews based on search query
   const filteredReviews = useMemo(() => userReviews.filter((review: Review) => {
@@ -730,6 +738,17 @@ function Profile() {
               <ListPlus className="w-4 h-4" />
               Lists ({gameLists.length})
             </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
+                activeTab === 'saved'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <Bookmark className="w-4 h-4" />
+              Saved ({savedLists.length})
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -916,6 +935,42 @@ function Profile() {
             {/* Lists Tab */}
             <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
               <ListsSection isOwnProfile={true} />
+            </div>
+
+            {/* Saved Tab */}
+            <div className={activeTab !== 'saved' ? 'invisible absolute inset-0 p-6' : ''}>
+              {savedListsPending ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden animate-pulse">
+                      <div className="aspect-video bg-muted-foreground/20" />
+                      <div className="p-3">
+                        <div className="h-5 w-3/4 bg-muted-foreground/20 mb-2" />
+                        <div className="h-4 w-full bg-muted-foreground/20" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : savedLists.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {savedLists.map((list: SavedGameListSummary) => (
+                    <div key={list.id} className="relative">
+                      <GameListCard list={list} showSaveButton />
+                      <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
+                        @{list.ownerUsername}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Bookmark className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No saved lists</p>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Save other users' lists to find them here!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
