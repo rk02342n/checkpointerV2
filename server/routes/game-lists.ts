@@ -201,6 +201,132 @@ export const gameListsRoute = new Hono()
   return c.json({ lists: listsWithCovers });
 })
 
+// GET /popular - Get popular public lists ordered by save count
+.get('/popular', async (c) => {
+  const limitParam = Number(c.req.query('limit')) || 6;
+  const limit = Math.min(Math.max(limitParam, 1), 20);
+
+  const lists = await db
+    .select({
+      id: gameListsTable.id,
+      name: gameListsTable.name,
+      description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
+      visibility: gameListsTable.visibility,
+      createdAt: gameListsTable.createdAt,
+      updatedAt: gameListsTable.updatedAt,
+      gameCount: sql<number>`(SELECT COUNT(*) FROM game_list_items WHERE game_list_items.list_id = ${gameListsTable.id})`.as('gameCount'),
+      saveCount: sql<number>`(SELECT COUNT(*) FROM saved_game_lists WHERE saved_game_lists.list_id = ${gameListsTable.id})`.as('saveCount'),
+      ownerUsername: usersTable.username,
+      ownerDisplayName: usersTable.displayName,
+      ownerAvatarUrl: usersTable.avatarUrl,
+      ownerId: usersTable.id,
+    })
+    .from(gameListsTable)
+    .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
+    .where(eq(gameListsTable.visibility, 'public'))
+    .orderBy(
+      desc(sql`(SELECT COUNT(*) FROM saved_game_lists WHERE saved_game_lists.list_id = ${gameListsTable.id})`),
+      desc(gameListsTable.updatedAt)
+    )
+    .limit(limit);
+
+  // Get first 4 game covers for each list (only if no custom cover)
+  const listsWithCovers = await Promise.all(
+    lists.map(async (list) => {
+      if (list.coverUrl) {
+        return { ...list, gameCoverUrls: [] };
+      }
+
+      const covers = await db
+        .select({ coverUrl: gamesTable.coverUrl })
+        .from(gameListItemsTable)
+        .innerJoin(gamesTable, eq(gameListItemsTable.gameId, gamesTable.id))
+        .where(eq(gameListItemsTable.listId, list.id))
+        .orderBy(asc(gameListItemsTable.position))
+        .limit(4);
+
+      return {
+        ...list,
+        gameCoverUrls: covers.map(c => c.coverUrl).filter(Boolean),
+      };
+    })
+  );
+
+  return c.json({ lists: listsWithCovers });
+})
+
+// GET /game/:gameId/public-lists - Get public lists that contain a specific game
+.get('/game/:gameId/public-lists', async (c) => {
+  const gameId = c.req.param('gameId');
+  const limitParam = Number(c.req.query('limit')) || 4;
+  const limit = Math.min(Math.max(limitParam, 1), 20);
+
+  // Get total count of public lists containing this game
+  const totalCountResult = await db
+    .select({ count: count() })
+    .from(gameListItemsTable)
+    .innerJoin(gameListsTable, eq(gameListItemsTable.listId, gameListsTable.id))
+    .where(and(
+      eq(gameListItemsTable.gameId, gameId),
+      eq(gameListsTable.visibility, 'public')
+    ))
+    .then(res => res[0]?.count ?? 0);
+
+  const lists = await db
+    .select({
+      id: gameListsTable.id,
+      name: gameListsTable.name,
+      description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
+      visibility: gameListsTable.visibility,
+      createdAt: gameListsTable.createdAt,
+      updatedAt: gameListsTable.updatedAt,
+      gameCount: sql<number>`(SELECT COUNT(*) FROM game_list_items WHERE game_list_items.list_id = ${gameListsTable.id})`.as('gameCount'),
+      saveCount: sql<number>`(SELECT COUNT(*) FROM saved_game_lists WHERE saved_game_lists.list_id = ${gameListsTable.id})`.as('saveCount'),
+      ownerUsername: usersTable.username,
+      ownerDisplayName: usersTable.displayName,
+      ownerAvatarUrl: usersTable.avatarUrl,
+      ownerId: usersTable.id,
+    })
+    .from(gameListItemsTable)
+    .innerJoin(gameListsTable, eq(gameListItemsTable.listId, gameListsTable.id))
+    .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
+    .where(and(
+      eq(gameListItemsTable.gameId, gameId),
+      eq(gameListsTable.visibility, 'public')
+    ))
+    .orderBy(
+      desc(sql`(SELECT COUNT(*) FROM saved_game_lists WHERE saved_game_lists.list_id = ${gameListsTable.id})`),
+      desc(gameListsTable.updatedAt)
+    )
+    .limit(limit);
+
+  // Get first 4 game covers for each list (only if no custom cover)
+  const listsWithCovers = await Promise.all(
+    lists.map(async (list) => {
+      if (list.coverUrl) {
+        return { ...list, gameCoverUrls: [] };
+      }
+
+      const covers = await db
+        .select({ coverUrl: gamesTable.coverUrl })
+        .from(gameListItemsTable)
+        .innerJoin(gamesTable, eq(gameListItemsTable.gameId, gamesTable.id))
+        .where(eq(gameListItemsTable.listId, list.id))
+        .orderBy(asc(gameListItemsTable.position))
+        .limit(4);
+
+      return {
+        ...list,
+        gameCoverUrls: covers.map(c => c.coverUrl).filter(Boolean),
+      };
+    })
+  );
+
+  return c.json({ lists: listsWithCovers, totalCount: totalCountResult });
+})
+
 // GET /:listId - Get single list with games (public lists visible to all, private only to owner)
 .get('/:listId', async (c) => {
   const listId = c.req.param('listId');

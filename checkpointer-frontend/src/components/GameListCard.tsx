@@ -8,15 +8,16 @@ interface GameListCardProps {
   list: GameListSummary;
   linkPrefix?: string; // "/lists" for public routes
   showSaveButton?: boolean;
+  showSaveCount?: boolean;
 }
 
-export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = false }: GameListCardProps) {
+export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = false, showSaveCount = false }: GameListCardProps) {
   const hasCustomCover = !!list.coverUrl;
   const queryClient = useQueryClient();
 
   const { data: saveData } = useQuery({
     ...listSavedQueryOptions(list.id),
-    enabled: showSaveButton,
+    enabled: showSaveButton || showSaveCount,
   });
 
   const isSaved = saveData?.isSaved ?? false;
@@ -105,22 +106,31 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
         <div className="absolute bottom-2 right-2 bg-stone-900 dark:bg-stone-700 text-white text-xs font-bold px-2 py-1">
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </div>
-        {/* Save button */}
-        {showSaveButton && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleToggleSave();
-            }}
-            disabled={saveMutation.isPending || unsaveMutation.isPending}
-            className="absolute top-2 right-2 z-10 p-1.5 bg-background/80 hover:bg-background border-2 border-border transition-all disabled:opacity-50"
-            title={isSaved ? "Unsave list" : "Save list"}
-          >
-            <Bookmark
-              className={`w-4 h-4 ${isSaved ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground hover:text-foreground'}`}
-            />
-          </button>
+        {/* Save button / save count */}
+        {(showSaveButton || (showSaveCount && saveData?.saveCount)) && (
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+            {saveData?.saveCount ? (
+              <span className="text-xs font-bold bg-background/80 border-2 border-border px-1.5 py-0.5">
+                {saveData.saveCount}
+              </span>
+            ) : null}
+            {showSaveButton && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleToggleSave();
+                }}
+                disabled={saveMutation.isPending || unsaveMutation.isPending}
+                className="p-1.5 bg-background/80 hover:bg-background border-2 border-border transition-all disabled:opacity-50"
+                title={isSaved ? "Unsave list" : "Save list"}
+              >
+                <Bookmark
+                  className={`w-4 h-4 ${isSaved ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground hover:text-foreground'}`}
+                />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -132,9 +142,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
             <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
         </div>
-        {list.description && (
-          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{list.description}</p>
-        )}
+        <p className="text-muted-foreground text-sm mt-1 line-clamp-2 min-h-10">{list.description || "\u00A0"}</p>
       </div>
     </Link>
   );

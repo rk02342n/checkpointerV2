@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { getFeaturedGamesQueryOptions, getTopRatedGamesQueryOptions, getTrendingGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { dbUserQueryOptions } from "@/lib/api"
+import { popularListsQueryOptions, type PopularGameListSummary } from "@/lib/gameListsQuery"
 import { useQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
 import FeaturedGames from "@/components/FeaturedGames"
 import { FeaturedGamesSkeleton } from "@/components/custom-skeletons/FeaturedGamesSkeleton"
+import { GameListCard } from "@/components/GameListCard"
 export const Route = createFileRoute("/")({
   component: Checkpointer,
 })
@@ -14,6 +16,7 @@ export default function Checkpointer() {
   const { data: featuredData, isPending } = useQuery(getFeaturedGamesQueryOptions)
   const { data: topRatedData, isPending: isTopRatedPending } = useQuery(getTopRatedGamesQueryOptions)
   const { data: trendingData, isPending: isTrendingPending } = useQuery(getTrendingGamesQueryOptions)
+  const { data: popularListsData } = useQuery(popularListsQueryOptions)
   const { data: dbUserData, isError: isAuthError } = useQuery({
     ...dbUserQueryOptions,
     retry: false,
@@ -135,6 +138,27 @@ export default function Checkpointer() {
               onGameClick={handleGameClick}
             />)}
         </section>
+
+        {/* Popular Lists */}
+        {popularListsData && popularListsData.lists.length > 0 && (
+          <>
+            <br/>
+            <br/>
+            <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 font-alt text-foreground">Popular Lists</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {popularListsData.lists.map((list: PopularGameListSummary) => (
+                  <div key={list.id} className="relative">
+                    <GameListCard list={list} showSaveButton />
+                    <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
+                      @{list.ownerUsername}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">

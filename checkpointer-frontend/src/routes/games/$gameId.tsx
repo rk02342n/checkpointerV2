@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/dialog'
 import { LogGameModal } from '@/components/LogGameModal'
 import { AddToListModal } from '@/components/AddToListModal'
+import { publicListsForGameQueryOptions, type PopularGameListSummary } from '@/lib/gameListsQuery'
+import { GameListCard } from '@/components/GameListCard'
 
 export const Route = createFileRoute('/games/$gameId')({
   component: GameView,
@@ -56,6 +58,9 @@ function GameView () {
     (getReviewsByGameIdQueryOptions(gameId));
 
     const {data: loadingCreateReview} = useQuery(loadingCreateReviewQueryOptions);
+
+    // Public lists featuring this game
+    const { data: publicListsData } = useQuery(publicListsForGameQueryOptions(gameId));
 
     // Load more state
     const [visibleCount, setVisibleCount] = useState(4);
@@ -548,6 +553,30 @@ const queryClient = useQueryClient();
                                                         })() : link.category)}
                                                     </span>
                                                 </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Featured in Lists */}
+                                {publicListsData && publicListsData.lists.length > 0 && (
+                                    <div className="bg-purple-200 dark:bg-purple-900/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-foreground">
+                                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4">
+                                            Featured in Lists
+                                            {publicListsData.totalCount > publicListsData.lists.length && (
+                                                <span className="text-muted-foreground font-normal ml-2">
+                                                    ({publicListsData.totalCount} total)
+                                                </span>
+                                            )}
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {publicListsData.lists.slice(0, 4).map((list: PopularGameListSummary) => (
+                                                <div key={list.id} className="relative">
+                                                    <GameListCard list={list} />
+                                                    <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
+                                                        @{list.ownerUsername}
+                                                    </div>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>

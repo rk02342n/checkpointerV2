@@ -82,7 +82,7 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {lists.map((list) => (
-          <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} />
+          <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} showSaveCount={isOwnProfile} />
         ))}
       </div>
 

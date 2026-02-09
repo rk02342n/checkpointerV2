@@ -56,6 +56,14 @@ export type SavedGameListSummary = GameListSummary & {
   ownerId: string;
 };
 
+export type PopularGameListSummary = GameListSummary & {
+  ownerUsername: string;
+  ownerDisplayName: string | null;
+  ownerAvatarUrl: string | null;
+  ownerId: string;
+  saveCount: number;
+};
+
 // Get own lists
 async function getMyGameLists(): Promise<{ lists: GameListSummary[] }> {
   const res = await fetch("/api/game-lists");
@@ -291,6 +299,37 @@ export const mySavedListsQueryOptions = queryOptions({
   queryFn: getMySavedLists,
   staleTime: 1000 * 60 * 5, // 5 minutes
 });
+
+// Get popular public lists
+async function getPopularLists(limit = 6): Promise<{ lists: PopularGameListSummary[] }> {
+  const res = await fetch(`/api/game-lists/popular?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch popular lists");
+  }
+  return res.json();
+}
+
+export const popularListsQueryOptions = queryOptions({
+  queryKey: ['popular-lists'],
+  queryFn: () => getPopularLists(),
+  staleTime: 1000 * 60 * 5, // 5 minutes
+});
+
+// Get public lists containing a specific game
+async function getPublicListsForGame(gameId: string, limit = 4): Promise<{ lists: PopularGameListSummary[]; totalCount: number }> {
+  const res = await fetch(`/api/game-lists/game/${gameId}/public-lists?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch public lists for game");
+  }
+  return res.json();
+}
+
+export const publicListsForGameQueryOptions = (gameId: string) =>
+  queryOptions({
+    queryKey: ['public-lists-for-game', gameId],
+    queryFn: () => getPublicListsForGame(gameId),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
 // Check if a list is saved
 async function getListSaved(listId: string): Promise<{ isSaved: boolean; saveCount: number }> {
