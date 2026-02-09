@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
-import { getAllGamesQueryOptions, getTopRatedGamesQueryOptions, getTrendingGamesQueryOptions, type Game } from "@/lib/gameQuery"
+import { getFeaturedGamesQueryOptions, getTopRatedGamesQueryOptions, getTrendingGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { dbUserQueryOptions } from "@/lib/api"
 import { useQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
 })
 
 export default function Checkpointer() {
-  const { data, isPending } = useQuery(getAllGamesQueryOptions)
+  const { data: featuredData, isPending } = useQuery(getFeaturedGamesQueryOptions)
   const { data: topRatedData, isPending: isTopRatedPending } = useQuery(getTopRatedGamesQueryOptions)
   const { data: trendingData, isPending: isTrendingPending } = useQuery(getTrendingGamesQueryOptions)
   const { data: dbUserData, isError: isAuthError } = useQuery({
@@ -97,14 +97,14 @@ export default function Checkpointer() {
         <section className="bg-muted border-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
-          ) : (
+          ) : featuredData ? (
             <FeaturedGames
               title="Featured games"
-              games={data.games}
+              games={featuredData.games}
               limit={4}
               onGameClick={handleGameClick}
             />
-          )}
+          ) : null}
         </section>
 
         <br/>

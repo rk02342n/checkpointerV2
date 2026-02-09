@@ -124,6 +124,7 @@ export async function deleteExpense({id}: {id: number}) {
 // App Settings
 export type AppSettings = {
   darkModeEnabled: boolean;
+  featuredGameIds?: string[];
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

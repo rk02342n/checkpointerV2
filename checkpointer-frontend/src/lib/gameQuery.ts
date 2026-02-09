@@ -134,6 +134,20 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
     return data
 }
 
+export async function getFeaturedGames(): Promise<{ games: Game[] }> {
+  const res = await fetch("/api/games/featured");
+  if (!res.ok) {
+    throw new Error("Server error fetching featured games");
+  }
+  return res.json();
+}
+
+export const getFeaturedGamesQueryOptions = queryOptions({
+  queryKey: ["featured-games"],
+  queryFn: getFeaturedGames,
+  staleTime: 1000 * 60 * 5,
+});
+
 export async function getTopRatedGames(limit = 4): Promise<{ games: Game[] }> {
   const res = await fetch(`/api/games/top-rated?limit=${limit}`);
   if (!res.ok) {

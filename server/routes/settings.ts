@@ -5,6 +5,7 @@ import { appSettingsTable } from "../db/schema/app-settings";
 // Default settings values
 const defaultSettings: Record<string, unknown> = {
   darkModeEnabled: true,
+  featuredGameIds: [],
 };
 
 export const settingsRoute = new Hono()

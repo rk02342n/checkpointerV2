@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { dbUserQueryOptions } from '@/lib/api'
+import { dbUserQueryOptions, updateAppSetting } from '@/lib/api'
 import {
   adminStatsQueryOptions,
   adminUsersQueryOptions,
@@ -15,6 +15,7 @@ import {
   type AuditLog,
   type UserRole,
 } from '@/lib/adminApi'
+import { searchGames, type Game } from '@/lib/gameQuery'
 import {
   Users,
   MessageSquare,
@@ -29,6 +30,12 @@ import {
   Clock,
   Settings,
   Moon,
+  Star,
+  Search,
+  X,
+  ArrowUp,
+  ArrowDown,
+  Save,
 } from 'lucide-react'
 import { useSettings } from '@/lib/settingsContext'
 import { toast } from 'sonner'
@@ -693,6 +700,9 @@ function SettingsPanel() {
         </div>
       </div>
 
+      {/* Featured Games */}
+      <FeaturedGamesPicker />
+
       {/* Info Card */}
       <div className="bg-sky-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
         <div className="flex items-start gap-3">
@@ -705,6 +715,242 @@ function SettingsPanel() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function FeaturedGamesPicker() {
+  const { settings } = useSettings()
+  const queryClient = useQueryClient()
+  const [selectedGames, setSelectedGames] = useState<Game[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Game[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Load existing featured games on mount
+  useEffect(() => {
+    const ids = settings.featuredGameIds
+    if (!ids || ids.length === 0 || isLoaded) {
+      setIsLoaded(true)
+      return
+    }
+
+    // Fetch game details for the saved IDs
+    async function loadGames() {
+      try {
+        const res = await fetch('/api/games/featured')
+        if (res.ok) {
+          const data = await res.json()
+          // Only use games that match the saved IDs, preserving order
+          const savedIds = settings.featuredGameIds ?? []
+          const gameMap = new Map(data.games.map((g: Game) => [String(g.id), g]))
+          const ordered = savedIds.map(id => gameMap.get(id)).filter(Boolean) as Game[]
+          setSelectedGames(ordered)
+        }
+      } catch {
+        // Ignore errors, start with empty list
+      } finally {
+        setIsLoaded(true)
+      }
+    }
+    loadGames()
+  }, [settings.featuredGameIds, isLoaded])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setShowDropdown(false)
+      return
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const data = await searchGames(searchQuery)
+        // Filter out already-selected games
+        const selectedIds = new Set(selectedGames.map(g => String(g.id)))
+        setSearchResults(data.games.filter(g => !selectedIds.has(String(g.id))))
+        setShowDropdown(true)
+      } catch {
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300)
+
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    }
+  }, [searchQuery, selectedGames])
+
+  const addGame = (game: Game) => {
+    setSelectedGames(prev => [...prev, game])
+    setSearchQuery('')
+    setSearchResults([])
+    setShowDropdown(false)
+  }
+
+  const removeGame = (gameId: string | number) => {
+    setSelectedGames(prev => prev.filter(g => String(g.id) !== String(gameId)))
+  }
+
+  const moveGame = (index: number, direction: 'up' | 'down') => {
+    const newList = [...selectedGames]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= newList.length) return
+    ;[newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]]
+    setSelectedGames(newList)
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const ids = selectedGames.map(g => String(g.id))
+      await updateAppSetting('featuredGameIds', ids)
+      queryClient.invalidateQueries({ queryKey: ['featured-games'] })
+      toast.success('Featured games updated')
+    } catch {
+      toast.error('Failed to save featured games')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Star className="w-6 h-6 text-stone-900" />
+        <h3 className="text-lg font-bold text-stone-900">Featured Games</h3>
+      </div>
+
+      <p className="text-sm text-stone-600 mb-4">
+        Select and order the games that appear in the "Featured games" section on the homepage.
+        If no games are selected, the top-rated games by IGDB rating will be shown instead.
+      </p>
+
+      {/* Search Input */}
+      <div className="relative mb-4" ref={dropdownRef}>
+        <div className="flex items-center gap-2 border-4 border-stone-900 bg-stone-50 px-3 py-2">
+          <Search className="w-4 h-4 text-stone-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search games to add..."
+            className="flex-1 bg-transparent outline-none text-sm text-stone-900 placeholder:text-stone-400"
+          />
+          {isSearching && (
+            <div className="animate-spin h-4 w-4 border-2 border-stone-900 border-t-transparent rounded-full" />
+          )}
+        </div>
+
+        {/* Search Dropdown */}
+        {showDropdown && searchResults.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] max-h-60 overflow-y-auto">
+            {searchResults.map((game) => (
+              <button
+                key={game.id}
+                onClick={() => addGame(game)}
+                className="flex items-center gap-3 w-full px-3 py-2 hover:bg-stone-100 text-left border-b border-stone-200 last:border-b-0"
+              >
+                {game.coverUrl ? (
+                  <img
+                    src={game.coverUrl}
+                    alt={game.name}
+                    className="w-8 h-10 object-cover border-2 border-stone-900"
+                  />
+                ) : (
+                  <div className="w-8 h-10 bg-stone-200 border-2 border-stone-900" />
+                )}
+                <span className="text-sm font-bold text-stone-900 truncate">{game.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Selected Games List */}
+      {selectedGames.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {selectedGames.map((game, index) => (
+            <div
+              key={game.id}
+              className="flex items-center gap-3 p-2 bg-stone-50 border-4 border-stone-900"
+            >
+              <span className="text-xs font-bold text-stone-500 w-6 text-center">{index + 1}</span>
+              {game.coverUrl ? (
+                <img
+                  src={game.coverUrl}
+                  alt={game.name}
+                  className="w-8 h-10 object-cover border-2 border-stone-900"
+                />
+              ) : (
+                <div className="w-8 h-10 bg-stone-200 border-2 border-stone-900" />
+              )}
+              <span className="flex-1 text-sm font-bold text-stone-900 truncate">{game.name}</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => moveGame(index, 'up')}
+                  disabled={index === 0}
+                  className="p-1 hover:bg-stone-200 disabled:opacity-30 transition-colors"
+                  title="Move up"
+                >
+                  <ArrowUp className="w-4 h-4 text-stone-900" />
+                </button>
+                <button
+                  onClick={() => moveGame(index, 'down')}
+                  disabled={index === selectedGames.length - 1}
+                  className="p-1 hover:bg-stone-200 disabled:opacity-30 transition-colors"
+                  title="Move down"
+                >
+                  <ArrowDown className="w-4 h-4 text-stone-900" />
+                </button>
+                <button
+                  onClick={() => removeGame(game.id)}
+                  className="p-1 hover:bg-rose-100 transition-colors"
+                  title="Remove"
+                >
+                  <X className="w-4 h-4 text-rose-700" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedGames.length === 0 && isLoaded && (
+        <div className="text-sm text-stone-500 italic mb-4 p-4 bg-stone-50 border-4 border-stone-900 text-center">
+          No featured games selected. The homepage will show top-rated games by IGDB rating.
+        </div>
+      )}
+
+      {/* Save Button */}
+      <Button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="bg-green-400 hover:bg-green-500 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
+      >
+        <Save className="w-4 h-4 mr-2" />
+        {isSaving ? 'Saving...' : 'Save Featured Games'}
+      </Button>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { db } from "../db";
 import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
 import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists, inArray } from "drizzle-orm";
+import { appSettingsTable } from "../db/schema/app-settings";
 import { reviewsTable } from "../db/schema/reviews";
 import { genresTable } from "../db/schema/genres";
 import { platformsTable } from "../db/schema/platforms";
@@ -237,6 +238,49 @@ export const gamesRoute = new Hono()
     ...g,
     platforms: platformMap.get(g.id) ?? [],
   }));
+
+  return c.json({ games });
+})
+
+// Featured games — admin-curated list, falls back to top 40 by IGDB rating
+.get("/featured", async (c) => {
+  // Read the featuredGameIds setting
+  const setting = await db
+    .select({ value: appSettingsTable.value })
+    .from(appSettingsTable)
+    .where(eq(appSettingsTable.key, "featuredGameIds"))
+    .then(res => res[0]);
+
+  const featuredIds = Array.isArray(setting?.value) ? setting.value as string[] : [];
+
+  if (featuredIds.length > 0) {
+    const featuredGames = await db
+      .select()
+      .from(gamesTable)
+      .where(inArray(gamesTable.id, featuredIds));
+
+    // Preserve admin ordering
+    const gameMap = new Map(featuredGames.map(g => [g.id, g]));
+    const orderedGames = featuredIds.map(id => gameMap.get(id)).filter(Boolean) as typeof featuredGames;
+
+    const platformMap = await getPlatformsForGames(orderedGames.map(g => g.id));
+    const games = orderedGames.map(g => ({
+      ...g,
+      platforms: platformMap.get(g.id) ?? [],
+    }));
+
+    return c.json({ games });
+  }
+
+  // Fallback: top 40 by IGDB rating
+  const fallbackGames = await db
+    .select()
+    .from(gamesTable)
+    .orderBy(desc(gamesTable.igdbRating))
+    .limit(40);
+
+  const platformMap = await getPlatformsForGames(fallbackGames.map(g => g.id));
+  const games = fallbackGames.map(g => ({ ...g, platforms: platformMap.get(g.id) ?? [] }));
 
   return c.json({ games });
 })
