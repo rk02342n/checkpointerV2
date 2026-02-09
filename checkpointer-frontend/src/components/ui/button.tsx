@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground font-semibold rounded-none border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:brightness-110 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
+        default: "bg-primary text-foreground font-semibold rounded-none border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:brightness-110 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
         destructive:
           "bg-rose-500 text-white font-semibold rounded-none border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:bg-rose-600 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
         outline:
@@ -17,7 +17,7 @@ const buttonVariants = cva(
         secondary:
           "bg-muted text-foreground font-semibold rounded-none border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:brightness-95 active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
         ghost:
-          "hover:bg-muted hover:text-foreground rounded-none",
+          "hover:text-muted-foreground rounded-none",
         link: "text-primary underline-offset-4 hover:underline",
         pop: "bg-card text-foreground font-semibold rounded-none border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px]",
       },

@@ -35,7 +35,7 @@ export default function Checkpointer() {
           <div className="bg-secondary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
-                <div className="inline-block bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
+                <div className="inline-block bg-primary text-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
                   Game Tracking
                 </div>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-secondary-foreground hover:opacity-80">
@@ -147,13 +147,13 @@ export default function Checkpointer() {
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
-          <div className="bg-primary text-primary-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
+          <div className="bg-primary text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
                   Ready to track your games?
                 </h2>
-                <p className="text-primary-foreground/80 mt-2 text-sm sm:text-base">
+                <p className="text-foreground/80 mt-2 text-sm sm:text-base">
                   Join the community and start building your gaming history.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export default function Checkpointer() {
                   </Button>
                   <Button
                     asChild
-                    className="bg-primary-foreground text-primary hover:brightness-110 px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-primary-foreground text-foreground hover:brightness-110 px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/register">Sign Up</a>
                   </Button>

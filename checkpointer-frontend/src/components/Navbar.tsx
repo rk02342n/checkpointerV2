@@ -78,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           className="flex items-center gap-2 cursor-pointer group"
           onClick={() => { navigate({to: `/`});}}
         >
-          <span className="text-sm sm:text-2xl font-bold text-primary-foreground tracking-tight font-alt hover:opacity-80">Checkpointer</span>
+          <span className="text-sm sm:text-2xl font-bold text-foreground tracking-tight font-alt hover:opacity-80">Checkpointer</span>
         </div>
 
         
@@ -140,7 +140,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           {isAdmin && (
             <Button
               variant="ghost"
-              className="hidden md:flex items-center gap-2 text-primary-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
+              className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
               onClick={() => { navigate({to: `/admin`});}}
             >
               <Shield className="w-4 h-4" />
@@ -149,13 +149,13 @@ const Navbar: React.FC<NavbarProps> = () => {
           )}
           {isLoggedIn ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none">
+              <DropdownMenuTrigger className="focus:outline-none cursor-pointer">
                 {/* Mobile: icon only */}
                 <div className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-4 border-border hover:bg-muted transition-colors">
                   <ChevronDown className="w-5 h-5 text-foreground" />
                 </div>
                 {/* Desktop: full button with text */}
-                <div className="hidden md:flex items-center gap-2 text-primary-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors">
+                <div className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors">
                   <User className="w-4 h-4" />
                   <span>Account</span>
                   <ChevronDown className="w-3 h-3" />
@@ -210,7 +210,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               {/* Desktop: full link with text */}
               <a
                 href="/api/login"
-                className="hidden md:flex items-center gap-2 text-primary-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
+                className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Login / Sign Up</span>

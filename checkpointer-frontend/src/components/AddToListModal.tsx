@@ -133,52 +133,52 @@ export function AddToListModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
+          className="bg-background border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
           showCloseButton={true}
         >
           <DialogHeader className="p-4 sm:p-6 pb-0 sm:pb-0">
-            <DialogTitle className="text-stone-900 font-bold text-lg sm:text-xl">
+            <DialogTitle className="font-bold text-lg sm:text-xl">
               Add to List
             </DialogTitle>
           </DialogHeader>
 
           <div className="p-4 sm:p-6 pt-4 space-y-4 flex-1 overflow-hidden flex flex-col">
             {/* Game Preview */}
-            <div className="flex items-center gap-3 p-3 bg-stone-100 border-2 border-stone-300">
+            <div className="flex items-center gap-3 p-3 bg-muted border-2 border-border">
               {gameCoverUrl ? (
                 <img
-                  className="w-10 h-12 object-cover border-2 border-stone-900 flex-shrink-0"
+                  className="w-10 h-12 object-cover border-2 border-border shrink-0"
                   src={gameCoverUrl}
                   alt={gameName}
                 />
               ) : (
-                <div className="w-10 h-12 bg-stone-200 border-2 border-stone-900 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-12 bg-stone-200 border-2 border-stone-900 flex items-center justify-center shrink-0">
                   <Gamepad2 className="w-5 h-5 text-stone-500" />
                 </div>
               )}
-              <span className="text-stone-900 font-medium text-sm truncate">{gameName}</span>
+              <span className="font-medium text-sm truncate">{gameName}</span>
             </div>
 
             {/* Lists */}
-            <div className="flex-1 min-h-0 overflow-y-auto border-4 border-stone-900 bg-stone-50">
+            <div className="flex-1 min-h-0 overflow-y-auto border-4 border-border bg-muted">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full min-h-[150px]">
-                  <Loader2 className="w-5 h-5 text-stone-500 animate-spin" />
-                  <span className="ml-2 text-stone-500 text-sm">Loading lists...</span>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="ml-2 text-sm">Loading lists...</span>
                 </div>
               ) : lists.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[150px] text-stone-400 p-4">
+                <div className="flex flex-col items-center justify-center h-full min-h-[150px] p-4">
                   <span className="text-sm text-center mb-3">You don't have any lists yet</span>
                   <Button
                     onClick={() => setShowCreateModal(true)}
-                    className="bg-stone-900 hover:bg-stone-800 text-white border-4 border-stone-900 rounded-none"
+                    className="bg-stone-900 hover:bg-stone-800 text-foreground border-4 border-border rounded-none"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First List
                   </Button>
                 </div>
               ) : (
-                <div className="divide-y-2 divide-stone-200">
+                <div className="divide-y-2">
                   {lists.map((list) => {
                     const isPending = pendingListId === list.id;
                     return (
@@ -188,14 +188,14 @@ export function AddToListModal({
                         disabled={isPending}
                         className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
                           list.hasGame
-                            ? "bg-green-100 hover:bg-green-200"
-                            : "hover:bg-orange-100"
+                            ? "bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800"
+                            : "hover:bg-orange-100 hover:dark:bg-orange-800"
                         } ${isPending ? "opacity-50" : ""}`}
                       >
                         <div
                           className={`w-6 h-6 flex items-center justify-center border-2 ${
                             list.hasGame
-                              ? "bg-green-500 border-green-600"
+                              ? "bg-green-500 border-green-600 dark:bg-green-900 dark:hover:bg-green-800"
                               : "bg-white border-stone-400"
                           }`}
                         >
@@ -207,14 +207,14 @@ export function AddToListModal({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-stone-900 font-semibold text-sm truncate">
+                            <span className="font-semibold text-sm truncate">
                               {list.name}
                             </span>
                             {list.visibility === "private" && (
                               <Lock className="w-3 h-3 text-stone-500 shrink-0" />
                             )}
                           </div>
-                          <span className="text-stone-600 text-xs">
+                          <span className="text-muted-foreground text-xs">
                             {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
                           </span>
                         </div>
