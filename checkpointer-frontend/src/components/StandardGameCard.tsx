@@ -128,9 +128,12 @@ export const StandardGameCard = ({
 
   return (
     <>
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onGameClick?.(game)}
-      className={cardClasses[variant]}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onGameClick?.(game) }}
+      className={`${cardClasses[variant]} cursor-pointer`}
     >
       <div className="relative overflow-hidden">
         {game.coverUrl ? (
@@ -244,7 +247,7 @@ export const StandardGameCard = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </button>
+    </div>
 
     <LogGameModal
       open={showLogModal}
