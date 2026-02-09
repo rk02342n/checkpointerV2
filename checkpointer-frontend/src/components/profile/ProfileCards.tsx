@@ -48,7 +48,7 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className={`block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
+      className={`block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-background dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -57,11 +57,11 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
             <img
               src={gameCoverUrl}
               alt={gameName}
-              className="w-16 h-20 object-cover border-2 border-stone-900"
+              className="w-16 h-20 object-cover border-2 border-border"
             />
           ) : (
-            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-stone-500" />
+            <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -71,11 +71,11 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0 flex-1">
-              <h4 className="text-stone-900 font-bold truncate" title={gameName}>
+              <h4 className="text-foreground font-bold truncate" title={gameName}>
                 {gameName}
               </h4>
               {review.createdAt && (
-                <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
+                <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
                   <Calendar className="w-3 h-3" />
                   <span>{formatDate(review.createdAt)}</span>
                 </div>
@@ -86,13 +86,13 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
 
           {/* Review Text */}
           {review.reviewText && (
-            <p className="text-stone-700 text-sm line-clamp-3 flex-1">
+            <p className="text-foreground/80 text-sm line-clamp-3 flex-1">
               "{review.reviewText}"
             </p>
           )}
 
           {/* Actions: Like & Delete */}
-          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t-2 border-stone-200">
+          <div className="flex justify-end items-center gap-2 mt-2 pt-2 border-t-2 border-border">
             <button
               onClick={(e) => {
                 e.preventDefault()
@@ -102,8 +102,8 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
               disabled={isLiking}
               className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                 review.userLiked
-                  ? 'text-orange-100 hover:text-orange-100'
-                  : 'text-stone-600 hover:text-orange-300'
+                  ? 'text-orange-400 hover:text-orange-300'
+                  : 'text-muted-foreground hover:text-orange-300'
               } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-3 h-3 ${review.userLiked ? 'fill-current' : ''}`} />
@@ -119,7 +119,7 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
                   onDelete(String(review.id))
                 }}
                 disabled={isDeleting}
-                className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 p-1 h-auto"
+                className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950 p-1 h-auto"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -181,7 +181,7 @@ export const SessionCard = memo(function SessionCard({ session }: SessionCardPro
     <Link
       to="/games/$gameId"
       params={{ gameId: session.game.id }}
-      className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
+      className="block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -190,11 +190,11 @@ export const SessionCard = memo(function SessionCard({ session }: SessionCardPro
             <img
               src={session.game.coverUrl}
               alt={session.game.name}
-              className="w-16 h-20 object-cover border-2 border-stone-900"
+              className="w-16 h-20 object-cover border-2 border-border"
             />
           ) : (
-            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-stone-500" />
+            <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -204,37 +204,37 @@ export const SessionCard = memo(function SessionCard({ session }: SessionCardPro
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0 flex-1">
-              <h4 className="text-stone-900 font-bold truncate" title={session.game.name}>
+              <h4 className="text-foreground font-bold truncate" title={session.game.name}>
                 {session.game.name}
               </h4>
-              <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
                 <Calendar className="w-3 h-3" />
                 <span>{formatDate(session.session.startedAt)}</span>
               </div>
             </div>
             {isActive ? (
-              <span className="bg-green-400 text-stone-900 px-2 py-1 text-xs font-bold uppercase border-2 border-stone-900">
+              <span className="bg-green-400 dark:bg-green-700 text-foreground px-2 py-1 text-xs font-bold uppercase border-2 border-border">
                 Playing Now
               </span>
             ) : session.session.status === 'finished' ? (
-              <span className="bg-green-200 text-green-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+              <span className="bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 text-xs font-medium border-2 border-border">
                 Finished
               </span>
             ) : session.session.status === 'stashed' ? (
-              <span className="bg-amber-200 text-amber-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+              <span className="bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-300 px-2 py-1 text-xs font-medium border-2 border-border">
                 Stashed
               </span>
             ) : (
-              <span className="bg-stone-200 text-stone-700 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+              <span className="bg-muted text-muted-foreground px-2 py-1 text-xs font-medium border-2 border-border">
                 Ended
               </span>
             )}
           </div>
 
           {/* Duration */}
-          <div className="flex items-center gap-2 mt-auto pt-2 border-t-2 border-stone-200">
-            <Clock className="w-4 h-4 text-stone-500" />
-            <span className="text-stone-700 text-sm font-medium">
+          <div className="flex items-center gap-2 mt-auto pt-2 border-t-2 border-border">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-foreground/80 text-sm font-medium">
               {isActive ? `Playing for ${duration}` : duration}
             </span>
           </div>
@@ -264,7 +264,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
     <Link
       to="/games/$gameId"
       params={{ gameId: item.gameId }}
-      className={`block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
+      className={`block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -273,11 +273,11 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
             <img
               src={item.gameCoverUrl}
               alt={item.gameName}
-              className="w-16 h-20 object-cover border-2 border-stone-900"
+              className="w-16 h-20 object-cover border-2 border-border"
             />
           ) : (
-            <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
-              <Gamepad2 className="w-6 h-6 text-stone-500" />
+            <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -287,22 +287,22 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
           {/* Header */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0 flex-1">
-              <h4 className="text-stone-900 font-bold truncate" title={item.gameName}>
+              <h4 className="text-foreground font-bold truncate" title={item.gameName}>
                 {item.gameName}
               </h4>
-              <div className="flex items-center gap-1 text-stone-600 text-xs mt-1">
+              <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
                 <Calendar className="w-3 h-3" />
                 <span>Added {formatDate(item.createdAt)}</span>
               </div>
             </div>
-            <span className="bg-amber-200 text-amber-800 px-2 py-1 text-xs font-medium border-2 border-stone-900">
+            <span className="bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-300 px-2 py-1 text-xs font-medium border-2 border-border">
               Want to Play
             </span>
           </div>
 
           {/* Actions */}
           {onRemove && (
-            <div className="flex justify-end items-center gap-2 mt-auto pt-2 border-t-2 border-stone-200">
+            <div className="flex justify-end items-center gap-2 mt-auto pt-2 border-t-2 border-border">
               <Button
                 variant="ghost"
                 size="sm"
@@ -312,7 +312,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
                   onRemove(item.gameId)
                 }}
                 disabled={isRemoving}
-                className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 p-1 h-auto"
+                className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950 p-1 h-auto"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
                 <span className="text-xs">Remove</span>

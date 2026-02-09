@@ -648,7 +648,7 @@ const queryClient = useQueryClient();
                             {/* Right: Rating & Review Form */}
                             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                                 {/* Average Rating */}
-                                <div className="bg-amber-200 dark:bg-amber-900/70 border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-center">
+                                <div className="bg-amber-200 dark:bg-yellow-900 border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-center">
                                     <h3 className="text-xs font-bold uppercase tracking-widest mb-4">Average Rating</h3>
                                     {isRatingPending ? (
                                         <>

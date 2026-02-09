@@ -462,11 +462,11 @@ function Profile() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-rose-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="flex items-center justify-center h-64">
-            <div className="text-stone-600 font-medium">Loading profile...</div>
+            <div className="text-muted-foreground font-medium">Loading profile...</div>
           </div>
         </div>
       </div>
@@ -478,11 +478,11 @@ function Profile() {
   const reviewCount = totalReviewCount
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
       <Navbar />
-      <div className="container mx-auto max-w-4xl px-6 py-8 bg-white">
+      <div className="container mx-auto max-w-4xl px-6 py-8 bg-background">
         {/* Profile Header */}
-        <div className="bg-blue-600/40 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
+        <div className="bg-blue-600/40 dark:bg-blue-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <input
@@ -497,12 +497,12 @@ function Profile() {
               disabled={avatarMutation.isPending}
               className="relative group cursor-pointer"
             >
-              <Avatar className="w-24 h-24 border-4 border-stone-900 group-hover:opacity-80 transition-opacity">
+              <Avatar className="w-24 h-24 border-4 border-border group-hover:opacity-80 transition-opacity">
                 <AvatarImage
                   src={dbUserData?.account?.avatarUrl ? `/api/user/avatar/${dbUserData.account.id}` : undefined}
                   alt={user.given_name}
                 />
-                <AvatarFallback className="bg-orange-100 text-stone-900 text-2xl font-bold">
+                <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-2xl font-bold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -517,13 +517,13 @@ function Profile() {
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold text-stone-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 {user.given_name} {user.family_name}
               </h1>
               {isEditingUsername ? (
                 <div className="mt-1">
                   <div className="flex items-center gap-2 justify-center md:justify-start">
-                    <span className="text-stone-700 text-sm font-medium">@</span>
+                    <span className="text-muted-foreground text-sm font-medium">@</span>
                     <div className="relative">
                       <Input
                         type="text"
@@ -535,19 +535,19 @@ function Profile() {
                           }
                           if (e.key === 'Escape') handleCancelEdit()
                         }}
-                        className={`bg-white border-2 px-2 py-1 h-7 text-sm md:w-75 sm:w-40 rounded-none pr-7 ${
+                        className={`bg-background border-2 px-2 py-1 h-7 text-sm md:w-75 sm:w-40 rounded-none pr-7 ${
                           usernameStatus.error || usernameStatus.available === false
                             ? 'border-rose-500'
                             : usernameStatus.available === true
                             ? 'border-green-500'
-                            : 'border-stone-900'
+                            : 'border-border'
                         }`}
                         autoFocus
                         disabled={usernameMutation.isPending}
                       />
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">
                         {usernameStatus.checking ? (
-                          <Loader2 className="w-3 h-3 text-stone-500 animate-spin" />
+                          <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />
                         ) : usernameStatus.available === true ? (
                           <Check className="w-3 h-3 text-green-600" />
                         ) : usernameStatus.available === false ? (
@@ -558,7 +558,7 @@ function Profile() {
                     <button
                       onClick={handleSaveUsername}
                       disabled={usernameMutation.isPending || usernameStatus.checking || !usernameStatus.available}
-                      className="text-green-600 hover:text-green-700 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Save username"
                     >
                       {usernameMutation.isPending ? (
@@ -570,7 +570,7 @@ function Profile() {
                     <button
                       onClick={handleCancelEdit}
                       disabled={usernameMutation.isPending}
-                      className="text-stone-600 hover:text-stone-700 p-1 disabled:opacity-50"
+                      className="text-muted-foreground hover:text-foreground p-1 disabled:opacity-50"
                       title="Cancel"
                     >
                       <X className="w-4 h-4" />
@@ -583,38 +583,38 @@ function Profile() {
                     ) : usernameStatus.available === false ? (
                       <p className="text-rose-500 text-xs">Username is taken</p>
                     ) : usernameStatus.isCurrent ? (
-                      <p className="text-stone-500 text-xs">This is your current username</p>
+                      <p className="text-muted-foreground text-xs">This is your current username</p>
                     ) : usernameStatus.available === true ? (
-                      <p className="text-green-600 text-xs">Username is available</p>
+                      <p className="text-green-600 dark:text-green-400 text-xs">Username is available</p>
                     ) : null}
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
-                  <p className="text-stone-700 text-sm font-medium">
+                  <p className="text-muted-foreground text-sm font-medium">
                     @{dbUserData?.account?.username || 'username'}
                   </p>
                   <button
                     onClick={handleEditUsername}
-                    className="text-stone-500 hover:text-stone-700 p-1"
+                    className="text-muted-foreground hover:text-foreground p-1"
                   >
                     <Pencil className="w-3 h-3" />
                   </button>
                 </div>
               )}
-              <p className="text-stone-600 text-sm mt-1">{user.email}</p>
+              <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
-                  <div className="text-2xl font-bold text-stone-900">{reviewCount}</div>
-                  <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Reviews</div>
+                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                  <div className="text-2xl font-bold text-foreground">{reviewCount}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
-                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
-                  <div className="text-2xl font-bold text-stone-900">
+                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                  <div className="text-2xl font-bold text-foreground">
                     <Gamepad2 className="w-6 h-6 inline" />
                   </div>
-                  <div className="text-xs uppercase tracking-wide text-stone-600 text-center font-medium">Gamer</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground text-center font-medium">Gamer</div>
                 </div>
               </div>
             </div>
@@ -630,7 +630,7 @@ function Profile() {
               </Button>
               <Button
                 variant="outline"
-                className="px-6 text-rose-600 border-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                className="px-6 text-rose-600 border-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:border-rose-400 dark:hover:bg-rose-950 dark:hover:text-rose-300"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 Delete Account
@@ -641,31 +641,31 @@ function Profile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="bg-green-100 dark:bg-green-600/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
                   src={currentlyPlayingData.game.coverUrl}
                   alt={currentlyPlayingData.game.name}
-                  className="w-12 h-16 object-cover border-2 border-stone-900"
+                  className="w-12 h-16 object-cover border-2 border-border"
                 />
               ) : (
-                <div className="w-12 h-16 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
-                  <Gamepad2 className="w-5 h-5 text-stone-500" />
+                <div className="w-12 h-16 bg-muted border-2 border-border flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-muted-foreground" />
                 </div>
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Currently Playing</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Currently Playing</div>
               <Link
                 to="/games/$gameId"
                 params={{ gameId: currentlyPlayingData.game.id }}
-                className="font-bold hover:underline truncate block text-stone-900"
+                className="font-bold hover:underline truncate block text-foreground"
               >
                 {currentlyPlayingData.game.name}
               </Link>
               {currentlyPlayingData.session?.startedAt && (
-                <div className="text-xs text-stone-600">
+                <div className="text-xs text-muted-foreground">
                   Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
                 </div>
               )}
@@ -683,15 +683,15 @@ function Profile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+        <div className="bg-card border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]">
           {/* Tab Headers */}
-          <div className="flex border-b-4 border-stone-900">
+          <div className="flex border-b-4 border-border">
             <button
               onClick={() => setActiveTab('reviews')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -699,10 +699,10 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <History className="w-4 h-4" />
@@ -710,10 +710,10 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -721,10 +721,10 @@ function Profile() {
             </button>
             <button
               onClick={() => setActiveTab('lists')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -740,25 +740,25 @@ function Profile() {
               {userReviews.length > 0 && (
                 <div className="mb-4">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Search by game name or review..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-white border-4 border-stone-900 pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-stone-900 rounded-none"
+                      className="bg-background border-4 border-border pl-10 pr-10 py-2 w-full focus:ring-2 focus:ring-border rounded-none"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-500 hover:text-stone-900"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
                   {searchQuery.trim() && (
-                    <p className="text-stone-600 text-sm mt-2">
+                    <p className="text-muted-foreground text-sm mt-2">
                       Showing {filteredReviews.length} of {userReviews.length} reviews
                     </p>
                   )}
@@ -768,13 +768,13 @@ function Profile() {
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-full bg-stone-200" />
-                          <div className="h-4 w-2/3 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-full bg-muted-foreground/20" />
+                          <div className="h-4 w-2/3 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -803,9 +803,9 @@ function Profile() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <Search className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                    <p className="text-stone-900 font-bold mb-2">No matching reviews</p>
-                    <p className="text-stone-600 text-sm mb-4">
+                    <Search className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-foreground font-bold mb-2">No matching reviews</p>
+                    <p className="text-muted-foreground text-sm mb-4">
                       Try a different search term
                     </p>
                     <Button
@@ -817,9 +817,9 @@ function Profile() {
                 )
               ) : (
                 <div className="text-center py-12">
-                  <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
-                  <p className="text-stone-600 text-sm mb-4">
+                  <Gamepad2 className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No reviews yet</p>
+                  <p className="text-muted-foreground text-sm mb-4">
                     Start playing games and share your thoughts!
                   </p>
                   <Button
@@ -836,13 +836,13 @@ function Profile() {
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-24 bg-stone-200" />
-                          <div className="h-4 w-20 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-24 bg-muted-foreground/20" />
+                          <div className="h-4 w-20 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -856,9 +856,9 @@ function Profile() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <History className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No play history yet</p>
-                  <p className="text-stone-600 text-sm mb-4">
+                  <History className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No play history yet</p>
+                  <p className="text-muted-foreground text-sm mb-4">
                     Start tracking your gaming sessions by clicking "Play" on a game page!
                   </p>
                   <Button
@@ -875,12 +875,12 @@ function Profile() {
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-24 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-24 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -899,9 +899,9 @@ function Profile() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <CalendarHeart className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No games in wishlist</p>
-                  <p className="text-stone-600 text-sm mb-4">
+                  <CalendarHeart className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No games in wishlist</p>
+                  <p className="text-muted-foreground text-sm mb-4">
                     Click "Want" on a game page to add it to your wishlist!
                   </p>
                   <Button
@@ -923,13 +923,13 @@ function Profile() {
 
       {/* Delete Account Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-rose-600">
+            <DialogTitle className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
               <AlertTriangle className="w-5 h-5" />
               Delete Account
             </DialogTitle>
-            <DialogDescription className="text-stone-600">
+            <DialogDescription className="text-muted-foreground">
               This action cannot be undone. This will permanently delete your account and remove all your data including your reviews.
             </DialogDescription>
           </DialogHeader>
@@ -961,12 +961,12 @@ function Profile() {
 
       {/* Stop Playing Dialog */}
       <Dialog open={showStopPlayingDialog} onOpenChange={setShowStopPlayingDialog}>
-        <DialogContent className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-stone-900">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
               End Session
             </DialogTitle>
-            <DialogDescription className="text-stone-600">
+            <DialogDescription className="text-muted-foreground">
               How would you like to mark this session for <span className='font-bold'>{currentlyPlayingData?.game?.name}</span>?
             </DialogDescription>
           </DialogHeader>
@@ -974,7 +974,7 @@ function Profile() {
             <Button
               onClick={() => handleStopPlaying('finished')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-lime-100 hover:bg-lime-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+              className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
             >
               <Check className="w-5 h-5 mr-2" />
               <div className="text-left">
@@ -985,7 +985,7 @@ function Profile() {
             <Button
               onClick={() => handleStopPlaying('stashed')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-sky-100 hover:bg-sky-200 text-black border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+              className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
             >
               <Clock className="w-5 h-5 mr-2" />
               <div className="text-left">

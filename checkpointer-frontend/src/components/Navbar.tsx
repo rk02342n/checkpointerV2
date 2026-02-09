@@ -1,4 +1,4 @@
-import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
+import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Sun, Moon, Signature } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -213,7 +213,14 @@ const Navbar: React.FC<NavbarProps> = () => {
                 className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Login / Sign Up</span>
+                <span>Login</span>
+              </a>
+              <a
+                href="/api/register"
+                className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
+              >
+                <Signature className="w-4 h-4" />
+                <span>Sign Up</span>
               </a>
             </>
           )}

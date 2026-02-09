@@ -36,9 +36,9 @@ export function ListsSection({ userId, isOwnProfile = false }: ListsSectionProps
     return (
       <>
         <div className="text-center py-12">
-          <ListPlus className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-          <p className="text-stone-900 font-bold mb-2">No lists yet</p>
-          <p className="text-stone-600 text-sm mb-4">
+          <ListPlus className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+          <p className="text-foreground font-bold mb-2">No lists yet</p>
+          <p className="text-muted-foreground text-sm mb-4">
             {isOwnProfile
               ? "Create a list to organize your favorite games!"
               : "This user hasn't created any public lists yet."}
@@ -46,7 +46,7 @@ export function ListsSection({ userId, isOwnProfile = false }: ListsSectionProps
           {isOwnProfile && (
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-stone-900 hover:bg-stone-800 text-white border-4 border-stone-900 rounded-none"
+              className="bg-foreground hover:bg-foreground/90 text-background border-4 border-border rounded-none"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First List
@@ -71,7 +71,7 @@ export function ListsSection({ userId, isOwnProfile = false }: ListsSectionProps
           <Button
             onClick={() => setShowCreateModal(true)}
             variant="outline"
-            className="border-4 border-stone-900 rounded-none"
+            className="border-4 border-border rounded-none"
           >
             <Plus className="w-4 h-4 mr-2" />
             New List
@@ -101,12 +101,12 @@ function ListsSectionSkeleton() {
       {[1, 2].map((i) => (
         <div
           key={i}
-          className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] overflow-hidden"
+          className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden"
         >
-          <Skeleton className="aspect-[16/9] bg-stone-200" />
+          <Skeleton className="aspect-[16/9] bg-muted-foreground/20" />
           <div className="p-3">
-            <Skeleton className="h-5 w-3/4 bg-stone-200 mb-2" />
-            <Skeleton className="h-4 w-full bg-stone-200" />
+            <Skeleton className="h-5 w-3/4 bg-muted-foreground/20 mb-2" />
+            <Skeleton className="h-4 w-full bg-muted-foreground/20" />
           </div>
         </div>
       ))}

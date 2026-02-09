@@ -13,10 +13,10 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="block bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
+      className="block bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
-      <div className="aspect-16/9 bg-stone-200 relative">
+      <div className="aspect-16/9 bg-muted relative">
         {hasCustomCover ? (
           // Custom cover image
           <img
@@ -38,27 +38,27 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full bg-stone-300 flex items-center justify-center">
-                    <Gamepad2 className="w-6 h-6 text-stone-500" />
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Gamepad2 className="w-6 h-6 text-muted-foreground" />
                   </div>
                 )}
               </div>
             ))}
             {/* Fill remaining slots if less than 4 */}
             {Array.from({ length: Math.max(0, 4 - list.gameCoverUrls.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="bg-stone-300 flex items-center justify-center">
-                <Gamepad2 className="w-6 h-6 text-stone-400" />
+              <div key={`empty-${i}`} className="bg-muted flex items-center justify-center">
+                <Gamepad2 className="w-6 h-6 text-muted-foreground" />
               </div>
             ))}
           </div>
         ) : (
           // Empty state
           <div className="w-full h-full flex items-center justify-center">
-            <Gamepad2 className="w-12 h-12 text-stone-400" />
+            <Gamepad2 className="w-12 h-12 text-muted-foreground" />
           </div>
         )}
         {/* Game count badge */}
-        <div className="absolute bottom-2 right-2 bg-stone-900 text-white text-xs font-bold px-2 py-1">
+        <div className="absolute bottom-2 right-2 bg-stone-900 dark:bg-stone-700 text-white text-xs font-bold px-2 py-1">
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </div>
       </div>
@@ -66,13 +66,13 @@ export function GameListCard({ list, linkPrefix = "/lists" }: GameListCardProps)
       {/* List Info */}
       <div className="p-3">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold text-stone-900 truncate flex-1">{list.name}</h3>
+          <h3 className="font-bold text-foreground truncate flex-1">{list.name}</h3>
           {list.visibility === "private" && (
-            <Lock className="w-4 h-4 text-stone-500 flex-shrink-0" />
+            <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           )}
         </div>
         {list.description && (
-          <p className="text-stone-600 text-sm mt-1 line-clamp-2">{list.description}</p>
+          <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{list.description}</p>
         )}
       </div>
     </Link>
@@ -86,10 +86,10 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="flex items-center gap-3 p-3 bg-stone-50 border-4 border-stone-900 hover:bg-orange-100 transition-colors"
+      className="flex items-center gap-3 p-3 bg-muted border-4 border-border hover:bg-orange-100 dark:hover:bg-muted/80 transition-colors"
     >
       {/* Cover thumbnail */}
-      <div className="w-16 h-16 bg-stone-200 border-2 border-stone-900 flex-shrink-0 overflow-hidden">
+      <div className="w-16 h-16 bg-muted border-2 border-border flex-shrink-0 overflow-hidden">
         {hasCustomCover ? (
           <img
             src={getListCoverUrl(list.id)}
@@ -109,26 +109,26 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full bg-stone-300" />
+                  <div className="w-full h-full bg-muted" />
                 )}
               </div>
             ))}
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Gamepad2 className="w-6 h-6 text-stone-400" />
+            <Gamepad2 className="w-6 h-6 text-muted-foreground" />
           </div>
         )}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className="font-bold text-stone-900 text-sm truncate">{list.name}</h3>
+          <h3 className="font-bold text-foreground text-sm truncate">{list.name}</h3>
           {list.visibility === "private" && (
-            <Lock className="w-3 h-3 text-stone-500 flex-shrink-0" />
+            <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
           )}
         </div>
-        <p className="text-stone-600 text-xs">
+        <p className="text-muted-foreground text-xs">
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </p>
       </div>

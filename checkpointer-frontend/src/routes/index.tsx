@@ -170,13 +170,13 @@ export default function Checkpointer() {
                   <Button
                     asChild
                     variant="outline"
-                    className="bg-card text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-primary-foreground text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/login">Login</a>
                   </Button>
                   <Button
                     asChild
-                    className="bg-primary-foreground text-foreground hover:brightness-110 px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-primary-foreground text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/register">Sign Up</a>
                   </Button>
