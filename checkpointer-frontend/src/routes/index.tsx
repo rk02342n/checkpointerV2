@@ -93,30 +93,6 @@ export default function Checkpointer() {
           </div>
         </section>
 
-        {/* Stats Section */}
-        {/* <section className="mb-10 sm:mb-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { label: "Games", value:  "10K+", color: "bg-amber-600/50" },
-              { label: "Reviews", value: "1.2K+", color: "bg-red-600/50" },
-              { label: "Users", value: "100+", color: "bg-green-600/50" },
-              { label: "Logs", value: "5K+", color: "bg-blue-600/50" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className={`${stat.color} border-4 border-border p-4 sm:p-6 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]`}
-              >
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
-                  {stat.value}
-                </div>
-                <div className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section> */}
-
         {/* Featured Games Section */}
         <section className="bg-muted border-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isPending ? (

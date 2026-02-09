@@ -227,7 +227,7 @@ export const StandardGameCard = ({
           >
             <EllipsisVertical className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" side="top">
+          <DropdownMenuContent align="end" side="top" className="[&_[role=menuitem]]:hover:bg-orange-200! [&_[role=menuitem]]:focus:bg-orange-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-orange-900! dark:[&_[role=menuitem]]:focus:bg-orange-900!">
             <DropdownMenuItem onClick={handleReview}>
               <PenLine className="size-4" />
               Review
