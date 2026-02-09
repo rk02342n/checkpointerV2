@@ -121,13 +121,13 @@ function PublicProfile() {
 
   if (profileError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
-          <div className="bg-rose-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
-            <Gamepad2 className="w-12 h-12 text-rose-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-stone-900 mb-2">User Not Found</h2>
-            <p className="text-stone-600">This user profile doesn't exist.</p>
+          <div className="bg-rose-100 dark:bg-rose-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 text-center">
+            <Gamepad2 className="w-12 h-12 text-rose-600 dark:text-rose-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">User Not Found</h2>
+            <p className="text-muted-foreground">This user profile doesn't exist.</p>
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@ function PublicProfile() {
 
   if (isProfilePending) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <ProfileSkeleton />
@@ -153,44 +153,44 @@ function PublicProfile() {
       : '?'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-stone-900 selection:bg-orange-300/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
       <Navbar />
 
       <div className="container mx-auto max-w-4xl px-6 py-8">
         {/* Profile Header */}
-        <div className="bg-orange-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
+        <div className="bg-orange-100 dark:bg-orange-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
-            <Avatar className="w-24 h-24 border-4 border-stone-900">
+            <Avatar className="w-24 h-24 border-4 border-border">
               <AvatarImage
                 src={user?.avatarUrl ? `/api/user/avatar/${user.id}` : undefined}
                 alt={user?.displayName || user?.username || 'User'}
               />
-              <AvatarFallback className="bg-orange-100 text-stone-900 text-2xl font-bold">
+              <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-2xl font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-3xl font-bold text-stone-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 {user?.displayName || user?.username || 'Anonymous User'}
               </h1>
               {user?.username && (
-                <p className="text-stone-700 text-sm font-medium mt-1">@{user.username}</p>
+                <p className="text-muted-foreground text-sm font-medium mt-1">@{user.username}</p>
               )}
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
-                  <div className="text-2xl font-bold text-stone-900">{totalReviewCount}</div>
-                  <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Reviews</div>
+                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                  <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
-                <div className="bg-white border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] px-4 py-2">
-                  <div className="text-2xl font-bold text-stone-900">
+                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                  <div className="text-2xl font-bold text-foreground">
                     <Gamepad2 className="w-6 h-6 inline" />
                   </div>
-                  <div className="text-xs uppercase tracking-wide text-stone-600 text-center font-medium">Gamer</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground text-center font-medium">Gamer</div>
                 </div>
               </div>
             </div>
@@ -199,31 +199,31 @@ function PublicProfile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-100 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="bg-green-100 dark:bg-green-600/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
                   src={currentlyPlayingData.game.coverUrl}
                   alt={currentlyPlayingData.game.name}
-                  className="w-12 h-16 object-cover border-2 border-stone-900"
+                  className="w-12 h-16 object-cover border-2 border-border"
                 />
               ) : (
-                <div className="w-12 h-16 bg-stone-200 border-2 border-stone-900 flex items-center justify-center">
-                  <Gamepad2 className="w-5 h-5 text-stone-500" />
+                <div className="w-12 h-16 bg-muted border-2 border-border flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-muted-foreground" />
                 </div>
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wide text-stone-600 font-medium">Currently Playing</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Currently Playing</div>
               <Link
                 to="/games/$gameId"
                 params={{ gameId: currentlyPlayingData.game.id }}
-                className="font-bold hover:underline truncate block text-stone-900"
+                className="font-bold hover:underline truncate block text-foreground"
               >
                 {currentlyPlayingData.game.name}
               </Link>
               {currentlyPlayingData.session?.startedAt && (
-                <div className="text-xs text-stone-600">
+                <div className="text-xs text-muted-foreground">
                   Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
                 </div>
               )}
@@ -232,15 +232,15 @@ function PublicProfile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+        <div className="bg-card border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]">
           {/* Tab Headers */}
-          <div className="flex border-b-4 border-stone-900">
+          <div className="flex border-b-4 border-border">
             <button
               onClick={() => setActiveTab('reviews')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -248,10 +248,10 @@ function PublicProfile() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <History className="w-4 h-4" />
@@ -259,10 +259,10 @@ function PublicProfile() {
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -270,10 +270,10 @@ function PublicProfile() {
             </button>
             <button
               onClick={() => setActiveTab('lists')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-stone-900 ${
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
-                  ? 'bg-amber-200 text-stone-900'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -288,13 +288,13 @@ function PublicProfile() {
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-full bg-stone-200" />
-                          <div className="h-4 w-2/3 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-full bg-muted-foreground/20" />
+                          <div className="h-4 w-2/3 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -322,9 +322,9 @@ function PublicProfile() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Gamepad2 className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No reviews yet</p>
-                  <p className="text-stone-600 text-sm">
+                  <Gamepad2 className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No reviews yet</p>
+                  <p className="text-muted-foreground text-sm">
                     This user hasn't written any reviews yet.
                   </p>
                 </div>
@@ -336,13 +336,13 @@ function PublicProfile() {
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-24 bg-stone-200" />
-                          <div className="h-4 w-20 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-24 bg-muted-foreground/20" />
+                          <div className="h-4 w-20 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -356,9 +356,9 @@ function PublicProfile() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <History className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No play history yet</p>
-                  <p className="text-stone-600 text-sm">
+                  <History className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No play history yet</p>
+                  <p className="text-muted-foreground text-sm">
                     This user hasn't started any gaming sessions yet.
                   </p>
                 </div>
@@ -370,12 +370,12 @@ function PublicProfile() {
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
-                          <div className="h-5 w-32 bg-stone-200" />
-                          <div className="h-4 w-24 bg-stone-200" />
+                          <div className="h-5 w-32 bg-muted-foreground/20" />
+                          <div className="h-4 w-24 bg-muted-foreground/20" />
                         </div>
                       </div>
                     </div>
@@ -389,9 +389,9 @@ function PublicProfile() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <CalendarHeart className="w-12 h-12 text-stone-400 mx-auto mb-4" />
-                  <p className="text-stone-900 font-bold mb-2">No games in wishlist</p>
-                  <p className="text-stone-600 text-sm">
+                  <CalendarHeart className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No games in wishlist</p>
+                  <p className="text-muted-foreground text-sm">
                     This user hasn't added any games to their wishlist yet.
                   </p>
                 </div>
@@ -412,30 +412,30 @@ function PublicProfile() {
 function ProfileSkeleton() {
   return (
     <>
-      <div className="bg-orange-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 mb-8">
+      <div className="bg-orange-100 dark:bg-orange-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full bg-orange-300 border-4 border-stone-900" />
+          <Skeleton className="w-24 h-24 rounded-full bg-orange-300 dark:bg-orange-800 border-4 border-border" />
           <div className="flex-1 text-center md:text-left">
-            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-orange-300" />
-            <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-orange-300" />
+            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-orange-300 dark:bg-orange-800" />
+            <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-orange-300 dark:bg-orange-800" />
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-              <Skeleton className="h-16 w-24 bg-white border-4 border-stone-900" />
-              <Skeleton className="h-16 w-24 bg-white border-4 border-stone-900" />
+              <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
+              <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
             </div>
           </div>
         </div>
       </div>
-      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
-        <Skeleton className="h-5 w-24 mb-4 bg-stone-200" />
+      <div className="bg-card border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6">
+        <Skeleton className="h-5 w-24 mb-4 bg-muted-foreground/20" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-stone-50 border-4 border-stone-900 p-4 animate-pulse">
+            <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
               <div className="flex gap-4">
-                <div className="w-16 h-20 bg-stone-200 border-2 border-stone-900" />
+                <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 w-32 bg-stone-200" />
-                  <div className="h-4 w-full bg-stone-200" />
-                  <div className="h-4 w-2/3 bg-stone-200" />
+                  <div className="h-5 w-32 bg-muted-foreground/20" />
+                  <div className="h-4 w-full bg-muted-foreground/20" />
+                  <div className="h-4 w-2/3 bg-muted-foreground/20" />
                 </div>
               </div>
             </div>

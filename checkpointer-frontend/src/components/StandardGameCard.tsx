@@ -33,9 +33,9 @@ interface StandardGameCardProps {
 
 const cardClasses: Record<Variant, string> = {
   featured:
-    "group text-left bg-white dark:bg-stone-900 border-2 sm:border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] sm:hover:shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:translate-x-px sm:hover:translate-x-[3px] hover:translate-y-px sm:hover:translate-y-[3px] transition-all duration-100",
+    "group text-left bg-white dark:bg-stone-900 hover:bg-orange-100 dark:hover:bg-orange-950 border-2 sm:border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:active-[6px_6px_0px_0px_rgba(41,37,36,1)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] sm:active:shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
   browse:
-    "group text-left bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100",
+    "group text-left bg-card border-4 border-border hover:bg-orange-100 dark:hover:bg-orange-950 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
 }
 
 export const StandardGameCard = ({
@@ -142,8 +142,8 @@ export const StandardGameCard = ({
             alt={game.name}
             className={
               variant === "featured"
-                ? "w-full aspect-3/4 object-cover transition-all duration-300"
-                : "w-full h-48 sm:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                ? "w-full aspect-3/4 object-cover"
+                : "w-full h-48 sm:h-56 object-cover duration-300"
             }
             loading="lazy"
           />
