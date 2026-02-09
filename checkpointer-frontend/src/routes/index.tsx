@@ -28,7 +28,6 @@ export default function Checkpointer() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Navbar />
-
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-7xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
@@ -41,7 +40,6 @@ export default function Checkpointer() {
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-secondary-foreground hover:opacity-80">
                   Checkpointer
                   <br />
-                  {/* <span className="text-orange-300">pointer</span> */}
                 </h2>
                 <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/70 max-w-md leading-relaxed">
                   Track, log, and review games as you play. Build your personal gaming history.
