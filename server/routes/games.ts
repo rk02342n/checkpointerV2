@@ -241,6 +241,39 @@ export const gamesRoute = new Hono()
   return c.json({ games });
 })
 
+// Trending games — most reviewed in the last 7 days
+.get("/trending", async (c) => {
+  const limit = Math.min(parseInt(c.req.query("limit") || "4"), 20);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const trendingIds = await db
+    .select({
+      gameId: reviewsTable.gameId,
+    })
+    .from(reviewsTable)
+    .where(gte(reviewsTable.createdAt, sevenDaysAgo))
+    .groupBy(reviewsTable.gameId)
+    .orderBy(desc(sql`count(${reviewsTable.id})`))
+    .limit(limit);
+
+  const ids = trendingIds.map(r => r.gameId);
+  const trending = ids.length > 0
+    ? await db.select().from(gamesTable).where(inArray(gamesTable.id, ids))
+    : [];
+
+  // Preserve the trending order (most reviewed first)
+  const gameMap = new Map(trending.map(g => [g.id, g]));
+  const orderedTrending = ids.map(id => gameMap.get(id)).filter(Boolean) as typeof trending;
+
+  const platformMap = await getPlatformsForGames(orderedTrending.map(g => g.id));
+  const games = orderedTrending.map(g => ({
+    ...g,
+    platforms: platformMap.get(g.id) ?? [],
+  }));
+
+  return c.json({ games });
+})
+
 // Average rating for a game by its ID
 .get("/rating/:id", async c => {
     const id = c.req.param('id');
