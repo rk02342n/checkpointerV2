@@ -113,18 +113,18 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
       else onOpenChange(isOpen);
     }}>
       <DialogContent
-        className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto"
+        className="bg-background border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto"
         showCloseButton={true}
       >
         <DialogHeader>
-          <DialogTitle className="text-stone-900 font-bold text-lg sm:text-xl">
+          <DialogTitle className="text-foreground font-bold text-lg sm:text-xl">
             Create New List
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="list-name" className="text-stone-900 font-semibold text-sm">
+            <Label htmlFor="list-name" className="text-foreground font-semibold text-sm">
               List Name *
             </Label>
             <Input
@@ -133,14 +133,14 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               placeholder="e.g., Favorite RPGs"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-white border-4 border-stone-900 text-stone-900 rounded-none focus:ring-2 focus:ring-stone-900"
+              className="bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-border"
               maxLength={100}
               autoFocus
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="list-description" className="text-stone-900 font-semibold text-sm">
+            <Label htmlFor="list-description" className="text-foreground font-semibold text-sm">
               Description (optional)
             </Label>
             <Textarea
@@ -148,17 +148,17 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               placeholder="What's this list about?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-white border-4 border-stone-900 text-stone-900 rounded-none focus:ring-2 focus:ring-stone-900 min-h-20"
+              className="bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-border min-h-20"
               maxLength={500}
             />
-            <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-amber-600' : 'text-stone-500'}`}>
+            <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-amber-600' : 'text-muted-foreground'}`}>
               {description.length} / 500
             </p>
           </div>
 
           {/* Cover Image */}
           <div className="space-y-2">
-            <Label className="text-stone-900 font-semibold text-sm">
+            <Label className="text-foreground font-semibold text-sm">
               Cover Image (optional)
             </Label>
             <input
@@ -173,12 +173,12 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
                 <img
                   src={coverPreview}
                   alt="Cover preview"
-                  className="w-full aspect-[16/9] object-cover border-4 border-stone-900"
+                  className="w-full aspect-[16/9] object-cover border-4 border-border"
                 />
                 <button
                   type="button"
                   onClick={handleRemoveCover}
-                  className="absolute top-2 right-2 p-1 bg-stone-900 text-white hover:bg-stone-700 transition-colors"
+                  className="absolute top-2 right-2 p-1 bg-foreground text-background hover:opacity-80 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -187,19 +187,19 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-[16/9] border-4 border-dashed border-stone-300 hover:border-stone-400 bg-stone-50 flex flex-col items-center justify-center gap-2 transition-colors"
+                className="w-full aspect-[16/9] border-4 border-dashed border-border hover:border-muted-foreground bg-muted flex flex-col items-center justify-center gap-2 transition-colors"
               >
-                <ImagePlus className="w-8 h-8 text-stone-400" />
-                <span className="text-sm text-stone-600">Click to upload cover image</span>
+                <ImagePlus className="w-8 h-8 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Click to upload cover image</span>
               </button>
             )}
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-muted-foreground">
               Recommended: 16:9 aspect ratio. Max 5MB.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-stone-900 font-semibold text-sm">
+            <Label className="text-foreground font-semibold text-sm">
               Visibility
             </Label>
             <div className="grid grid-cols-2 gap-2">
@@ -208,8 +208,8 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
                 onClick={() => setVisibility("public")}
                 className={`flex items-center justify-center gap-2 p-3 border-4 font-semibold text-sm transition-colors ${
                   visibility === "public"
-                    ? "bg-green-200 border-stone-900 text-stone-900"
-                    : "bg-white border-stone-300 text-stone-600 hover:border-stone-400"
+                    ? "bg-green-200 border-border text-foreground dark:bg-green-800"
+                    : "bg-muted border-border text-muted-foreground hover:border-muted-foreground"
                 }`}
               >
                 <Globe className="w-4 h-4" />
@@ -220,15 +220,15 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
                 onClick={() => setVisibility("private")}
                 className={`flex items-center justify-center gap-2 p-3 border-4 font-semibold text-sm transition-colors ${
                   visibility === "private"
-                    ? "bg-amber-200 border-stone-900 text-stone-900"
-                    : "bg-white border-stone-300 text-stone-600 hover:border-stone-400"
+                    ? "bg-amber-200 border-border text-foreground dark:bg-amber-700"
+                    : "bg-muted border-border text-muted-foreground hover:border-muted-foreground"
                 }`}
               >
                 <Lock className="w-4 h-4" />
                 Private
               </button>
             </div>
-            <p className="text-xs text-stone-600">
+            <p className="text-xs text-muted-foreground">
               {visibility === "public"
                 ? "Anyone can see this list"
                 : "Only you can see this list"}
@@ -247,14 +247,14 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               variant="outline"
               onClick={resetAndClose}
               disabled={createMutation.isPending}
-              className="border-4 border-stone-900 rounded-none"
+              className="border-4 border-border rounded-none"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!name.trim() || description.length > 500 || createMutation.isPending}
-              className="bg-stone-900 hover:bg-stone-800 text-white border-4 border-stone-900 rounded-none"
+              className="bg-foreground hover:opacity-90 text-background border-4 border-border rounded-none"
             >
               {createMutation.isPending ? (
                 <>

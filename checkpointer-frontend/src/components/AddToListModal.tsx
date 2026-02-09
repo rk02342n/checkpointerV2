@@ -144,7 +144,7 @@ export function AddToListModal({
 
           <div className="p-4 sm:p-6 pt-4 space-y-4 flex-1 overflow-hidden flex flex-col">
             {/* Game Preview */}
-            <div className="flex items-center gap-3 p-3 bg-green-900 border-2 border-border">
+            <div className="flex items-center gap-3 p-3 dark:bg-green-900 bg-green-300 border-2 border-border">
               {gameCoverUrl ? (
                 <img
                   className="w-10 h-12 object-cover border-2 border-border shrink-0"
