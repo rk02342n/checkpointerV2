@@ -467,7 +467,7 @@ const queryClient = useQueryClient();
                         {dbUserData?.account && (
                             <button
                                 onClick={() => { posthog.capture('add_to_list_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowAddToListModal(true); }}
-                                className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-muted transition-all p-2"
+                                className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-purple-800 transition-all p-2"
                             >
                                 <ListPlus className="w-5 h-5" />
                                 <span className="text-xs uppercase font-bold tracking-wider">Add to List</span>
@@ -808,39 +808,39 @@ function GameDetailSkeleton() {
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Left Column */}
       <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-        <div className="border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
-          <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-stone-200" />
+        <div className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+          <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-muted" />
         </div>
         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
-          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
-          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
-          <Skeleton className="h-14 sm:h-16 bg-stone-200 border-4 border-stone-900" />
+          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
         </div>
       </div>
 
       {/* Right Column */}
       <div className="flex-1 pt-0 min-w-0">
         <div className="mb-6">
-          <Skeleton className="h-8 sm:h-10 w-3/4 mb-4 bg-stone-200" />
+          <Skeleton className="h-8 sm:h-10 w-3/4 mb-4 bg-muted" />
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 bg-stone-200 border-2 border-stone-900" />
-            <Skeleton className="h-7 sm:h-8 w-20 sm:w-24 bg-stone-200 border-2 border-stone-900" />
-            <Skeleton className="h-7 sm:h-8 w-24 sm:w-28 bg-stone-200 border-2 border-stone-900" />
+            <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 bg-muted border-2 border-border" />
+            <Skeleton className="h-7 sm:h-8 w-20 sm:w-24 bg-muted border-2 border-border" />
+            <Skeleton className="h-7 sm:h-8 w-24 sm:w-28 bg-muted border-2 border-border" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
-              <Skeleton className="h-4 w-24 mb-4 bg-stone-200" />
-              <Skeleton className="h-4 w-full mb-2 bg-stone-200" />
-              <Skeleton className="h-4 w-full mb-2 bg-stone-200" />
-              <Skeleton className="h-4 w-5/6 bg-stone-200" />
+            <div className="bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+              <Skeleton className="h-4 w-24 mb-4 bg-muted" />
+              <Skeleton className="h-4 w-full mb-2 bg-muted" />
+              <Skeleton className="h-4 w-full mb-2 bg-muted" />
+              <Skeleton className="h-4 w-5/6 bg-muted" />
             </div>
           </div>
           <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-24 w-full bg-amber-200 border-4 border-stone-900" />
-            <Skeleton className="h-64 w-full bg-orange-200 border-4 border-stone-900" />
+            <Skeleton className="h-24 w-full bg-amber-200 dark:bg-amber-900 border-4 border-border" />
+            <Skeleton className="h-64 w-full bg-orange-200 dark:bg-orange-900 border-4 border-border" />
           </div>
         </div>
       </div>
