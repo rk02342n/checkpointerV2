@@ -19,6 +19,7 @@ export const gamesTable = pgTable("games", {
 }, (games) => [
   index("games_name_idx").on(games.name),
   index("games_igdb_idx").on(games.igdbId),
+  index("games_name_trgm_idx").using("gin", games.name.op("gin_trgm_ops")),
 ]);
 
 export const gamesInsertSchema = createInsertSchema(gamesTable, {

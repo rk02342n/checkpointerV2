@@ -134,6 +134,13 @@
       "when": 1770623041648,
       "tag": "0018_sturdy_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1770698463522,
+      "tag": "0019_numerous_quentin_quire",
+      "breakpoints": true
     }
   ]
 }

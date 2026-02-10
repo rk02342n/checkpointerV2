@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { db } from "../db";
 import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
-import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists, inArray } from "drizzle-orm";
+import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists, inArray, getTableColumns } from "drizzle-orm";
 import { appSettingsTable } from "../db/schema/app-settings";
 import { reviewsTable } from "../db/schema/reviews";
 import { genresTable } from "../db/schema/genres";
@@ -165,28 +165,25 @@ export const gamesRoute = new Hono()
 
   const orderFn = sortOrder === "asc" ? asc : desc;
 
-  // Build query
-  let query = db.select().from(gamesTable);
+  // Single query with window function for total count
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as typeof query;
-  }
-
-  const gamesRaw = await query
+  const rawResults = await db
+    .select({
+      ...getTableColumns(gamesTable),
+      totalCount: sql<number>`count(*) over()`,
+    })
+    .from(gamesTable)
+    .where(whereClause)
     .orderBy(orderFn(orderByColumn))
     .limit(limit)
     .offset(offset);
 
+  const totalCount = rawResults.length > 0 ? Number(rawResults[0]!.totalCount) : 0;
+  const gamesRaw = rawResults.map(({ totalCount: _, ...game }) => game);
+
   const platformMap = await getPlatformsForGames(gamesRaw.map(g => g.id));
   const games = gamesRaw.map(g => ({ ...g, platforms: platformMap.get(g.id) ?? [] }));
-
-  // Get total count for pagination
-  let countQuery = db.select({ count: sql<number>`count(*)` }).from(gamesTable);
-  if (conditions.length > 0) {
-    countQuery = countQuery.where(and(...conditions)) as typeof countQuery;
-  }
-  const countResult = await countQuery;
-  const totalCount = countResult[0]?.count ?? 0;
 
   // Get unique years for filter dropdown
   const yearsResult = await db
