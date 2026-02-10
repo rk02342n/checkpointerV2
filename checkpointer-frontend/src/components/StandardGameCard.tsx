@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { type Game } from "@/lib/gameQuery"
 import { dbUserQueryOptions } from "@/lib/api"
-import { addToWishlist, type WishlistResponse } from "@/lib/wantToPlayQuery"
+import { addToWishlist, removeFromWishlist, gameInWishlistQueryOptions, type WishlistResponse } from "@/lib/wantToPlayQuery"
 import { LogGameModal } from "@/components/LogGameModal"
 import { AddToListModal } from "@/components/AddToListModal"
-import { EllipsisVertical, ListPlus, CalendarHeart, BookOpen, PenLine } from "lucide-react"
+import { EllipsisVertical, ListPlus, CalendarHeart, CalendarMinus, BookOpen, PenLine } from "lucide-react"
 import { toast } from "sonner"
 
 type Variant = "featured" | "browse"
@@ -57,6 +57,12 @@ export const StandardGameCard = ({
   const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false })
   const isLoggedIn = !!dbUserData?.account
 
+  const { data: wishlistCheck } = useQuery({
+    ...gameInWishlistQueryOptions(gameId),
+    enabled: isLoggedIn,
+  })
+  const isInWishlist = wishlistCheck?.inWishlist ?? false
+
   const wishlistMutation = useMutation({
     mutationFn: () => addToWishlist(gameId),
     onMutate: async () => {
@@ -96,6 +102,36 @@ export const StandardGameCard = ({
     },
   })
 
+  const removeWishlistMutation = useMutation({
+    mutationFn: () => removeFromWishlist(gameId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['want-to-play-check', gameId] })
+      await queryClient.cancelQueries({ queryKey: ['want-to-play'] })
+
+      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['want-to-play'])
+
+      queryClient.setQueryData(['want-to-play-check', gameId], { inWishlist: false })
+
+      if (previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], {
+          wishlist: previousWishlist.wishlist.filter((item) => item.gameId !== gameId),
+        })
+      }
+
+      return { previousWishlist }
+    },
+    onError: (_err, _, context) => {
+      queryClient.setQueryData(['want-to-play-check', gameId], { inWishlist: true })
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(['want-to-play'], context.previousWishlist)
+      }
+      toast.error("Failed to remove from wishlist")
+    },
+    onSuccess: () => {
+      toast.success(`${game.name} removed from wishlist`)
+    },
+  })
+
   const handleAddToWishlist = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!isLoggedIn) {
@@ -104,6 +140,12 @@ export const StandardGameCard = ({
     }
     posthog.capture('game_card_action', { game_id: gameId, action: 'add_to_wishlist' })
     wishlistMutation.mutate()
+  }
+
+  const handleRemoveFromWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    posthog.capture('game_card_action', { game_id: gameId, action: 'remove_from_wishlist' })
+    removeWishlistMutation.mutate()
   }
 
   const handleLog = (e: React.MouseEvent) => {
@@ -238,10 +280,17 @@ export const StandardGameCard = ({
               <PenLine className="size-4" />
               Review
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleAddToWishlist}>
-              <CalendarHeart className="size-4" />
-              Add to Wishlist
-            </DropdownMenuItem>
+            {isInWishlist ? (
+              <DropdownMenuItem onClick={handleRemoveFromWishlist}>
+                <CalendarMinus className="size-4" />
+                Remove from Wishlist
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleAddToWishlist}>
+                <CalendarHeart className="size-4" />
+                Add to Wishlist
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={handleLog}>
               <BookOpen className="size-4" />
               Log
