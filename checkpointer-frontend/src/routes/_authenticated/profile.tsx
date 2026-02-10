@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
@@ -39,6 +40,7 @@ const REVIEWS_PER_PAGE = 10
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const posthog = usePostHog()
   const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists' | 'saved'>('reviews')
   const [searchQuery, setSearchQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
@@ -78,6 +80,7 @@ function Profile() {
 
   const handleStopPlaying = (status: SessionStatus) => {
     const gameId = currentlyPlayingData?.game?.id
+    posthog.capture('stop_playing_from_profile', { game_id: gameId, end_status: status })
     stopPlayingMutation.mutate(status)
     if (gameId && status === 'finished') {
       navigate({ to: '/games/$gameId', params: { gameId }, search: { review: true } })
@@ -100,6 +103,7 @@ function Profile() {
       return res.json()
     },
     onSuccess: () => {
+      posthog.capture('avatar_uploaded')
       toast.success('Avatar updated!')
       queryClient.invalidateQueries({ queryKey: ['get-db-user'] })
     },
@@ -123,6 +127,7 @@ function Profile() {
       return res.json()
     },
     onSuccess: () => {
+      posthog.capture('username_updated')
       toast.success('Username updated!')
       queryClient.invalidateQueries({ queryKey: ['get-db-user'] })
       setIsEditingUsername(false)
@@ -145,6 +150,7 @@ function Profile() {
       return res.json()
     },
     onSuccess: () => {
+      posthog.capture('account_deleted')
       toast.success('Account deleted')
       window.location.href = '/api/logout'
     },
@@ -363,7 +369,8 @@ function Profile() {
       }
       toast.error(error.message || 'Failed to delete review')
     },
-    onSuccess: (_data, _reviewId, context) => {
+    onSuccess: (_data, reviewId, context) => {
+      posthog.capture('review_deleted', { review_id: reviewId })
       toast.success('Review deleted')
       queryClient.invalidateQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
       if (context?.gameId) {
@@ -695,7 +702,7 @@ function Profile() {
           {/* Tab Headers */}
           <div className="flex border-b-4 border-border">
             <button
-              onClick={() => setActiveTab('reviews')}
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'reviews' }); setActiveTab('reviews'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
@@ -706,7 +713,7 @@ function Profile() {
               Reviews ({totalReviewCount})
             </button>
             <button
-              onClick={() => setActiveTab('history')}
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'history' }); setActiveTab('history'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
@@ -717,7 +724,7 @@ function Profile() {
               Play History ({playSessions.length})
             </button>
             <button
-              onClick={() => setActiveTab('wishlist')}
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'wishlist' }); setActiveTab('wishlist'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
@@ -728,7 +735,7 @@ function Profile() {
               Want to Play ({wishlistItems.length})
             </button>
             <button
-              onClick={() => setActiveTab('lists')}
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'lists' }); setActiveTab('lists'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
@@ -739,7 +746,7 @@ function Profile() {
               Lists ({gameLists.length})
             </button>
             <button
-              onClick={() => setActiveTab('saved')}
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'saved' }); setActiveTab('saved'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'saved'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'

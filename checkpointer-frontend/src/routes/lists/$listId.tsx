@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -53,6 +54,7 @@ function ListDetailView() {
   const { listId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [gameToRemove, setGameToRemove] = useState<GameListGame | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -78,12 +80,20 @@ function ListDetailView() {
     enabled: canSave,
   });
 
+  // Track list view
+  useEffect(() => {
+    if (list) {
+      posthog.capture('list_viewed', { list_id: listId, list_name: list.name, game_count: list.gameCount, is_owner: isOwner })
+    }
+  }, [listId, list?.name])
+
   // Save list mutation
   const saveMutation = useMutation({
     mutationFn: () => saveList(listId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["list-saved", listId] });
       queryClient.invalidateQueries({ queryKey: ["my-saved-lists"] });
+      posthog.capture('list_saved', { list_id: listId, list_name: list?.name });
       toast.success("List saved!");
     },
     onError: (err) => {
@@ -97,6 +107,7 @@ function ListDetailView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["list-saved", listId] });
       queryClient.invalidateQueries({ queryKey: ["my-saved-lists"] });
+      posthog.capture('list_unsaved', { list_id: listId, list_name: list?.name });
       toast.success("List unsaved");
     },
     onError: (err) => {
@@ -109,6 +120,7 @@ function ListDetailView() {
     mutationFn: () => deleteList(listId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      posthog.capture('list_deleted', { list_id: listId, list_name: list?.name });
       toast.success("List deleted");
       navigate({ to: "/profile" });
     },
@@ -120,10 +132,11 @@ function ListDetailView() {
   // Remove game mutation
   const removeGameMutation = useMutation({
     mutationFn: (gameId: string) => removeGameFromList(listId, gameId),
-    onSuccess: () => {
+    onSuccess: (_data, gameId) => {
       queryClient.invalidateQueries({ queryKey: ["game-list", listId] });
       queryClient.invalidateQueries({ queryKey: ["game-list-auth", listId] });
       queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      posthog.capture('game_removed_from_list', { list_id: listId, game_id: gameId });
       toast.success("Game removed from list");
       setGameToRemove(null);
     },

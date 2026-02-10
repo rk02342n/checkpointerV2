@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePostHog } from 'posthog-js/react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Gamepad2, Loader2, ConciergeBell, History, X, CalendarHeart } from "lucide-react";
 import {
@@ -36,6 +37,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   // Set preselected game when modal opens
   useEffect(() => {
@@ -117,6 +119,8 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
 
   const handleSubmit = () => {
     if (!selectedGame) return;
+
+    posthog.capture('game_logged', { game_id: String(selectedGame.id), game_name: selectedGame.name, log_type: logType });
 
     if (logType === "want-to-play") {
       addToWishlistMutation.mutate(String(selectedGame.id));

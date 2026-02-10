@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Lock, Gamepad2, Bookmark } from "lucide-react";
+import { usePostHog } from 'posthog-js/react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type GameListSummary, getListCoverUrl, listSavedQueryOptions, saveList, unsaveList } from "@/lib/gameListsQuery";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ interface GameListCardProps {
 export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = false, showSaveCount = false }: GameListCardProps) {
   const hasCustomCover = !!list.coverUrl;
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const { data: saveData } = useQuery({
     ...listSavedQueryOptions(list.id),
@@ -48,6 +50,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
 
   const handleToggleSave = () => {
     if (saveMutation.isPending || unsaveMutation.isPending) return;
+    posthog.capture('list_save_toggled', { list_id: list.id, list_name: list.name, action: isSaved ? 'unsaved' : 'saved' });
     if (isSaved) {
       unsaveMutation.mutate();
     } else {

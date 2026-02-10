@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
 import { Heart, Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
@@ -51,6 +52,7 @@ function GameView () {
     const { gameId } = Route.useParams()
     const { review: openReviewForm } = Route.useSearch()
     const navigate = useNavigate()
+    const posthog = usePostHog()
     const { isPending, error, data } = useQuery
     (getGameByIdQueryOptions(gameId))
 
@@ -77,6 +79,13 @@ function GameView () {
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
+
+    // Track game view
+    useEffect(() => {
+      if (data?.game) {
+        posthog.capture('game_viewed', { game_id: gameId, game_name: data.game.name })
+      }
+    }, [gameId, data?.game?.name])
 
     // Like mutation with optimistic updates
     const likeMutation = useMutation({
@@ -129,6 +138,8 @@ function GameView () {
         toast.error("Please log in to like reviews");
         return;
       }
+      const review = gameReviews.find(r => r.id === reviewId);
+      posthog.capture('review_liked', { review_id: reviewId, game_id: gameId, action: review?.userLiked ? 'unlike' : 'like' });
       likeMutation.mutate(reviewId);
     };
 
@@ -238,6 +249,7 @@ function GameView () {
         toast.error("Please log in to add games to your wishlist");
         return;
       }
+      posthog.capture('wishlist_toggled', { game_id: gameId, action: isInWishlist ? 'removed' : 'added' });
       wantToPlayMutation.mutate();
     };
 
@@ -249,6 +261,7 @@ function GameView () {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['currently-playing'] });
         queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
+        posthog.capture('currently_playing_set', { game_id: gameId, game_name: data?.game?.name });
         toast.success('Now playing!');
       },
       onError: (error) => {
@@ -262,6 +275,7 @@ function GameView () {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['currently-playing'] });
         queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
+        posthog.capture('currently_playing_stopped', { game_id: gameId, game_name: data?.game?.name });
         toast.success('Stopped playing');
       },
       onError: (error) => {
@@ -280,6 +294,7 @@ function GameView () {
         queryClient.invalidateQueries({ queryKey: ['game-active-players'] });
         queryClient.invalidateQueries({ queryKey: ['play-history'] });
         setShowSwitchGameDialog(false);
+        posthog.capture('game_switched', { new_game_id: gameId, previous_game_name: currentlyPlayingData?.game?.name, end_status: status });
         toast.success(status === 'finished' ? 'Game completed! Now playing new game.' : 'Game stashed! Now playing new game.');
       },
       onError: (error) => {
@@ -378,6 +393,7 @@ const queryClient = useQueryClient();
         }
 
         toast.dismiss();
+        posthog.capture('review_created', { game_id: gameId, game_name: data?.game?.name, rating: ratingStr });
         toast.success(`Review has been added: ID: ${newReview.id}`)
         setIsFormMaximized(false);
         formApi.reset();
@@ -412,7 +428,7 @@ const queryClient = useQueryClient();
 
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
-                                onClick={() => setShowLogGameModal(true)}
+                                onClick={() => { posthog.capture('log_game_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowLogGameModal(true); }}
                                 className="flex flex-col items-center justify-center gap-1 dark:hover:bg-blue-800 hover:bg-blue-100 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2"
                             >
                                 <Pencil className="w-5 h-5" />
@@ -450,7 +466,7 @@ const queryClient = useQueryClient();
                         {/* Add to List Button */}
                         {dbUserData?.account && (
                             <button
-                                onClick={() => setShowAddToListModal(true)}
+                                onClick={() => { posthog.capture('add_to_list_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowAddToListModal(true); }}
                                 className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-muted transition-all p-2"
                             >
                                 <ListPlus className="w-5 h-5" />

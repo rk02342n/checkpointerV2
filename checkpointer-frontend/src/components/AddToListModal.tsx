@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePostHog } from 'posthog-js/react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Check, Lock, Gamepad2 } from "lucide-react";
 import {
@@ -37,6 +38,7 @@ export function AddToListModal({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [pendingListId, setPendingListId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const { data, isLoading } = useQuery({
     ...listsForGameQueryOptions(gameId),
@@ -117,8 +119,10 @@ export function AddToListModal({
 
   const handleToggle = (list: GameListWithStatus) => {
     if (list.hasGame) {
+      posthog.capture('game_removed_from_list', { game_id: gameId, list_id: list.id, list_name: list.name });
       removeMutation.mutate({ listId: list.id });
     } else {
+      posthog.capture('game_added_to_list', { game_id: gameId, list_id: list.id, list_name: list.name });
       addMutation.mutate({ listId: list.id });
     }
   };

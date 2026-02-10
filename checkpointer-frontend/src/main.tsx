@@ -7,6 +7,8 @@ import {
 } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import { SettingsProvider } from './lib/settingsContext'
+import { PostHogProvider } from 'posthog-js/react'
+import posthog from 'posthog-js'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -32,17 +34,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
-
+posthog.init('phc_HvfVRb2qoLSFdrz2tlKIHLmVfm1JDWQO4Fzq69hPAFz', {
+  api_host: 'https://us.i.posthog.com',
+  defaults: '2026-01-30',
+  person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SettingsProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router}/>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </SettingsProvider>
+    <PostHogProvider client={posthog}>
+      <SettingsProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router}/>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </SettingsProvider>
+    </PostHogProvider>
   </StrictMode>,
 )
 

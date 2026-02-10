@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { usePostHog } from 'posthog-js/react'
 import { useNavigate } from "@tanstack/react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +48,7 @@ export const StandardGameCard = ({
   const platforms = game.platforms ?? []
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const posthog = usePostHog()
   const gameId = String(game.id)
 
   const [showLogModal, setShowLogModal] = useState(false)
@@ -100,6 +102,7 @@ export const StandardGameCard = ({
       toast.error("Please log in to add games to your wishlist")
       return
     }
+    posthog.capture('game_card_action', { game_id: gameId, action: 'add_to_wishlist' })
     wishlistMutation.mutate()
   }
 
@@ -109,11 +112,13 @@ export const StandardGameCard = ({
       toast.error("Please log in to log games")
       return
     }
+    posthog.capture('game_card_action', { game_id: gameId, action: 'log' })
     setShowLogModal(true)
   }
 
   const handleReview = (e: React.MouseEvent) => {
     e.stopPropagation()
+    posthog.capture('game_card_action', { game_id: gameId, action: 'review' })
     navigate({ to: "/games/$gameId", params: { gameId }, search: { review: true } })
   }
 
@@ -123,6 +128,7 @@ export const StandardGameCard = ({
       toast.error("Please log in to add games to lists")
       return
     }
+    posthog.capture('game_card_action', { game_id: gameId, action: 'add_to_list' })
     setShowAddToListModal(true)
   }
 

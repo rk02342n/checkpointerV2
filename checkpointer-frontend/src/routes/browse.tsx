@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback } from "react"
+import { usePostHog } from 'posthog-js/react'
 import { Search } from "lucide-react"
 import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
@@ -50,6 +51,7 @@ export const Route = createFileRoute("/browse")({
 export default function BrowseGames() {
   const search = Route.useSearch()
   const navigate = useNavigate()
+  const posthog = usePostHog()
 
   // Apply defaults for values not in URL
   const currentPage = search.page ?? 1
@@ -96,6 +98,9 @@ export default function BrowseGames() {
     if (debouncedSearch !== urlQ) {
       updateSearch({ q: debouncedSearch || undefined, page: undefined }, { replace: true })
     }
+    if (debouncedSearch) {
+      posthog.capture('browse_searched', { query: debouncedSearch, sort_by: sortBy, filters: { year: yearFilter, genre: genreFilter, platform: platformFilter } })
+    }
   }, [debouncedSearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build query params from URL state (using debounced search for API)
@@ -130,6 +135,7 @@ export default function BrowseGames() {
   const platforms = data?.platforms ?? []
 
   const handleGameClick = (game: Game) => {
+    posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })
     window.scrollTo(0, 0)
     navigate({ to: `/games/${game.id}` })
   }
@@ -141,18 +147,22 @@ export default function BrowseGames() {
 
   const handleSortChange = (value: string) => {
     const [newSortBy, newSortOrder] = value.split("-") as [SortBy, SortOrder]
+    posthog.capture('browse_filter_changed', { filter_type: 'sort', value })
     updateSearch({ sortBy: newSortBy, sortOrder: newSortOrder, page: undefined }, { replace: true })
   }
 
   const handleYearChange = (value: string) => {
+    posthog.capture('browse_filter_changed', { filter_type: 'year', value })
     updateSearch({ year: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handleGenreChange = (value: string) => {
+    posthog.capture('browse_filter_changed', { filter_type: 'genre', value })
     updateSearch({ genre: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handlePlatformChange = (value: string) => {
+    posthog.capture('browse_filter_changed', { filter_type: 'platform', value })
     updateSearch({ platform: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 

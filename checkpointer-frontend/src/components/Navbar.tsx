@@ -1,4 +1,5 @@
 import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Sun, Moon, Signature } from "lucide-react";
+import { usePostHog } from 'posthog-js/react'
 import { useTheme } from "next-themes";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -30,6 +31,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     const navigate = useNavigate();
     const { theme, setTheme } = useTheme();
     const { settings } = useSettings();
+    const posthog = usePostHog();
 
     // Debounce search query to avoid excessive API calls
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -50,6 +52,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     const games: Game[] = data?.games || [];
 
     const handleGameClick = (id: string | number): void => {
+        posthog.capture('navbar_search_result_clicked', { game_id: String(id), query: searchQuery });
         navigate({to: `/games/${id}`});
         setSearchQuery('');
     }
@@ -180,7 +183,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                 {isAdmin && <DropdownMenuSeparator className="bg-border/50" />}
                 {settings.darkModeEnabled && (
                   <DropdownMenuItem
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    onClick={() => { const newTheme = theme === 'dark' ? 'light' : 'dark'; posthog.capture('dark_mode_toggled', { new_theme: newTheme }); setTheme(newTheme); }}
                     className="font-medium rounded-none hover:bg-primary/20"
                   >
                     <Sun className="w-4 h-4 hidden dark:block" />
@@ -228,7 +231,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           <Button
             variant="outline"
             className="hidden md:flex items-center gap-2 bg-card hover:bg-muted text-foreground border-4 border-border px-4 py-2 font-semibold transition-all text-sm"
-            onClick={() => setLogGameModalOpen(true)}
+            onClick={() => { posthog.capture('log_game_modal_opened', { source: 'navbar' }); setLogGameModalOpen(true); }}
           >
             <Plus className="w-4 h-4" />
             <span>Log Game</span>

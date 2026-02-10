@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { usePostHog } from 'posthog-js/react'
 import { Button } from "@/components/ui/button"
 import { getFeaturedGamesQueryOptions, getTopRatedGamesQueryOptions, getTrendingGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { dbUserQueryOptions } from "@/lib/api"
@@ -23,8 +24,10 @@ export default function Checkpointer() {
   })
   const isLoggedIn = !!dbUserData?.account && !isAuthError
   const navigate = useNavigate()
+  const posthog = usePostHog()
 
   const handleGameClick = (game: Game) => {
+    posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'home' })
     window.scrollTo(0, 0)
     navigate({ to: `/games/${game.id}` })
   }
@@ -52,13 +55,13 @@ export default function Checkpointer() {
                   {isLoggedIn ? (
                     <>
                       <Button
-                        onClick={() => navigate({ to: '/browse' })}
+                        onClick={() => { posthog.capture('cta_clicked', { button_name: 'start_logging' }); navigate({ to: '/browse' }); }}
                         className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg"
                       >
                         Start Logging
                       </Button>
                       <Button
-                        onClick={() => navigate({ to: '/browse' })}
+                        onClick={() => { posthog.capture('cta_clicked', { button_name: 'browse_games' }); navigate({ to: '/browse' }); }}
                         variant="outline"
                         className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-amber-50 dark:hover:bg-muted"
                       >
@@ -174,7 +177,7 @@ export default function Checkpointer() {
               </div>
               {isLoggedIn ? (
                 <Button
-                  onClick={() => navigate({ to: '/browse' })}
+                  onClick={() => { posthog.capture('cta_clicked', { button_name: 'get_started' }); navigate({ to: '/browse' }); }}
                   variant="outline"
                   className="bg-card text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full md:w-auto"
                 >

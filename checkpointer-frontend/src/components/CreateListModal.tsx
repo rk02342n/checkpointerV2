@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { usePostHog } from 'posthog-js/react'
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Lock, Globe, ImagePlus, X } from "lucide-react";
 import {
@@ -29,6 +30,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -48,6 +50,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      posthog.capture('list_created', { list_name: name.trim(), visibility, has_cover: !!coverFile });
       toast.success("List created!");
       resetAndClose();
       onSuccess?.(data.list.id);

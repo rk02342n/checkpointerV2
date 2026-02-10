@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
@@ -29,6 +30,7 @@ const REVIEWS_PER_PAGE = 10
 function PublicProfile() {
   const { userId } = Route.useParams()
   const queryClient = useQueryClient()
+  const posthog = usePostHog()
   const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists'>('reviews')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
 
@@ -64,6 +66,11 @@ function PublicProfile() {
     ...userGameListsQueryOptions(userId),
     enabled: !!userId
   })
+
+  // Track public profile view
+  useEffect(() => {
+    posthog.capture('public_profile_viewed', { viewed_user_id: userId })
+  }, [userId])
 
   const userReviews = reviewsData?.reviews ?? []
   const totalReviewCount = reviewsData?.totalCount ?? 0
