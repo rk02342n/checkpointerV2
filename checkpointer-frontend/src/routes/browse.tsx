@@ -1,74 +1,163 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
-import { Search, Loader2 } from "lucide-react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useState, useEffect, useCallback } from "react"
+import { Search } from "lucide-react"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StandardGameCard } from "@/components/StandardGameCard"
 import { browseGames, type Game, type BrowseGamesParams } from "@/lib/gameQuery"
+import { useDebounce } from "@/lib/useDebounce"
+import { BrowsePagination } from "@/components/BrowsePagination"
 
 type SortBy = "rating" | "year" | "name"
 type SortOrder = "asc" | "desc"
 
 const ITEMS_PER_PAGE = 24
 
+const VALID_SORT_BY = ["rating", "year", "name"] as const
+const VALID_SORT_ORDER = ["asc", "desc"] as const
+
+interface BrowseSearchParams {
+  q?: string
+  page?: number
+  sortBy?: SortBy
+  sortOrder?: SortOrder
+  year?: string
+  genre?: string
+  platform?: string
+}
+
 export const Route = createFileRoute("/browse")({
   component: BrowseGames,
+  validateSearch: (search: Record<string, unknown>): BrowseSearchParams => {
+    const q = typeof search.q === "string" && search.q.trim() ? search.q.trim() : undefined
+    const rawPage = Number(search.page)
+    const page = Number.isInteger(rawPage) && rawPage > 1 ? rawPage : undefined
+    const sortBy = VALID_SORT_BY.includes(search.sortBy as SortBy) && search.sortBy !== "rating"
+      ? (search.sortBy as SortBy)
+      : undefined
+    const sortOrder = VALID_SORT_ORDER.includes(search.sortOrder as SortOrder) && search.sortOrder !== "desc"
+      ? (search.sortOrder as SortOrder)
+      : undefined
+    const year = typeof search.year === "string" && search.year ? search.year : undefined
+    const genre = typeof search.genre === "string" && search.genre ? search.genre : undefined
+    const platform = typeof search.platform === "string" && search.platform ? search.platform : undefined
+
+    return { q, page, sortBy, sortOrder, year, genre, platform }
+  },
 })
 
 export default function BrowseGames() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<SortBy>("rating")
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
-  const [yearFilter, setYearFilter] = useState<string>("all")
-  const [genreFilter, setGenreFilter] = useState<string>("all")
-  const [platformFilter, setPlatformFilter] = useState<string>("all")
-
+  const search = Route.useSearch()
   const navigate = useNavigate()
+
+  // Apply defaults for values not in URL
+  const currentPage = search.page ?? 1
+  const sortBy: SortBy = search.sortBy ?? "rating"
+  const sortOrder: SortOrder = search.sortOrder ?? "desc"
+  const yearFilter = search.year ?? "all"
+  const genreFilter = search.genre ?? "all"
+  const platformFilter = search.platform ?? "all"
+
+  // Local state for responsive search input
+  const [searchInput, setSearchInput] = useState(search.q ?? "")
+  const debouncedSearch = useDebounce(searchInput, 300)
+
+  // Sync local input when URL q changes externally (back/forward navigation)
+  useEffect(() => {
+    setSearchInput(search.q ?? "")
+  }, [search.q])
+
+  // Helper to update URL search params, stripping defaults to keep URLs clean
+  const updateSearch = useCallback(
+    (updates: Partial<BrowseSearchParams>, options?: { replace?: boolean }) => {
+      navigate({
+        search: (prev: BrowseSearchParams) => {
+          const next = { ...prev, ...updates }
+          // Strip default values to keep URL clean
+          if (!next.q) next.q = undefined
+          if (!next.page || next.page <= 1) next.page = undefined
+          if (next.sortBy === "rating") next.sortBy = undefined
+          if (next.sortOrder === "desc") next.sortOrder = undefined
+          if (!next.year || next.year === "all") next.year = undefined
+          if (!next.genre || next.genre === "all") next.genre = undefined
+          if (!next.platform || next.platform === "all") next.platform = undefined
+          return next
+        },
+        replace: options?.replace ?? false,
+      })
+    },
+    [navigate]
+  )
+
+  // Sync debounced search value to URL
+  useEffect(() => {
+    const urlQ = search.q ?? ""
+    if (debouncedSearch !== urlQ) {
+      updateSearch({ q: debouncedSearch || undefined, page: undefined }, { replace: true })
+    }
+  }, [debouncedSearch]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Build query params from URL state (using debounced search for API)
+  const queryParams: BrowseGamesParams = {
+    q: debouncedSearch || undefined,
+    sortBy,
+    sortOrder,
+    year: yearFilter !== "all" ? yearFilter : undefined,
+    genre: genreFilter !== "all" ? genreFilter : undefined,
+    platform: platformFilter !== "all" ? platformFilter : undefined,
+    limit: ITEMS_PER_PAGE,
+    offset: (currentPage - 1) * ITEMS_PER_PAGE,
+  }
 
   const {
     data,
     isPending,
+    isFetching,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['browse-games-infinite', { q: searchQuery || undefined, sortBy, sortOrder, year: yearFilter !== "all" ? yearFilter : undefined, genre: genreFilter !== "all" ? genreFilter : undefined, platform: platformFilter !== "all" ? platformFilter : undefined }],
-    queryFn: async ({ pageParam = 0 }) => {
-      const params: BrowseGamesParams = {
-        q: searchQuery || undefined,
-        sortBy,
-        sortOrder,
-        year: yearFilter !== "all" ? yearFilter : undefined,
-        genre: genreFilter !== "all" ? genreFilter : undefined,
-        platform: platformFilter !== "all" ? platformFilter : undefined,
-        limit: ITEMS_PER_PAGE,
-        offset: pageParam,
-      }
-      return browseGames(params)
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.hasMore) {
-        return lastPage.pagination.offset + lastPage.pagination.limit
-      }
-      return undefined
-    },
+  } = useQuery({
+    queryKey: ['browse-games', queryParams],
+    queryFn: () => browseGames(queryParams),
     staleTime: 1000 * 60 * 2,
+    placeholderData: keepPreviousData,
   })
 
-  const allGames = data?.pages.flatMap(page => page.games) ?? []
-  const totalCount = data?.pages[0]?.totalCount ?? 0
-  const years = data?.pages[0]?.years ?? []
-  const genres = data?.pages[0]?.genres ?? []
-  const platforms = data?.pages[0]?.platforms ?? []
+  const games = data?.games ?? []
+  const totalCount = data?.totalCount ?? 0
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+  const years = data?.years ?? []
+  const genres = data?.genres ?? []
+  const platforms = data?.platforms ?? []
 
   const handleGameClick = (game: Game) => {
     window.scrollTo(0, 0)
     navigate({ to: `/games/${game.id}` })
   }
+
+  const handlePageChange = (page: number) => {
+    window.scrollTo(0, 0)
+    updateSearch({ page })
+  }
+
+  const handleSortChange = (value: string) => {
+    const [newSortBy, newSortOrder] = value.split("-") as [SortBy, SortOrder]
+    updateSearch({ sortBy: newSortBy, sortOrder: newSortOrder, page: undefined }, { replace: true })
+  }
+
+  const handleYearChange = (value: string) => {
+    updateSearch({ year: value === "all" ? undefined : value, page: undefined }, { replace: true })
+  }
+
+  const handleGenreChange = (value: string) => {
+    updateSearch({ genre: value === "all" ? undefined : value, page: undefined }, { replace: true })
+  }
+
+  const handlePlatformChange = (value: string) => {
+    updateSearch({ platform: value === "all" ? undefined : value, page: undefined }, { replace: true })
+  }
+
+  const rangeStart = totalCount > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0
+  const rangeEnd = Math.min(currentPage * ITEMS_PER_PAGE, totalCount)
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -93,8 +182,8 @@ export default function BrowseGames() {
             <input
               type="text"
               placeholder="Search games..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full bg-input border-4 border-border py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-border rounded-none"
             />
           </div>
@@ -108,11 +197,7 @@ export default function BrowseGames() {
               </label>
               <select
                 value={`${sortBy}-${sortOrder}`}
-                onChange={(e) => {
-                  const [newSortBy, newSortOrder] = e.target.value.split("-") as [SortBy, SortOrder]
-                  setSortBy(newSortBy)
-                  setSortOrder(newSortOrder)
-                }}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="rating-desc">Rating (High to Low)</option>
@@ -131,7 +216,7 @@ export default function BrowseGames() {
               </label>
               <select
                 value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
+                onChange={(e) => handleYearChange(e.target.value)}
                 className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Years</option>
@@ -148,7 +233,7 @@ export default function BrowseGames() {
               </label>
               <select
                 value={genreFilter}
-                onChange={(e) => setGenreFilter(e.target.value)}
+                onChange={(e) => handleGenreChange(e.target.value)}
                 className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Genres</option>
@@ -165,7 +250,7 @@ export default function BrowseGames() {
               </label>
               <select
                 value={platformFilter}
-                onChange={(e) => setPlatformFilter(e.target.value)}
+                onChange={(e) => handlePlatformChange(e.target.value)}
                 className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Platforms</option>
@@ -184,8 +269,10 @@ export default function BrowseGames() {
               "Loading games..."
             ) : error ? (
               "Error loading games"
+            ) : totalCount > 0 ? (
+              `Showing ${rangeStart}-${rangeEnd} of ${totalCount} games`
             ) : (
-              `Showing ${allGames.length} of ${totalCount} games`
+              "No games found"
             )}
           </p>
         </div>
@@ -204,7 +291,7 @@ export default function BrowseGames() {
                 Failed to load games. Please try again.
               </p>
             </div>
-          ) : allGames.length === 0 ? (
+          ) : games.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg font-semibold text-muted-foreground">
                 No games found matching your criteria
@@ -212,8 +299,12 @@ export default function BrowseGames() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {allGames.map((game) => (
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity ${
+                  isFetching && !isPending ? "opacity-60" : "opacity-100"
+                }`}
+              >
+                {games.map((game) => (
                   <StandardGameCard
                     key={game.id}
                     game={game}
@@ -223,25 +314,14 @@ export default function BrowseGames() {
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {hasNextPage && (
-                <div className="flex justify-center mt-8">
-                  <Button
-                    onClick={() => fetchNextPage()}
-                    disabled={isFetchingNextPage}
-                    className="px-8 py-3"
-                  >
-                    {isFetchingNextPage ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Loading...
-                      </>
-                    ) : (
-                      `Load More (${totalCount - allGames.length} remaining)`
-                    )}
-                  </Button>
-                </div>
-              )}
+              <BrowsePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={ITEMS_PER_PAGE}
+                isFetching={isFetching}
+                onPageChange={handlePageChange}
+              />
             </>
           )}
         </section>
