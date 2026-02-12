@@ -165,7 +165,7 @@ export default function Checkpointer() {
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
-          <div className="bg-primary text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
+          <div className="bg-blue-400/80 text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
