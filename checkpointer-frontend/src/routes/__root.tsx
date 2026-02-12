@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { Toaster } from "@/components/ui/sonner"
-import { Gamepad } from 'lucide-react'
 
 interface MyRouterContext {
   // The ReturnType of your useAuth hook or the value of your AuthContext

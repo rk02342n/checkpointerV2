@@ -74,6 +74,7 @@ export default function BrowseGames() {
   const updateSearch = useCallback(
     (updates: Partial<BrowseSearchParams>, options?: { replace?: boolean }) => {
       navigate({
+        from: "/browse",
         search: (prev: BrowseSearchParams) => {
           const next = { ...prev, ...updates }
           // Strip default values to keep URL clean
