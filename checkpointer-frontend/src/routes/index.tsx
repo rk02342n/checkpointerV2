@@ -3,12 +3,11 @@ import { usePostHog } from 'posthog-js/react'
 import { Button } from "@/components/ui/button"
 import { getFeaturedGamesQueryOptions, getTopRatedGamesQueryOptions, getTrendingGamesQueryOptions, type Game } from "@/lib/gameQuery"
 import { dbUserQueryOptions } from "@/lib/api"
-import { popularListsQueryOptions, type PopularGameListSummary } from "@/lib/gameListsQuery"
+import { popularListsQueryOptions } from "@/lib/gameListsQuery"
 import { useQuery } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
 import FeaturedGames from "@/components/FeaturedGames"
 import { FeaturedGamesSkeleton } from "@/components/custom-skeletons/FeaturedGamesSkeleton"
-import { GameListCard } from "@/components/GameListCard"
 import { ListCarousel } from "@/components/ListCarousel"
 
 export const Route = createFileRoute("/")({
