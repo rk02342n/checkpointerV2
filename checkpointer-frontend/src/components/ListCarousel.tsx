@@ -31,25 +31,28 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                         </TabsTrigger>
                     ))}
                 </TabsList>
-                {gameList.map((list, index) => (
-                    <TabsContent
-                        key={list.id}
-                        value={String(index)}
-                        forceMount
-                        hidden={activeTab !== String(index)}
-                    >
-                        {list.coverUrl && (
-                            <Link to="/lists/$listId" params={{ listId: list.id }}>
-                                <img
-                                    src={getListCoverUrl(list.id)}
-                                    alt={list.name}
-                                    className="object-cover aspect-21/9 w-full border-border border-4"
-                                    loading="lazy"
-                                />
-                            </Link>
-                        )}
-                    </TabsContent>
-                ))}
+                <div className="relative">
+                    {gameList.map((list, index) => {
+                        const isActive = activeTab === String(index);
+                        return (
+                            <div
+                                key={list.id}
+                                className={`transition-opacity duration-500 ease-in-out ${isActive ? "opacity-100" : "opacity-0 pointer-events-none absolute inset-0"}`}
+                            >
+                                {list.coverUrl && (
+                                    <Link to="/lists/$listId" params={{ listId: list.id }}>
+                                        <img
+                                            src={getListCoverUrl(list.id)}
+                                            alt={list.name}
+                                            className="object-cover aspect-21/9 w-full border-border border-4 hover:opacity-90"
+                                            loading="lazy"
+                                        />
+                                    </Link>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </Tabs>
         </div>
     )
