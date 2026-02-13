@@ -64,7 +64,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
       className="block bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
-      <div className="aspect-video bg-muted relative">
+      <div className="aspect-21/9 bg-muted relative">
         {hasCustomCover ? (
           // Custom cover image
           <img
@@ -145,7 +145,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
             <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
         </div>
-        <p className="text-muted-foreground text-sm mt-1 line-clamp-2 min-h-10">{list.description || "\u00A0"}</p>
+        <p className="text-muted-foreground text-sm mt-1 line-clamp-2 min-h-10">{list.description || `${list.gameCount} ${list.gameCount === 1 ? "game" : "games"}`}</p>
       </div>
     </Link>
   );

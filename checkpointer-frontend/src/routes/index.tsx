@@ -9,6 +9,8 @@ import Navbar from "@/components/Navbar"
 import FeaturedGames from "@/components/FeaturedGames"
 import { FeaturedGamesSkeleton } from "@/components/custom-skeletons/FeaturedGamesSkeleton"
 import { GameListCard } from "@/components/GameListCard"
+import { ListCarousel } from "@/components/ListCarousel"
+
 export const Route = createFileRoute("/")({
   component: Checkpointer,
 })
@@ -17,7 +19,7 @@ export default function Checkpointer() {
   const { data: featuredData, isPending } = useQuery(getFeaturedGamesQueryOptions)
   const { data: topRatedData, isPending: isTopRatedPending } = useQuery(getTopRatedGamesQueryOptions)
   const { data: trendingData, isPending: isTrendingPending } = useQuery(getTrendingGamesQueryOptions)
-  const { data: popularListsData } = useQuery(popularListsQueryOptions)
+  const { data: popularListsData, isPending: areListsPending } = useQuery(popularListsQueryOptions)
   const { data: dbUserData, isError: isAuthError } = useQuery({
     ...dbUserQueryOptions,
     retry: false,
@@ -36,6 +38,9 @@ export default function Checkpointer() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Navbar />
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-7xl">
+        
+        {/* {!areListsPending && popularListsData
+         && <ListCarousel gameList={popularListsData?.lists}/>} */}
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
           <div className="bg-secondary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
