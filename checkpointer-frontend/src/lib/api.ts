@@ -18,7 +18,9 @@ async function getCurrentUser() {
   }
 async function getDbUser() {
     const res = await fetch("/api/user/account")
-    // const res = await api.me.$get() // not working because of error caused by hono client
+    if (res.status === 401) {
+      return { account: null };
+    }
     if(!res.ok){
       throw new Error("Server error");
     }

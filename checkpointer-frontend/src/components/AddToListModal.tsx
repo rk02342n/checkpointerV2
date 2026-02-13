@@ -17,6 +17,7 @@ import {
   removeGameFromList,
   type GameListWithStatus,
 } from "@/lib/gameListsQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 import { toast } from "sonner";
 import { CreateListModal } from "./CreateListModal";
 
@@ -39,10 +40,12 @@ export function AddToListModal({
   const [pendingListId, setPendingListId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const posthog = usePostHog();
+  const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false });
+  const isLoggedIn = !!dbUserData?.account;
 
   const { data, isLoading } = useQuery({
     ...listsForGameQueryOptions(gameId),
-    enabled: open,
+    enabled: open && isLoggedIn,
   });
 
   const lists = data?.lists ?? [];

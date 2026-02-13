@@ -43,17 +43,17 @@ export default function Checkpointer() {
          && <ListCarousel gameList={popularListsData?.lists}/>} */}
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-secondary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
+          <div className="bg-secondary brightness-100 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
                 <div className="inline-block bg-primary text-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
                   Game Tracking
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-secondary-foreground hover:opacity-80">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-foreground hover:opacity-80">
                   Checkpointer
                   <br />
                 </h2>
-                <p className="text-base sm:text-lg md:text-xl text-secondary-foreground/70 max-w-md leading-relaxed">
+                <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-md leading-relaxed">
                   Track, log, and review games as you play. Build your personal gaming history.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">

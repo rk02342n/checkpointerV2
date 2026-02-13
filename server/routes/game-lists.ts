@@ -224,7 +224,10 @@ export const gameListsRoute = new Hono()
     })
     .from(gameListsTable)
     .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
-    .where(eq(gameListsTable.visibility, 'public'))
+    .where(and(
+      eq(gameListsTable.visibility, 'public'),
+      sql`${gameListsTable.coverUrl} IS NOT NULL`
+    ))
     .orderBy(
       desc(sql`(SELECT COUNT(*) FROM saved_game_lists WHERE saved_game_lists.list_id = ${gameListsTable.id})`),
       desc(gameListsTable.updatedAt)

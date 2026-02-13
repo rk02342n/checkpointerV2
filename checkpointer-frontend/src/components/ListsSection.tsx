@@ -9,6 +9,7 @@ import {
   userGameListsQueryOptions,
   type GameListSummary,
 } from "@/lib/gameListsQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 import { Skeleton } from "./ui/skeleton";
 
 interface ListsSectionProps {
@@ -19,13 +20,15 @@ interface ListsSectionProps {
 
 export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = false }: ListsSectionProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false });
+  const isLoggedIn = !!dbUserData?.account;
 
   // Use appropriate query based on whether viewing own profile or someone else's
-  const { data, isLoading } = useQuery(
-    userId && !isOwnProfile
-      ? userGameListsQueryOptions(userId)
-      : myGameListsQueryOptions
-  );
+  const useOwnLists = isOwnProfile || (!userId);
+  const { data, isLoading } = useQuery({
+    ...(useOwnLists ? myGameListsQueryOptions : userGameListsQueryOptions(userId!)),
+    enabled: useOwnLists ? isLoggedIn : !!userId,
+  });
 
   const lists: GameListSummary[] = data?.lists ?? [];
 

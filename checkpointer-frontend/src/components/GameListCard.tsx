@@ -3,6 +3,7 @@ import { Lock, Gamepad2, Bookmark } from "lucide-react";
 import { usePostHog } from 'posthog-js/react'
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type GameListSummary, getListCoverUrl, listSavedQueryOptions, saveList, unsaveList } from "@/lib/gameListsQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 import { toast } from "sonner";
 
 interface GameListCardProps {
@@ -16,10 +17,12 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
   const hasCustomCover = !!list.coverUrl;
   const queryClient = useQueryClient();
   const posthog = usePostHog();
+  const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false });
+  const isLoggedIn = !!dbUserData?.account;
 
   const { data: saveData } = useQuery({
     ...listSavedQueryOptions(list.id),
-    enabled: showSaveButton || showSaveCount,
+    enabled: isLoggedIn && (showSaveButton || showSaveCount),
   });
 
   const isSaved = saveData?.isSaved ?? false;

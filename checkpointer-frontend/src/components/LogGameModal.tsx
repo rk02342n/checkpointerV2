@@ -21,6 +21,7 @@ import {
   type SessionStatus,
 } from "@/lib/gameSessionsQuery";
 import { addToWishlist } from "@/lib/wantToPlayQuery";
+import { dbUserQueryOptions } from "@/lib/api";
 
 interface LogGameModalProps {
   open: boolean;
@@ -46,10 +47,13 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
     }
   }, [open, preselectedGame]);
 
+  const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false });
+  const isLoggedIn = !!dbUserData?.account;
+
   // Check if user has a currently playing game
   const { data: currentlyPlayingData } = useQuery({
     ...currentlyPlayingQueryOptions,
-    enabled: open,
+    enabled: open && isLoggedIn,
   });
 
   const hasCurrentGame = !!currentlyPlayingData?.game;
