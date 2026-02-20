@@ -52,9 +52,6 @@ export default function Checkpointer() {
                     <div className="bg-amber-100 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
                   </div>
                 </div>
-                <div className="hidden sm:inline-block bg-primary text-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
-                  Game Tracking
-                </div>
                 <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight font-alt text-foreground hover:opacity-80">
                   Checkpointer
                 </h2>

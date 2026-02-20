@@ -4,7 +4,7 @@ import { type PopularGameListSummary, getListCoverUrl } from "@/lib/gameListsQue
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Link } from "@tanstack/react-router"
 
-const AUTO_ADVANCE_MS = 5000;
+const AUTO_ADVANCE_MS = 4000;
 
 export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] }) {
     const [activeTab, setActiveTab] = useState("0");
@@ -44,7 +44,7 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                                         <img
                                             src={getListCoverUrl(list.id)}
                                             alt={list.name}
-                                            className="object-cover aspect-square sm:aspect-21/9 w-full border-border border-4"
+                                            className="object-cover aspect-square sm:aspect-30/9 w-full border-border border-4"
                                             loading="lazy"
                                         />
                                         
@@ -54,7 +54,7 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                         );
                     })}
                     {/* Info card pinned to the right */}
-                    <div className={`absolute bottom-2 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 bg-background/90 backdrop-blur-sm border-2 sm:border-4 border-border p-2 sm:p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]}`}>
+                    <div className={`absolute bottom-2 max-h-4/5 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 bg-background/70 backdrop-blur-sm border-2 sm:border-4 border-border p-2 sm:p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden`}>
                         <h3 className="hidden sm:block text-xs text-muted-foreground truncate text-end mb-6">
                             Lists in feature
                         </h3>
