@@ -1,0 +1,46 @@
+name: IGDB Game Sync
+
+on:
+  schedule:
+    # Every Sunday at 4:00 AM UTC
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Sync mode"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - full
+          - incremental
+
+jobs:
+  sync:
+    name: Sync IGDB games
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.6"
+
+      - run: bun install
+
+      - name: Run IGDB sync
+        run: |
+          MODE="${{ github.event.inputs.mode || 'auto' }}"
+          if [ "$MODE" = "full" ]; then
+            bun server/scripts/sync-igdb-games.ts --full
+          elif [ "$MODE" = "incremental" ]; then
+            bun server/scripts/sync-igdb-games.ts --incremental
+          else
+            bun server/scripts/sync-igdb-games.ts
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}

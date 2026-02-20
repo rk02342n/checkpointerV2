@@ -9,57 +9,19 @@ import { gameKeywordsTable } from "../db/schema/game-keywords";
 import { gameImagesTable } from "../db/schema/game-images";
 import { gameLinksTable } from "../db/schema/game-links";
 
-// --- IGDB website category mapping ---
-const IGDB_WEBSITE_CATEGORY_MAP: Record<number, string> = {
-  1: "official",
-  2: "other",     // wikia
-  3: "wikipedia",
-  4: "other",     // facebook
-  5: "twitter",
-  6: "twitch",
-  8: "other",     // instagram
-  9: "youtube",
-  10: "other",    // iphone
-  11: "other",    // ipad
-  12: "other",    // android
-  13: "steam",
-  14: "reddit",
-  15: "itch",
-  16: "epic",
-  17: "gog",
-  18: "discord",
-};
+import {
+  getIgdbToken,
+  fetchIgdb,
+  chunk,
+  delay,
+  igdbImageUrl,
+  IGDB_DELAY_MS,
+  IGDB_WEBSITE_CATEGORY_MAP,
+  type LinkCategory,
+  type ImageType,
+} from "../lib/igdb";
 
-type LinkCategory = "official" | "steam" | "gog" | "epic" | "itch" | "wikipedia" | "twitter" | "reddit" | "youtube" | "twitch" | "discord" | "other";
-type ImageType = "screenshot" | "artwork";
-
-const IGDB_DELAY_MS = 500; // 2 req/sec to stay well within 4 req/sec limit
-const DB_INSERT_CHUNK = 500; // max rows per INSERT to avoid Postgres parameter limits
-
-async function getIgdbToken(): Promise<string> {
-  const clientId = process.env.TWITCH_CLIENT_ID;
-  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
-  if (!clientId || !clientSecret) {
-    throw new Error("Missing TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET in .env");
-  }
-
-  const res = await fetch("https://id.twitch.tv/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "client_credentials",
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to get IGDB token: ${res.status} ${await res.text()}`);
-  }
-
-  const data = (await res.json()) as { access_token: string };
-  return data.access_token;
-}
+import { bulkInsertIgnore } from "../lib/sync-helpers";
 
 interface IgdbGame {
   id: number;
@@ -87,43 +49,7 @@ async function fetchIgdbBatch(
     limit 500;
   `;
 
-  const res = await fetch("https://api.igdb.com/v4/games", {
-    method: "POST",
-    headers: {
-      "Client-ID": clientId,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "text/plain",
-    },
-    body,
-  });
-
-  if (!res.ok) {
-    throw new Error(`IGDB API error: ${res.status} ${await res.text()}`);
-  }
-
-  return res.json() as Promise<IgdbGame[]>;
-}
-
-function chunk<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
-}
-
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-/** Insert rows in chunks to avoid Postgres parameter limits */
-async function bulkInsert<T extends Record<string, unknown>>(
-  table: Parameters<typeof db.insert>[0],
-  rows: T[],
-) {
-  if (rows.length === 0) return;
-  const chunks_ = chunk(rows, DB_INSERT_CHUNK);
-  for (const c of chunks_) {
-    await (db.insert(table).values(c as any) as any).onConflictDoNothing();
-  }
+  return fetchIgdb<IgdbGame[]>("games", body, token, clientId);
 }
 
 async function main() {
@@ -177,17 +103,17 @@ async function main() {
 
     // --- 2. Upsert lookup tables ---
     if (genreMap.size > 0) {
-      await bulkInsert(genresTable,
+      await bulkInsertIgnore(db,genresTable,
         Array.from(genreMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug }))
       );
     }
     if (platformMap.size > 0) {
-      await bulkInsert(platformsTable,
+      await bulkInsertIgnore(db,platformsTable,
         Array.from(platformMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug, abbreviation: d.abbreviation ?? null }))
       );
     }
     if (keywordMap.size > 0) {
-      await bulkInsert(keywordsTable,
+      await bulkInsertIgnore(db,keywordsTable,
         Array.from(keywordMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug }))
       );
     }
@@ -248,7 +174,7 @@ async function main() {
             gameId,
             igdbImageId: s.image_id,
             imageType: "screenshot",
-            url: `https://images.igdb.com/igdb/image/upload/t_1080p/${s.image_id}.jpg`,
+            url: igdbImageUrl(s.image_id),
             width: s.width ?? null,
             height: s.height ?? null,
             position: idx,
@@ -263,7 +189,7 @@ async function main() {
             gameId,
             igdbImageId: a.image_id,
             imageType: "artwork",
-            url: `https://images.igdb.com/igdb/image/upload/t_1080p/${a.image_id}.jpg`,
+            url: igdbImageUrl(a.image_id),
             width: a.width ?? null,
             height: a.height ?? null,
             position: idx,
@@ -281,11 +207,11 @@ async function main() {
     }
 
     // --- 5. Bulk insert all rows for this batch ---
-    await bulkInsert(gameGenresTable, allGenreJunctions);
-    await bulkInsert(gamePlatformsTable, allPlatformJunctions);
-    await bulkInsert(gameKeywordsTable, allKeywordJunctions);
-    await bulkInsert(gameImagesTable, allImageRows);
-    await bulkInsert(gameLinksTable, allLinkRows);
+    await bulkInsertIgnore(db,gameGenresTable, allGenreJunctions);
+    await bulkInsertIgnore(db,gamePlatformsTable, allPlatformJunctions);
+    await bulkInsertIgnore(db,gameKeywordsTable, allKeywordJunctions);
+    await bulkInsertIgnore(db,gameImagesTable, allImageRows);
+    await bulkInsertIgnore(db,gameLinksTable, allLinkRows);
 
     console.log(`  Inserted: ${allGenreJunctions.length} genre links, ${allPlatformJunctions.length} platform links, ${allKeywordJunctions.length} keyword links, ${allImageRows.length} images, ${allLinkRows.length} links`);
 

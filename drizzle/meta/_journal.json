@@ -141,6 +141,13 @@
       "when": 1770698463522,
       "tag": "0019_numerous_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1771551175472,
+      "tag": "0020_gifted_maximus",
+      "breakpoints": true
     }
   ]
 }
