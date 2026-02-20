@@ -41,31 +41,39 @@ export default function Checkpointer() {
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
           <div className="bg-secondary brightness-100 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-6">
-                <div className="inline-block bg-primary text-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="space-y-6 text-center sm:text-left">
+                {/* Checks logo - mobile only */}
+                <div className="sm:hidden">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-amber-100 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                    <div className="bg-stone-900 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                    <div className="bg-stone-900 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                    <div className="bg-amber-100 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  </div>
+                </div>
+                <div className="hidden sm:inline-block bg-primary text-foreground px-3 py-1 text-xs font-semibold rounded-none border-2 border-border">
                   Game Tracking
                 </div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[0.95] font-alt text-foreground hover:opacity-80">
+                <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight font-alt text-foreground hover:opacity-80">
                   Checkpointer
-                  <br />
                 </h2>
-                <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-md leading-relaxed">
+                <p className="text-sm sm:text-lg md:text-xl text-foreground/70 sm:max-w-md leading-relaxed mx-auto sm:mx-0">
                   Track, log, and review games as you play. Build your personal gaming history.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 items-center sm:items-start">
                   {isLoggedIn ? (
                     <>
                       <Button
                         onClick={() => { posthog.capture('cta_clicked', { button_name: 'start_logging' }); navigate({ to: '/browse' }); }}
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
                       >
                         Start Logging
                       </Button>
                       <Button
                         onClick={() => { posthog.capture('cta_clicked', { button_name: 'browse_games' }); navigate({ to: '/browse' }); }}
                         variant="outline"
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-amber-50 dark:hover:bg-muted"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-amber-50 dark:hover:bg-muted w-full sm:w-auto"
                       >
                         Browse Games
                       </Button>
@@ -74,14 +82,14 @@ export default function Checkpointer() {
                     <>
                       <Button
                         asChild
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
                       >
                         <a href="/api/login">Login</a>
                       </Button>
                       <Button
                         asChild
                         variant="outline"
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
                       >
                         <a href="/api/register">Sign Up</a>
                       </Button>
@@ -89,7 +97,7 @@ export default function Checkpointer() {
                   )}
                 </div>
               </div>
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-amber-100 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
                   <div className="bg-stone-900 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />

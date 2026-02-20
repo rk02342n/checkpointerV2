@@ -25,7 +25,7 @@ export const contactRoute = new Hono().post(
 
     try {
       await resend.emails.send({
-        from: "Checkpointer Contact <onboarding@resend.dev>", // needs to be changed to checkpointer domain on resend
+        from: "Checkpointer Contact <noreply@info.checkpointer.io>",
         to: "hello@checkpointer.io",
         replyTo: email,
         subject: `Contact Form: Message from ${name}`,
