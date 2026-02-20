@@ -76,6 +76,10 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
    R2_BUCKET_NAME=your_bucket_name
    R2_ENDPOINT=your_r2_endpoint
 
+   # IGDB / Twitch (for game sync)
+   TWITCH_CLIENT_ID=your_twitch_client_id
+   TWITCH_CLIENT_SECRET=your_twitch_client_secret
+
    # Email
    RESEND_API_KEY=your_resend_api_key
 
@@ -200,6 +204,47 @@ bun run build
 ```bash
 bun run lint
 ```
+
+## IGDB Game Sync
+
+The game catalog is sourced from [IGDB](https://www.igdb.com/) (~311k games). A sync script keeps the database up to date.
+
+### Environment Variables
+
+Requires a [Twitch developer application](https://dev.twitch.tv/console/apps) (IGDB uses Twitch OAuth):
+
+```env
+TWITCH_CLIENT_ID=your_twitch_client_id
+TWITCH_CLIENT_SECRET=your_twitch_client_secret
+```
+
+### Running Manually
+
+```bash
+# Auto-detect mode (incremental if last sync succeeded, full otherwise)
+bun run sync:igdb
+
+# Force a full import (~311k games, ~20-30 min)
+bun run sync:igdb:full
+```
+
+The sync is resumable — if it crashes or the connection drops, re-running `bun run sync:igdb` picks up from the last checkpoint.
+
+### Automated Sync (GitHub Actions)
+
+A weekly cron job runs every Sunday at 4:00 AM UTC via `.github/workflows/igdb-sync.yml`. It can also be triggered manually from the GitHub Actions tab with a mode selector (auto/full/incremental).
+
+**Required repository secrets:** `DATABASE_URL`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
+
+### How It Works
+
+- **Full sync**: Paginates through all IGDB games (500 per batch), upserts game data and metadata (genres, platforms, keywords, images, links). Progress is checkpointed to the `app_settings` table after each batch.
+- **Incremental sync**: Only fetches games updated since the last sync (with a 1-hour buffer). Typically processes a few hundred to a few thousand games.
+- **Preserved fields**: The sync never overwrites app-managed fields (`rating`, `avgUserRating`, `userReviewCount`). Only IGDB-sourced fields are updated.
+
+### Neon Database Notes
+
+When running against Neon, use the **direct** (non-pooler) connection string. The pooler connection drops long-lived connections. The sync script configures its own DB client with TCP keepalive to prevent disconnects.
 
 ## Performance Optimizations
 

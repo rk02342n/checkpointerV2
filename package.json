@@ -17,7 +17,9 @@
   "type": "module",
   "scripts": {
     "start": "bun server/index.ts",
-    "dev": "bun --watch server/index.ts"
+    "dev": "bun --watch server/index.ts",
+    "sync:igdb": "bun server/scripts/sync-igdb-games.ts",
+    "sync:igdb:full": "bun server/scripts/sync-igdb-games.ts --full"
   },
   "private": true,
   "devDependencies": {

@@ -1,18 +1,18 @@
-import { uuid, pgTable, index, timestamp, serial, text, numeric, integer } from "drizzle-orm/pg-core";
+import { uuid, pgTable, index, timestamp, text, numeric, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod'
 
 export const gamesTable = pgTable("games", {
   id: uuid("id").defaultRandom().primaryKey(),
-  igdbId: serial("igdb_id").notNull().unique(),
+  igdbId: integer("igdb_id").notNull().unique(),
   name: text("name").notNull(),
   slug: text("slug").unique(),
   summary: text("summary"),
   releaseDate: timestamp("release_date"),
   coverUrl: text("cover_url"),
   rating: numeric("rating", { precision: 3, scale: 2 }).default("0"),
-  ratingCount: serial("rating_count"),
-  igdbRating: numeric("igdb_rating", { precision: 3, scale: 2 }).default("0"),
+  ratingCount: integer("rating_count").default(0).notNull(),
+  igdbRating: numeric("igdb_rating", { precision: 5, scale: 2 }).default("0"),
   avgUserRating: numeric("avg_user_rating", { precision: 2, scale: 1 }),
   userReviewCount: integer("user_review_count").default(0).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
