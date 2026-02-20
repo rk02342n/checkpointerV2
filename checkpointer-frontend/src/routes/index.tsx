@@ -110,7 +110,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Featured Games Section */}
-        <section className="bg-muted border-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="bg-card border-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : featuredData ? (
@@ -126,7 +126,7 @@ export default function Checkpointer() {
         <br/>
         <br/>
         {/* Trending This Week */}
-        <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isTrendingPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : trendingData && trendingData.games.length > 0 ? (
@@ -142,7 +142,7 @@ export default function Checkpointer() {
         <br/>
         <br/>
         {/*Top Rated*/}
-        <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {!isTopRatedPending && topRatedData && (
             <FeaturedGames
               title="Top rated on Checkpointer"
@@ -200,13 +200,13 @@ export default function Checkpointer() {
                   <Button
                     asChild
                     variant="outline"
-                    className="bg-primary-foreground text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-card text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/login">Login</a>
                   </Button>
                   <Button
                     asChild
-                    className="bg-primary-foreground text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
+                    className="bg-card text-foreground hover:bg-muted px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg flex-1 md:flex-none"
                   >
                     <a href="/api/register">Sign Up</a>
                   </Button>
