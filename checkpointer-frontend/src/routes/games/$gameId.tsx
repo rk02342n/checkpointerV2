@@ -547,7 +547,7 @@ const queryClient = useQueryClient();
 
                                 {/* External Links */}
                                 {data.links && data.links.length > 0 && (
-                                    <div className="bg-muted border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                    <div className="bg-card border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
                                         <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">Links</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {data.links.map((link) => (
