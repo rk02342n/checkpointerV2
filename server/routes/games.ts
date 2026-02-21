@@ -69,7 +69,7 @@ export const gamesRoute = new Hono()
     .from(gamesTable)
     .where(or(
       ilike(gamesTable.name, `%${term}%`),
-      sql`word_similarity(${term}, ${gamesTable.name}) > 0.3`
+      sql`${term} <% ${gamesTable.name}`
     ))
     .orderBy(
       desc(sql`CASE WHEN ${gamesTable.name} ILIKE ${`%${term}%`} THEN 2 ELSE 0 END + word_similarity(${term}, ${gamesTable.name})`),
@@ -139,7 +139,7 @@ export const gamesRoute = new Hono()
     conditions.push(
       or(
         ilike(gamesTable.name, `%${term}%`),
-        sql`word_similarity(${term}, ${gamesTable.name}) > 0.3`
+        sql`${term} <% ${gamesTable.name}`
       )!
     );
   }
