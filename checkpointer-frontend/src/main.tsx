@@ -38,6 +38,7 @@ posthog.init('phc_HvfVRb2qoLSFdrz2tlKIHLmVfm1JDWQO4Fzq69hPAFz', {
   api_host: 'https://us.i.posthog.com',
   defaults: '2026-01-30',
   person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+  autocapture: false,
 })
 
 createRoot(document.getElementById('root')!).render(
