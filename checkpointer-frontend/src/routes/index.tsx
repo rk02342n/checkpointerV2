@@ -119,8 +119,8 @@ export default function Checkpointer() {
           ) : null}
         </section>
 
-        <br/>
-        <br/>
+        {!areListsPending && popularListsData
+         && <ListCarousel gameList={popularListsData?.lists}/>}
         {/* Trending This Week */}
         <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
           {isTrendingPending ? (
@@ -168,8 +168,6 @@ export default function Checkpointer() {
             </section>
           </>
         )} */}
-        {!areListsPending && popularListsData
-         && <ListCarousel gameList={popularListsData?.lists}/>}
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
