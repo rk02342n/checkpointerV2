@@ -6,7 +6,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StandardGameCard } from "@/components/StandardGameCard"
-import { browseGames, type Game, type BrowseGamesParams } from "@/lib/gameQuery"
+import { browseGames, getBrowseFiltersQueryOptions, type Game, type BrowseGamesParams } from "@/lib/gameQuery"
 import { useDebounce } from "@/lib/useDebounce"
 import { BrowsePagination } from "@/components/BrowsePagination"
 
@@ -128,12 +128,14 @@ export default function BrowseGames() {
     placeholderData: keepPreviousData,
   })
 
+  const { data: filtersData } = useQuery(getBrowseFiltersQueryOptions)
+
   const games = data?.games ?? []
   const totalCount = data?.totalCount ?? 0
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
-  const years = data?.years ?? []
-  const genres = data?.genres ?? []
-  const platforms = data?.platforms ?? []
+  const years = filtersData?.years ?? []
+  const genres = filtersData?.genres ?? []
+  const platforms = filtersData?.platforms ?? []
 
   const handleGameClick = (game: Game) => {
     posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })

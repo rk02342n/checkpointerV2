@@ -148,6 +148,13 @@
       "when": 1771551175472,
       "tag": "0020_gifted_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1771715713564,
+      "tag": "0021_amazing_rockslide",
+      "breakpoints": true
     }
   ]
 }
