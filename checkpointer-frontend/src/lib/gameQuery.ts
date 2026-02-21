@@ -190,9 +190,6 @@ export interface BrowseGamesParams {
 export interface BrowseGamesResponse {
   games: Game[]
   totalCount: number
-  years: string[]
-  genres: Genre[]
-  platforms: Platform[]
   pagination: {
     limit: number
     offset: number
@@ -228,3 +225,15 @@ export function getBrowseGamesQueryOptions(params: BrowseGamesParams = {}) {
     staleTime: 1000 * 60 * 2, // Cache for 2 minutes
   })
 }
+
+export async function fetchBrowseFilters(): Promise<{ years: string[]; genres: Genre[]; platforms: Platform[] }> {
+  const res = await fetch('/api/games/browse-filters');
+  if (!res.ok) throw new Error(`Server error fetching browse filters: ${res.status}`);
+  return res.json();
+}
+
+export const getBrowseFiltersQueryOptions = queryOptions({
+  queryKey: ['browse-filters'],
+  queryFn: fetchBrowseFilters,
+  staleTime: 1000 * 60 * 10,
+});

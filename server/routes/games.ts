@@ -38,6 +38,10 @@ async function getPlatformsForGames(gameIds: string[]) {
   return map;
 }
 
+// In-memory cache for browse filter options
+let filterOptionsCache: { data: any; expiresAt: number } = { data: null, expiresAt: 0 };
+const FILTER_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
 export const gamesRoute = new Hono()
 
 .get("/", async (c) => {
@@ -57,16 +61,21 @@ export const gamesRoute = new Hono()
 .get("/search", async (c) => {
   const searchQuery = c.req.query("q");
   if (!searchQuery || searchQuery.trim().length === 0) {
-    return c.json({ games: [] }); // or return an error
+    return c.json({ games: [] });
   }
-
-  const searchTerm = `%${searchQuery.trim()}%`;
+  const term = searchQuery.trim();
   const games = await db
     .select()
     .from(gamesTable)
-    .where(ilike(gamesTable.name, searchTerm))
-    .limit(20)
-    .orderBy(desc(gamesTable.igdbRating));
+    .where(or(
+      ilike(gamesTable.name, `%${term}%`),
+      sql`word_similarity(${term}, ${gamesTable.name}) > 0.3`
+    ))
+    .orderBy(
+      desc(sql`CASE WHEN ${gamesTable.name} ILIKE ${`%${term}%`} THEN 2 ELSE 0 END + word_similarity(${term}, ${gamesTable.name})`),
+      desc(gamesTable.igdbRating)
+    )
+    .limit(20);
   return c.json({ games });
 })
 
@@ -88,6 +97,28 @@ export const gamesRoute = new Hono()
   return c.json({ keywords });
 })
 
+// Cached filter options for browse dropdowns
+.get("/browse-filters", async (c) => {
+  const now = Date.now();
+  if (filterOptionsCache.data && now < filterOptionsCache.expiresAt) {
+    return c.json(filterOptionsCache.data);
+  }
+
+  const [yearsResult, genres, platforms] = await Promise.all([
+    db.select({ year: sql<number>`DISTINCT EXTRACT(YEAR FROM ${gamesTable.releaseDate})` })
+      .from(gamesTable)
+      .where(sql`${gamesTable.releaseDate} IS NOT NULL`)
+      .orderBy(desc(sql`EXTRACT(YEAR FROM ${gamesTable.releaseDate})`)),
+    db.select().from(genresTable).orderBy(asc(genresTable.name)),
+    db.select().from(platformsTable).orderBy(asc(platformsTable.name)),
+  ]);
+
+  const years = yearsResult.map(r => r.year).filter(y => y != null).map(y => String(Math.floor(y)));
+  const data = { years, genres, platforms };
+  filterOptionsCache = { data, expiresAt: now + FILTER_CACHE_TTL_MS };
+  return c.json(data);
+})
+
 // Browse games with filtering and sorting
 .get("/browse", async (c) => {
   const searchQuery = c.req.query("q") || "";
@@ -102,9 +133,15 @@ export const gamesRoute = new Hono()
   // Build conditions array
   const conditions = [];
 
-  // Search filter
+  // Search filter — hybrid ILIKE (exact substring) + word_similarity (fuzzy/typo tolerance)
   if (searchQuery.trim()) {
-    conditions.push(ilike(gamesTable.name, `%${searchQuery.trim()}%`));
+    const term = searchQuery.trim();
+    conditions.push(
+      or(
+        ilike(gamesTable.name, `%${term}%`),
+        sql`word_similarity(${term}, ${gamesTable.name}) > 0.3`
+      )!
+    );
   }
 
   // Year filter
@@ -165,54 +202,46 @@ export const gamesRoute = new Hono()
 
   const orderFn = sortOrder === "asc" ? asc : desc;
 
-  // Single query with window function for total count
+  // Relevance-based ordering when searching, user sort as tiebreaker
+  let orderByClause;
+  if (searchQuery.trim()) {
+    const term = searchQuery.trim();
+    const relevanceScore = sql`
+      CASE WHEN ${gamesTable.name} ILIKE ${`%${term}%`} THEN 2 ELSE 0 END
+      + word_similarity(${term}, ${gamesTable.name})
+    `;
+    orderByClause = [desc(relevanceScore), orderFn(orderByColumn)];
+  } else {
+    orderByClause = [orderFn(orderByColumn)];
+  }
+
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rawResults = await db
-    .select({
-      ...getTableColumns(gamesTable),
-      totalCount: sql<number>`count(*) over()`,
-    })
-    .from(gamesTable)
-    .where(whereClause)
-    .orderBy(orderFn(orderByColumn))
-    .limit(limit)
-    .offset(offset);
+  // Parallel queries: data + count (no window function overhead)
+  const [gamesRaw, totalCount] = await Promise.all([
+    db.select(getTableColumns(gamesTable))
+      .from(gamesTable)
+      .where(whereClause)
+      .orderBy(...orderByClause)
+      .limit(limit)
+      .offset(offset),
 
-  const totalCount = rawResults.length > 0 ? Number(rawResults[0]!.totalCount) : 0;
-  const gamesRaw = rawResults.map(({ totalCount: _, ...game }) => game);
+    db.select({ count: sql<number>`count(*)` })
+      .from(gamesTable)
+      .where(whereClause)
+      .then(res => Number(res[0]?.count ?? 0)),
+  ]);
 
   const platformMap = await getPlatformsForGames(gamesRaw.map(g => g.id));
   const games = gamesRaw.map(g => ({ ...g, platforms: platformMap.get(g.id) ?? [] }));
 
-  // Get unique years for filter dropdown
-  const yearsResult = await db
-    .select({ year: sql<number>`DISTINCT EXTRACT(YEAR FROM ${gamesTable.releaseDate})` })
-    .from(gamesTable)
-    .where(sql`${gamesTable.releaseDate} IS NOT NULL`)
-    .orderBy(desc(sql`EXTRACT(YEAR FROM ${gamesTable.releaseDate})`));
-
-  const years = yearsResult
-    .map(r => r.year)
-    .filter(y => y != null)
-    .map(y => String(Math.floor(y)));
-
-  // Get all genres and platforms for filter dropdowns
-  const [genres, platforms] = await Promise.all([
-    db.select().from(genresTable).orderBy(asc(genresTable.name)),
-    db.select().from(platformsTable).orderBy(asc(platformsTable.name)),
-  ]);
-
   return c.json({
     games,
-    totalCount: Number(totalCount),
-    years,
-    genres,
-    platforms,
+    totalCount,
     pagination: {
       limit,
       offset,
-      hasMore: offset + games.length < Number(totalCount)
+      hasMore: offset + games.length < totalCount
     }
   });
 })
