@@ -1076,7 +1076,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
                     interactive
                     rating={Number(field.state.value) || 0}
                     onValueChange={(rating) => field.handleChange(rating.toString())}
-                    size={isMaximized ? "md" : "sm"}
+                    size={"md"}
                   />
                 </div>
                 {field.state.meta.isTouched && !field.state.meta.isValid && (
