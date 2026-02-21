@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
@@ -76,6 +76,8 @@ function GameView () {
     const [showAddToListModal, setShowAddToListModal] = useState(false);
     // Synopsis expand state
     const [isSynopsisExpanded, setIsSynopsisExpanded] = useState(false);
+    // Reviews section ref for scrolling after submission
+    const reviewsSectionRef = useRef<HTMLDivElement>(null);
     const reviewsPerPage = 4;
     const visibleReviews = gameReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < gameReviews.length;
@@ -396,6 +398,7 @@ const queryClient = useQueryClient();
         posthog.capture('review_created', { game_id: gameId, game_name: data?.game?.name, rating: ratingStr });
         toast.success(`Review has been added: ID: ${newReview.id}`)
         setIsFormMaximized(false);
+        reviewsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         formApi.reset();
         // Clear the review search param if present to prevent form reopening on reload
         if (openReviewForm) {
@@ -598,7 +601,7 @@ const queryClient = useQueryClient();
                                     </div>
                                 )}
 
-                                <div className="bg-blue-400 dark:bg-blue-700/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-foreground">
+                                <div ref={reviewsSectionRef} className="bg-blue-400 dark:bg-blue-700/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-foreground">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4">
                                         Top Reviews
                                     </h3>
