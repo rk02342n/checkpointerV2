@@ -55,7 +55,8 @@ function Profile() {
   const setActiveTab = useCallback(
     (newTab: ProfileTab) => {
       navigate({
-        search: { tab: newTab === 'reviews' ? undefined : newTab },
+        from: Route.fullPath,
+        search: () => ({ tab: newTab === 'reviews' ? undefined : newTab }),
         replace: true,
       })
     },
