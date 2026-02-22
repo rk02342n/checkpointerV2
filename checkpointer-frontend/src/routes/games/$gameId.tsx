@@ -362,9 +362,20 @@ const queryClient = useQueryClient();
         };
         const newReview = await createReview({ value: reviewPayload });
 
+        // Enrich with user data (server only returns review table columns)
+        const enrichedReview = {
+          ...newReview,
+          username: dbUserData?.account?.username ?? null,
+          displayName: dbUserData?.account?.displayName ?? null,
+          avatarUrl: dbUserData?.account?.avatarUrl ?? null,
+          userId: dbUserData?.account?.id ?? newReview.userId,
+          likeCount: 0,
+          userLiked: false,
+        };
+
         queryClient.setQueryData(
           getReviewsByGameIdQueryOptions(gameId as string).queryKey,
-          [newReview, ...(existingGameReviews || [])]
+          [enrichedReview, ...(existingGameReviews || [])]
         );
         setVisibleCount(4);
 
@@ -605,20 +616,36 @@ const queryClient = useQueryClient();
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4">
                                         Top Reviews
                                     </h3>
-                                    {loadingCreateReview?.review &&
+                                    {loadingCreateReview?.review && (
                                         <div className="space-y-4 mb-4">
-                                                <div className="bg-orange-50 border-4 border-border p-3 sm:p-4">
-                                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                                        <div className="flex items-center gap-2 min-w-0">
-                                                            <div className="w-6 h-6 rounded-full bg-linear-to-tr from-orange-50 to-amber-500 border-2 border-stone-900 shrink-0" />
-                                                            <span className="text-sm font-bold text-foreground">You</span>
-                                                        </div>
-                                                        <StarRating rating={Number(loadingCreateReview?.review.rating)} size="sm" />
+                                            <div className="bg-orange-50 border-4 border-border p-3 sm:p-4">
+                                                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <Avatar className="w-6 h-6 border-2 border-stone-900 shrink-0">
+                                                            <AvatarImage
+                                                                src={dbUserData?.account?.avatarUrl
+                                                                    ? (dbUserData.account.avatarUrl.startsWith('http')
+                                                                        ? dbUserData.account.avatarUrl
+                                                                        : `/api/user/avatar/${dbUserData.account.id}`)
+                                                                    : undefined}
+                                                                alt={dbUserData?.account?.username || 'You'}
+                                                            />
+                                                            <AvatarFallback className="bg-orange-400 text-stone-900 text-xs font-bold">
+                                                                {dbUserData?.account?.username
+                                                                    ? dbUserData.account.username.slice(0, 2).toUpperCase()
+                                                                    : 'YO'}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="text-sm font-bold text-foreground">
+                                                            {dbUserData?.account?.username ? `@${dbUserData.account.username}` : 'You'}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-stone-700 text-sm p-2">"{loadingCreateReview.review.reviewText}"</p>
+                                                    <StarRating rating={Number(loadingCreateReview?.review.rating)} size="sm" />
                                                 </div>
+                                                <p className="text-stone-700 text-sm p-2">"{loadingCreateReview.review.reviewText}"</p>
+                                            </div>
                                         </div>
-                                    }
+                                    )}
                                     {reviewsLoading ? (
                                         <ReviewsSkeleton />
                                     ) : gameReviews?.length > 0 ? (
@@ -981,7 +1008,7 @@ interface ReviewFormBoxProps {
   onMinimize: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: any;
-  dbUserData: { account?: { id: string } | null } | undefined;
+  dbUserData: { account?: { id: string; username?: string | null; displayName?: string | null; avatarUrl?: string | null } | null } | undefined;
 }
 
 function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }: ReviewFormBoxProps) {
