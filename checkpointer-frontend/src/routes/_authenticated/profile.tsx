@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
-import { getAllReviewsByUserIdQueryOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { currentlyPlayingQueryOptions, stopPlaying, playHistoryQueryOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
-import { wantToPlayQueryOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
+import { getAllReviewsByUserIdQueryOptions, getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
+import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
+import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { Gamepad2, Search, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark } from 'lucide-react'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ListsSection } from '@/components/ListsSection'
 import { GameListCard } from '@/components/GameListCard'
-import { myGameListsQueryOptions, mySavedListsQueryOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
+import { LoadMoreButton } from '@/components/LoadMoreButton'
+import { myGameListsInfiniteOptions, mySavedListsInfiniteOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
 import { compressImage } from '@/lib/compressImage'
 import {
   Avatar,
@@ -44,8 +45,6 @@ export const Route = createFileRoute('/_authenticated/profile')({
   },
 })
 
-const REVIEWS_PER_PAGE = 10
-
 function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -63,7 +62,6 @@ function Profile() {
     [navigate]
   )
   const [searchQuery, setSearchQuery] = useState('')
-  const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showStopPlayingDialog, setShowStopPlayingDialog] = useState(false)
@@ -292,58 +290,95 @@ function Profile() {
 
   // Get user's reviews - using the database user ID (not Kinde ID)
   const dbUserId = dbUserData?.account?.id || ''
-  const { data: reviewsData, isPending: reviewsPending } = useQuery({
+  const isSearching = !!searchQuery.trim()
+
+  // Infinite query for reviews (used when not searching)
+  const {
+    data: infiniteReviewsData,
+    isPending: infiniteReviewsPending,
+    hasNextPage: hasMoreReviews,
+    isFetchingNextPage: isFetchingMoreReviews,
+    fetchNextPage: fetchMoreReviews,
+  } = useInfiniteQuery({
+    ...getReviewsByUserIdInfiniteOptions(dbUserId),
+    enabled: !!dbUserId && !isUserPending && !isSearching,
+  })
+
+  // Load-all query for reviews (used when searching, for client-side filtering)
+  const { data: allReviewsData, isPending: allReviewsPending } = useQuery({
     ...getAllReviewsByUserIdQueryOptions(dbUserId),
+    enabled: !!dbUserId && !isUserPending && isSearching,
+  })
+
+  const reviewsPending = isSearching ? allReviewsPending : infiniteReviewsPending
+
+  // Get user's play history (infinite)
+  const {
+    data: playHistoryData,
+    isPending: playHistoryPending,
+    hasNextPage: hasMoreHistory,
+    isFetchingNextPage: isFetchingMoreHistory,
+    fetchNextPage: fetchMoreHistory,
+  } = useInfiniteQuery({
+    ...playHistoryInfiniteOptions(dbUserId),
     enabled: !!dbUserId && !isUserPending
   })
 
-  // Get user's play history
-  const { data: playHistoryData, isPending: playHistoryPending } = useQuery({
-    ...playHistoryQueryOptions(dbUserId),
+  // Get user's wishlist (infinite)
+  const {
+    data: wishlistData,
+    isPending: wishlistPending,
+    hasNextPage: hasMoreWishlist,
+    isFetchingNextPage: isFetchingMoreWishlist,
+    fetchNextPage: fetchMoreWishlist,
+  } = useInfiniteQuery({
+    ...wishlistInfiniteOptions(),
     enabled: !!dbUserId && !isUserPending
   })
 
-  // Get user's wishlist
-  const { data: wishlistData, isPending: wishlistPending } = useQuery({
-    ...wantToPlayQueryOptions,
+  // Get user's game lists (for tab count)
+  const { data: gameListsData } = useInfiniteQuery({
+    ...myGameListsInfiniteOptions(),
     enabled: !!dbUserId && !isUserPending
   })
 
-  // Get user's game lists
-  const { data: gameListsData } = useQuery({
-    ...myGameListsQueryOptions,
+  // Get user's saved lists (infinite)
+  const {
+    data: savedListsData,
+    isPending: savedListsPending,
+    hasNextPage: hasMoreSaved,
+    isFetchingNextPage: isFetchingMoreSaved,
+    fetchNextPage: fetchMoreSaved,
+  } = useInfiniteQuery({
+    ...mySavedListsInfiniteOptions(),
     enabled: !!dbUserId && !isUserPending
   })
 
-  // Get user's saved lists
-  const { data: savedListsData, isPending: savedListsPending } = useQuery({
-    ...mySavedListsQueryOptions,
-    enabled: !!dbUserId && !isUserPending
-  })
+  // Derive data from infinite vs all-reviews queries
+  const userReviews = isSearching
+    ? (allReviewsData?.reviews ?? [])
+    : (infiniteReviewsData?.pages.flatMap(p => p.reviews) ?? [])
+  const totalReviewCount = isSearching
+    ? (allReviewsData?.totalCount ?? 0)
+    : (infiniteReviewsData?.pages[0]?.totalCount ?? 0)
+  const playSessions = playHistoryData?.pages.flatMap(p => p.sessions) ?? []
+  const totalHistoryCount = playHistoryData?.pages[0]?.totalCount ?? 0
+  const wishlistItems = wishlistData?.pages.flatMap(p => p.wishlist) ?? []
+  const totalWishlistCount = wishlistData?.pages[0]?.totalCount ?? 0
+  const totalListsCount = gameListsData?.pages[0]?.totalCount ?? 0
+  const savedLists = savedListsData?.pages.flatMap(p => p.lists) ?? []
+  const totalSavedCount = savedListsData?.pages[0]?.totalCount ?? 0
 
-  const userReviews = reviewsData?.reviews ?? []
-  const totalReviewCount = reviewsData?.totalCount ?? 0
-  const playSessions = playHistoryData?.sessions ?? []
-  const wishlistItems = wishlistData?.wishlist ?? []
-  const gameLists = gameListsData?.lists ?? []
-  const savedLists = savedListsData?.lists ?? []
-
-  // Filter reviews based on search query
-  const filteredReviews = useMemo(() => userReviews.filter((review: Review) => {
-    if (!searchQuery.trim()) return true
-    const query = searchQuery.toLowerCase()
-    const gameName = (review.gameName || '').toLowerCase()
-    const reviewText = (review.reviewText || '').toLowerCase()
-    return gameName.includes(query) || reviewText.includes(query)
-  }), [userReviews, searchQuery])
-
-  // Reset display count when search query changes
-  useEffect(() => {
-    setDisplayCount(REVIEWS_PER_PAGE)
-  }, [searchQuery])
-
-  const displayedReviews = useMemo(() => filteredReviews.slice(0, displayCount), [filteredReviews, displayCount])
-  const hasMoreReviews = displayCount < filteredReviews.length
+  // Filter reviews based on search query (only when searching, using all-reviews data)
+  const filteredReviews = useMemo(() => {
+    if (!isSearching) return userReviews
+    return userReviews.filter((review: Review) => {
+      const query = searchQuery.toLowerCase()
+      const gameName = (review.gameName || '').toLowerCase()
+      const reviewText = (review.reviewText || '').toLowerCase()
+      return gameName.includes(query) || reviewText.includes(query)
+    })
+  }, [userReviews, searchQuery, isSearching])
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -352,16 +387,32 @@ function Profile() {
       return { result, gameId: reviewToDelete?.gameId }
     },
     onMutate: async (reviewId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
       await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
       const reviewToDelete = userReviews.find((r: Review) => String(r.id) === reviewId)
       const gameId = reviewToDelete?.gameId
 
-      const previousUserReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
+      const previousInfiniteReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+      const previousAllReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
       const previousGameReviews = gameId
         ? queryClient.getQueryData(['get-reviews-game', gameId])
         : undefined
 
+      // Optimistically update infinite query data
+      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: InfiniteData<UserReviewsResponse> | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map((page, i) => ({
+            ...page,
+            reviews: page.reviews.filter((r) => String(r.id) !== reviewId),
+            totalCount: i === 0 ? page.totalCount - 1 : page.totalCount,
+          }))
+        }
+      })
+
+      // Optimistically update all-reviews query data (for search mode)
       queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
@@ -378,11 +429,14 @@ function Profile() {
         )
       }
 
-      return { previousUserReviews, previousGameReviews, gameId }
+      return { previousInfiniteReviews, previousAllReviews, previousGameReviews, gameId }
     },
     onError: (error, _reviewId, context) => {
-      if (context?.previousUserReviews) {
-        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousUserReviews)
+      if (context?.previousInfiniteReviews) {
+        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousInfiniteReviews)
+      }
+      if (context?.previousAllReviews) {
+        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousAllReviews)
       }
       if (context?.gameId && context?.previousGameReviews) {
         queryClient.setQueryData(['get-reviews-game', context.gameId], context.previousGameReviews)
@@ -392,6 +446,7 @@ function Profile() {
     onSuccess: (_data, reviewId, context) => {
       posthog.capture('review_deleted', { review_id: reviewId })
       toast.success('Review deleted')
+      queryClient.invalidateQueries({ queryKey: ['get-reviews-user', dbUserId] })
       queryClient.invalidateQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
       if (context?.gameId) {
         queryClient.invalidateQueries({ queryKey: ['get-reviews-game', context.gameId] })
@@ -407,33 +462,51 @@ function Profile() {
   const likeMutation = useMutation({
     mutationFn: toggleReviewLike,
     onMutate: async (reviewId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', dbUserId] })
       await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', dbUserId] })
 
-      const previousReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
+      const previousInfiniteReviews = queryClient.getQueryData(['get-reviews-user', dbUserId])
+      const previousAllReviews = queryClient.getQueryData(['get-all-reviews-user', dbUserId])
+
+      const updateReview = (review: Review) => {
+        if (String(review.id) === reviewId) {
+          const currentLikeCount = Number(review.likeCount)
+          return {
+            ...review,
+            userLiked: !review.userLiked,
+            likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
+          }
+        }
+        return review
+      }
+
+      queryClient.setQueryData(['get-reviews-user', dbUserId], (old: InfiniteData<UserReviewsResponse> | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          pages: old.pages.map(page => ({
+            ...page,
+            reviews: page.reviews.map(updateReview),
+          }))
+        }
+      })
 
       queryClient.setQueryData(['get-all-reviews-user', dbUserId], (old: UserReviewsResponse | undefined) => {
         if (!old) return old
         return {
           ...old,
-          reviews: old.reviews.map((review) => {
-            if (String(review.id) === reviewId) {
-              const currentLikeCount = Number(review.likeCount)
-              return {
-                ...review,
-                userLiked: !review.userLiked,
-                likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
-              }
-            }
-            return review
-          })
+          reviews: old.reviews.map(updateReview),
         }
       })
 
-      return { previousReviews }
+      return { previousInfiniteReviews, previousAllReviews }
     },
     onError: (err, _reviewId, context) => {
-      if (context?.previousReviews) {
-        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousReviews)
+      if (context?.previousInfiniteReviews) {
+        queryClient.setQueryData(['get-reviews-user', dbUserId], context.previousInfiniteReviews)
+      }
+      if (context?.previousAllReviews) {
+        queryClient.setQueryData(['get-all-reviews-user', dbUserId], context.previousAllReviews)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update like')
     },
@@ -451,14 +524,19 @@ function Profile() {
       await queryClient.cancelQueries({ queryKey: ['want-to-play-check', gameId] })
       await queryClient.cancelQueries({ queryKey: ['want-to-play-count', gameId] })
 
-      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['want-to-play'])
+      const previousWishlist = queryClient.getQueryData<InfiniteData<WishlistResponse>>(['want-to-play'])
       const previousCheck = queryClient.getQueryData<{ inWishlist: boolean }>(['want-to-play-check', gameId])
       const previousCount = queryClient.getQueryData<{ count: number }>(['want-to-play-count', gameId])
 
-      // Optimistically remove from wishlist
+      // Optimistically remove from wishlist (InfiniteData shape)
       if (previousWishlist) {
         queryClient.setQueryData(['want-to-play'], {
-          wishlist: previousWishlist.wishlist.filter(item => item.gameId !== gameId)
+          ...previousWishlist,
+          pages: previousWishlist.pages.map((page, i) => ({
+            ...page,
+            wishlist: page.wishlist.filter(item => item.gameId !== gameId),
+            totalCount: i === 0 ? page.totalCount - 1 : page.totalCount,
+          }))
         })
       }
 
@@ -510,7 +588,6 @@ function Profile() {
 
   const user = data.user
   const initials = `${user.given_name?.[0] || ''}${user.family_name?.[0] || ''}`.toUpperCase()
-  const reviewCount = totalReviewCount
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
@@ -642,7 +719,7 @@ function Profile() {
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
                 <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
-                  <div className="text-2xl font-bold text-foreground">{reviewCount}</div>
+                  <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
                 <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
@@ -741,7 +818,7 @@ function Profile() {
               }`}
             >
               <History className="w-4 h-4" />
-              Play History ({playSessions.length})
+              Play History ({totalHistoryCount})
             </button>
             <button
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'wishlist' }); setActiveTab('wishlist'); }}
@@ -752,7 +829,7 @@ function Profile() {
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
-              Want to Play ({wishlistItems.length})
+              Want to Play ({totalWishlistCount})
             </button>
             <button
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'lists' }); setActiveTab('lists'); }}
@@ -763,7 +840,7 @@ function Profile() {
               }`}
             >
               <ListPlus className="w-4 h-4" />
-              Lists ({gameLists.length})
+              Lists ({totalListsCount})
             </button>
             <button
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'saved' }); setActiveTab('saved'); }}
@@ -774,7 +851,7 @@ function Profile() {
               }`}
             >
               <Bookmark className="w-4 h-4" />
-              Saved ({savedLists.length})
+              Saved ({totalSavedCount})
             </button>
           </div>
 
@@ -827,9 +904,9 @@ function Profile() {
                   ))}
                 </div>
               ) : userReviews.length > 0 ? (
-                filteredReviews.length > 0 ? (
+                (isSearching ? filteredReviews : userReviews).length > 0 ? (
                   <div className="space-y-4">
-                    {displayedReviews.map((review: Review) => (
+                    {(isSearching ? filteredReviews : userReviews).map((review: Review) => (
                       <ReviewCard
                         key={review.id}
                         review={review}
@@ -839,12 +916,12 @@ function Profile() {
                         isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
                       />
                     ))}
-                    {hasMoreReviews && (
-                      <div className="flex justify-center pt-4">
-                        <Button onClick={() => setDisplayCount(prev => prev + REVIEWS_PER_PAGE)}>
-                          Load More
-                        </Button>
-                      </div>
+                    {!isSearching && (
+                      <LoadMoreButton
+                        hasNextPage={!!hasMoreReviews}
+                        isFetchingNextPage={isFetchingMoreReviews}
+                        fetchNextPage={fetchMoreReviews}
+                      />
                     )}
                   </div>
                 ) : (
@@ -899,6 +976,11 @@ function Profile() {
                   {playSessions.map((session) => (
                     <SessionCard key={session.session.id} session={session} />
                   ))}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreHistory}
+                    isFetchingNextPage={isFetchingMoreHistory}
+                    fetchNextPage={fetchMoreHistory}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -942,6 +1024,11 @@ function Profile() {
                       isRemoving={removeWishlistMutation.isPending && removeWishlistMutation.variables === item.gameId}
                     />
                   ))}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreWishlist}
+                    isFetchingNextPage={isFetchingMoreWishlist}
+                    fetchNextPage={fetchMoreWishlist}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -979,16 +1066,23 @@ function Profile() {
                   ))}
                 </div>
               ) : savedLists.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {savedLists.map((list: SavedGameListSummary) => (
-                    <div key={list.id} className="relative">
-                      <GameListCard list={list} showSaveButton />
-                      <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
-                        @{list.ownerUsername}
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {savedLists.map((list: SavedGameListSummary) => (
+                      <div key={list.id} className="relative">
+                        <GameListCard list={list} showSaveButton />
+                        <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
+                          @{list.ownerUsername}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreSaved}
+                    isFetchingNextPage={isFetchingMoreSaved}
+                    fetchNextPage={fetchMoreSaved}
+                  />
+                </>
               ) : (
                 <div className="text-center py-12">
                   <Bookmark className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />

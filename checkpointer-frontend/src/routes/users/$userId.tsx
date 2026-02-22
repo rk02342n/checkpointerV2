@@ -1,16 +1,17 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
-import { getAllReviewsByUserIdQueryOptions, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
-import { userCurrentlyPlayingQueryOptions, playHistoryQueryOptions } from '@/lib/gameSessionsQuery'
-import { userWantToPlayQueryOptions } from '@/lib/wantToPlayQuery'
+import { getReviewsByUserIdInfiniteOptions, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
+import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/lib/gameSessionsQuery'
+import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
 import { Gamepad2, Heart, History, CalendarHeart, ListPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ListsSection } from '@/components/ListsSection'
-import { userGameListsQueryOptions } from '@/lib/gameListsQuery'
+import { LoadMoreButton } from '@/components/LoadMoreButton'
+import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
 
 const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
@@ -30,11 +31,8 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"
-import { Button } from '@/components/ui/button'
 import Navbar from '@/components/Navbar'
 import { Skeleton } from '@/components/ui/skeleton'
-
-const REVIEWS_PER_PAGE = 10
 
 function PublicProfile() {
   const { userId } = Route.useParams()
@@ -53,7 +51,6 @@ function PublicProfile() {
     },
     [navigate]
   )
-  const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
 
   const { isPending: isProfilePending, data: profileData, error: profileError } = useQuery(publicUserProfileQueryOptions(userId))
   const { data: dbUserData } = useQuery(dbUserQueryOptions)
@@ -64,27 +61,47 @@ function PublicProfile() {
     enabled: !!userId,
   })
 
-  // Get user's reviews
-  const { data: reviewsData, isPending: reviewsPending } = useQuery({
-    ...getAllReviewsByUserIdQueryOptions(userId),
+  // Get user's reviews (infinite)
+  const {
+    data: reviewsData,
+    isPending: reviewsPending,
+    hasNextPage: hasMoreReviews,
+    isFetchingNextPage: isFetchingMoreReviews,
+    fetchNextPage: fetchMoreReviews,
+  } = useInfiniteQuery({
+    ...getReviewsByUserIdInfiniteOptions(userId),
     enabled: !!userId
   })
 
-  // Get user's play history
-  const { data: playHistoryData, isPending: playHistoryPending } = useQuery({
-    ...playHistoryQueryOptions(userId),
+  // Get user's play history (infinite)
+  const {
+    data: playHistoryData,
+    isPending: playHistoryPending,
+    hasNextPage: hasMoreHistory,
+    isFetchingNextPage: isFetchingMoreHistory,
+    fetchNextPage: fetchMoreHistory,
+  } = useInfiniteQuery({
+    ...playHistoryInfiniteOptions(userId),
     enabled: !!userId
   })
 
-  // Get user's wishlist
-  const { data: wishlistData, isPending: wishlistPending } = useQuery({
-    ...userWantToPlayQueryOptions(userId),
+  // Get user's wishlist (infinite)
+  const {
+    data: wishlistData,
+    isPending: wishlistPending,
+    hasNextPage: hasMoreWishlist,
+    isFetchingNextPage: isFetchingMoreWishlist,
+    fetchNextPage: fetchMoreWishlist,
+  } = useInfiniteQuery({
+    ...userWishlistInfiniteOptions(userId),
     enabled: !!userId
   })
 
-  // Get user's public game lists
-  const { data: gameListsData } = useQuery({
-    ...userGameListsQueryOptions(userId),
+  // Get user's public game lists (for tab count)
+  const {
+    data: gameListsData,
+  } = useInfiniteQuery({
+    ...userGameListsInfiniteOptions(userId),
     enabled: !!userId
   })
 
@@ -93,39 +110,40 @@ function PublicProfile() {
     posthog.capture('public_profile_viewed', { viewed_user_id: userId })
   }, [userId])
 
-  const userReviews = reviewsData?.reviews ?? []
-  const totalReviewCount = reviewsData?.totalCount ?? 0
-  const playSessions = playHistoryData?.sessions ?? []
-  const gameLists = gameListsData?.lists ?? []
-  const wishlistItems = wishlistData?.wishlist ?? []
-
-  // Client-side pagination for reviews
-  const displayedReviews = useMemo(() => userReviews.slice(0, displayCount), [userReviews, displayCount])
-  const hasMoreReviews = displayCount < userReviews.length
+  const userReviews = reviewsData?.pages.flatMap(p => p.reviews) ?? []
+  const totalReviewCount = reviewsData?.pages[0]?.totalCount ?? 0
+  const playSessions = playHistoryData?.pages.flatMap(p => p.sessions) ?? []
+  const totalHistoryCount = playHistoryData?.pages[0]?.totalCount ?? 0
+  const totalListsCount = gameListsData?.pages[0]?.totalCount ?? 0
+  const wishlistItems = wishlistData?.pages.flatMap(p => p.wishlist) ?? []
+  const totalWishlistCount = wishlistData?.pages[0]?.totalCount ?? 0
 
   // Like mutation with optimistic updates
   const likeMutation = useMutation({
     mutationFn: toggleReviewLike,
     onMutate: async (reviewId: string) => {
-      await queryClient.cancelQueries({ queryKey: ['get-all-reviews-user', userId] })
+      await queryClient.cancelQueries({ queryKey: ['get-reviews-user', userId] })
 
-      const previousReviews = queryClient.getQueryData(['get-all-reviews-user', userId])
+      const previousReviews = queryClient.getQueryData(['get-reviews-user', userId])
 
-      queryClient.setQueryData(['get-all-reviews-user', userId], (old: UserReviewsResponse | undefined) => {
+      queryClient.setQueryData(['get-reviews-user', userId], (old: InfiniteData<UserReviewsResponse> | undefined) => {
         if (!old) return old
         return {
           ...old,
-          reviews: old.reviews.map((review) => {
-            if (String(review.id) === reviewId) {
-              const currentLikeCount = Number(review.likeCount)
-              return {
-                ...review,
-                userLiked: !review.userLiked,
-                likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
+          pages: old.pages.map(page => ({
+            ...page,
+            reviews: page.reviews.map((review) => {
+              if (String(review.id) === reviewId) {
+                const currentLikeCount = Number(review.likeCount)
+                return {
+                  ...review,
+                  userLiked: !review.userLiked,
+                  likeCount: review.userLiked ? currentLikeCount - 1 : currentLikeCount + 1,
+                }
               }
-            }
-            return review
-          })
+              return review
+            })
+          }))
         }
       })
 
@@ -133,7 +151,7 @@ function PublicProfile() {
     },
     onError: (err, _reviewId, context) => {
       if (context?.previousReviews) {
-        queryClient.setQueryData(['get-all-reviews-user', userId], context.previousReviews)
+        queryClient.setQueryData(['get-reviews-user', userId], context.previousReviews)
       }
       toast.error(err instanceof Error ? err.message : 'Failed to update like')
     },
@@ -283,7 +301,7 @@ function PublicProfile() {
               }`}
             >
               <History className="w-4 h-4" />
-              Play History ({playSessions.length})
+              Play History ({totalHistoryCount})
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
@@ -294,7 +312,7 @@ function PublicProfile() {
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
-              Want to Play ({wishlistItems.length})
+              Want to Play ({totalWishlistCount})
             </button>
             <button
               onClick={() => setActiveTab('lists')}
@@ -305,7 +323,7 @@ function PublicProfile() {
               }`}
             >
               <ListPlus className="w-4 h-4" />
-              Lists ({gameLists.length})
+              Lists ({totalListsCount})
             </button>
           </div>
 
@@ -330,7 +348,7 @@ function PublicProfile() {
                 </div>
               ) : userReviews.length > 0 ? (
                 <div className="space-y-4">
-                  {displayedReviews.map((review: Review) => (
+                  {userReviews.map((review: Review) => (
                     <ReviewCard
                       key={review.id}
                       review={review}
@@ -339,14 +357,11 @@ function PublicProfile() {
                     />
                   ))}
 
-                  {/* Load More Button */}
-                  {hasMoreReviews && (
-                    <div className="flex justify-center pt-4">
-                      <Button onClick={() => setDisplayCount(prev => prev + REVIEWS_PER_PAGE)}>
-                        Load More
-                      </Button>
-                    </div>
-                  )}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreReviews}
+                    isFetchingNextPage={isFetchingMoreReviews}
+                    fetchNextPage={fetchMoreReviews}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -381,6 +396,11 @@ function PublicProfile() {
                   {playSessions.map((session) => (
                     <SessionCard key={session.session.id} session={session} />
                   ))}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreHistory}
+                    isFetchingNextPage={isFetchingMoreHistory}
+                    fetchNextPage={fetchMoreHistory}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -414,6 +434,11 @@ function PublicProfile() {
                   {wishlistItems.map((item) => (
                     <WishlistCard key={item.gameId} item={item} />
                   ))}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMoreWishlist}
+                    isFetchingNextPage={isFetchingMoreWishlist}
+                    fetchNextPage={fetchMoreWishlist}
+                  />
                 </div>
               ) : (
                 <div className="text-center py-12">

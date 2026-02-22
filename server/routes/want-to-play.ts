@@ -11,21 +11,40 @@ export const wantToPlayRoute = new Hono()
 // GET / - Get own wishlist with game details (authenticated)
 .get('/', getAuthUser, async (c) => {
   const user = c.var.dbUser;
+  const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const wishlist = await db
-    .select({
-      gameId: wantToPlayTable.gameId,
-      createdAt: wantToPlayTable.createdAt,
-      gameName: gamesTable.name,
-      gameCoverUrl: gamesTable.coverUrl,
-      gameSlug: gamesTable.slug,
-    })
-    .from(wantToPlayTable)
-    .innerJoin(gamesTable, eq(wantToPlayTable.gameId, gamesTable.id))
-    .where(eq(wantToPlayTable.userId, user.id))
-    .orderBy(desc(wantToPlayTable.createdAt));
+  const [totalCountResult, wishlist] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(wantToPlayTable)
+      .where(eq(wantToPlayTable.userId, user.id))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        gameId: wantToPlayTable.gameId,
+        createdAt: wantToPlayTable.createdAt,
+        gameName: gamesTable.name,
+        gameCoverUrl: gamesTable.coverUrl,
+        gameSlug: gamesTable.slug,
+      })
+      .from(wantToPlayTable)
+      .innerJoin(gamesTable, eq(wantToPlayTable.gameId, gamesTable.id))
+      .where(eq(wantToPlayTable.userId, user.id))
+      .orderBy(desc(wantToPlayTable.createdAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
 
-  return c.json({ wishlist });
+  const hasMore = wishlist.length > limit;
+  const paginatedWishlist = hasMore ? wishlist.slice(0, limit) : wishlist;
+
+  return c.json({
+    wishlist: paginatedWishlist,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
+  });
 })
 
 // GET /check/:gameId - Check if game is in wishlist (authenticated)
@@ -48,21 +67,40 @@ export const wantToPlayRoute = new Hono()
 // GET /user/:userId - Get user's public wishlist
 .get('/user/:userId', async (c) => {
   const userId = c.req.param('userId');
+  const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const wishlist = await db
-    .select({
-      gameId: wantToPlayTable.gameId,
-      createdAt: wantToPlayTable.createdAt,
-      gameName: gamesTable.name,
-      gameCoverUrl: gamesTable.coverUrl,
-      gameSlug: gamesTable.slug,
-    })
-    .from(wantToPlayTable)
-    .innerJoin(gamesTable, eq(wantToPlayTable.gameId, gamesTable.id))
-    .where(eq(wantToPlayTable.userId, userId))
-    .orderBy(desc(wantToPlayTable.createdAt));
+  const [totalCountResult, wishlist] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(wantToPlayTable)
+      .where(eq(wantToPlayTable.userId, userId))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        gameId: wantToPlayTable.gameId,
+        createdAt: wantToPlayTable.createdAt,
+        gameName: gamesTable.name,
+        gameCoverUrl: gamesTable.coverUrl,
+        gameSlug: gamesTable.slug,
+      })
+      .from(wantToPlayTable)
+      .innerJoin(gamesTable, eq(wantToPlayTable.gameId, gamesTable.id))
+      .where(eq(wantToPlayTable.userId, userId))
+      .orderBy(desc(wantToPlayTable.createdAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
 
-  return c.json({ wishlist });
+  const hasMore = wishlist.length > limit;
+  const paginatedWishlist = hasMore ? wishlist.slice(0, limit) : wishlist;
+
+  return c.json({
+    wishlist: paginatedWishlist,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
+  });
 })
 
 // GET /game/:gameId/count - Get count of users who want to play (public)

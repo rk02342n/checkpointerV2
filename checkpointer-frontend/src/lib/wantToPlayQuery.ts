@@ -10,11 +10,14 @@ export type WishlistItem = {
 
 export type WishlistResponse = {
   wishlist: WishlistItem[];
+  hasMore: boolean;
+  nextOffset: number | null;
+  totalCount: number;
 };
 
 // Get own wishlist
-async function getWishlist(): Promise<WishlistResponse> {
-  const res = await fetch("/api/want-to-play");
+async function getWishlist(offset = 0, limit = 20): Promise<WishlistResponse> {
+  const res = await fetch(`/api/want-to-play?offset=${offset}&limit=${limit}`);
   if (!res.ok) {
     throw new Error("Failed to fetch wishlist");
   }
@@ -23,13 +26,21 @@ async function getWishlist(): Promise<WishlistResponse> {
 
 export const wantToPlayQueryOptions = queryOptions({
   queryKey: ['want-to-play'],
-  queryFn: getWishlist,
+  queryFn: () => getWishlist(),
   staleTime: 1000 * 60 * 5, // 5 minutes
 });
 
+export const wishlistInfiniteOptions = (limit: number = 20) => ({
+  queryKey: ['want-to-play'],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getWishlist(pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: WishlistResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
+});
+
 // Get any user's wishlist (public)
-async function getUserWishlist(userId: string): Promise<WishlistResponse> {
-  const res = await fetch(`/api/want-to-play/user/${userId}`);
+async function getUserWishlist(userId: string, offset = 0, limit = 20): Promise<WishlistResponse> {
+  const res = await fetch(`/api/want-to-play/user/${userId}?offset=${offset}&limit=${limit}`);
   if (!res.ok) {
     throw new Error("Failed to fetch user wishlist");
   }
@@ -42,6 +53,14 @@ export const userWantToPlayQueryOptions = (userId: string) =>
     queryFn: () => getUserWishlist(userId),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+export const userWishlistInfiniteOptions = (userId: string, limit: number = 20) => ({
+  queryKey: ['user-want-to-play', userId],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getUserWishlist(userId, pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: WishlistResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
+});
 
 // Check if game is in wishlist
 async function checkGameInWishlist(gameId: string): Promise<{ inWishlist: boolean }> {

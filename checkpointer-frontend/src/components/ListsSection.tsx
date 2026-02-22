@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { Plus, ListPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { GameListCard } from "./GameListCard";
 import { CreateListModal } from "./CreateListModal";
+import { LoadMoreButton } from "./LoadMoreButton";
 import {
-  myGameListsQueryOptions,
-  userGameListsQueryOptions,
+  myGameListsInfiniteOptions,
+  userGameListsInfiniteOptions,
   type GameListSummary,
 } from "@/lib/gameListsQuery";
 import { dbUserQueryOptions } from "@/lib/api";
@@ -25,12 +26,12 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
 
   // Use appropriate query based on whether viewing own profile or someone else's
   const useOwnLists = isOwnProfile || (!userId);
-  const { data, isLoading } = useQuery({
-    ...(useOwnLists ? myGameListsQueryOptions : userGameListsQueryOptions(userId!)),
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
+    ...(useOwnLists ? myGameListsInfiniteOptions() : userGameListsInfiniteOptions(userId!)),
     enabled: useOwnLists ? isLoggedIn : !!userId,
   });
 
-  const lists: GameListSummary[] = data?.lists ?? [];
+  const lists: GameListSummary[] = data?.pages.flatMap(p => p.lists) ?? [];
 
   if (isLoading) {
     return <ListsSectionSkeleton />;
@@ -88,6 +89,12 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
           <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} showSaveCount={isOwnProfile} />
         ))}
       </div>
+
+      <LoadMoreButton
+        hasNextPage={!!hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
+      />
 
       {isOwnProfile && (
         <CreateListModal
