@@ -28,7 +28,7 @@ interface BrowseSearchParams {
   platform?: string
 }
 
-export const Route = createFileRoute("/browse")({
+export const Route = createFileRoute("/_authenticated/browse")({
   component: BrowseGames,
   validateSearch: (search: Record<string, unknown>): BrowseSearchParams => {
     const q = typeof search.q === "string" && search.q.trim() ? search.q.trim() : undefined

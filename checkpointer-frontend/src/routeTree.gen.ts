@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,13 +19,9 @@ import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authentic
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCreateExpenseRouteImport } from './routes/_authenticated/create-expense'
+import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
-const BrowseRoute = BrowseRouteImport.update({
-  id: '/browse',
-  path: '/browse',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -77,6 +72,11 @@ const AuthenticatedCreateExpenseRoute =
     path: '/create-expense',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -86,8 +86,8 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/browse': typeof BrowseRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -99,8 +99,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/browse': typeof BrowseRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -114,8 +114,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/about': typeof AboutRoute
-  '/browse': typeof BrowseRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -129,8 +129,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/browse'
     | '/admin'
+    | '/browse'
     | '/create-expense'
     | '/expenses'
     | '/profile'
@@ -142,8 +142,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/browse'
     | '/admin'
+    | '/browse'
     | '/create-expense'
     | '/expenses'
     | '/profile'
@@ -156,8 +156,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
-    | '/browse'
     | '/_authenticated/admin'
+    | '/_authenticated/browse'
     | '/_authenticated/create-expense'
     | '/_authenticated/expenses'
     | '/_authenticated/profile'
@@ -171,7 +171,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
-  BrowseRoute: typeof BrowseRoute
   GamesGameIdRoute: typeof GamesGameIdRoute
   ListsListIdRoute: typeof ListsListIdRoute
   UsersUserIdRoute: typeof UsersUserIdRoute
@@ -179,13 +178,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/browse': {
-      id: '/browse'
-      path: '/browse'
-      fullPath: '/browse'
-      preLoaderRoute: typeof BrowseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -256,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreateExpenseRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/browse': {
+      id: '/_authenticated/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof AuthenticatedBrowseRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -268,6 +267,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCreateExpenseRoute: typeof AuthenticatedCreateExpenseRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -276,6 +276,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCreateExpenseRoute: AuthenticatedCreateExpenseRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -290,7 +291,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
-  BrowseRoute: BrowseRoute,
   GamesGameIdRoute: GamesGameIdRoute,
   ListsListIdRoute: ListsListIdRoute,
   UsersUserIdRoute: UsersUserIdRoute,

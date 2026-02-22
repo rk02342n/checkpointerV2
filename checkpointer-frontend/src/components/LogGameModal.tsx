@@ -393,15 +393,18 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
           )}
 
           {/* Error Display */}
-          {error && (
-            <div className="p-3 bg-rose-50 border-2 border-rose-300 text-rose-600 text-xs sm:text-sm">
-              {error.message}
-            </div>
-          )}
         </div>
 
         {/* Submit Button */}
         <div className="p-4 sm:p-6 pt-0 sm:pt-0">
+          {!isLoggedIn ? (
+            <a
+              href="/api/login"
+              className="w-full flex items-center justify-center font-semibold py-3 text-sm border-4 border-border bg-background hover:bg-muted transition-colors"
+            >
+              Log in to log games
+            </a>
+          ) : (
           <Button
             className="w-full  font-semibold rounded-none py-3 text-sm"
             variant='outline'
@@ -421,6 +424,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
               </>
             )}
           </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

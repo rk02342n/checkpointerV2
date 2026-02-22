@@ -1153,7 +1153,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
               return (
                 <>
                   {!isLoggedIn && (
-                    <p className={`text-stone-700 text-center ${isMaximized ? 'text-sm' : 'text-xs'}`}>
+                    <p className={`text-foreground text-center ${isMaximized ? 'text-sm' : 'text-xs'}`}>
                       <a href="/api/login" className="underline font-bold">Log in</a> to submit a review
                     </p>
                   )}
