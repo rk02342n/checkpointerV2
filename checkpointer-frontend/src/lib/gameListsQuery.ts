@@ -64,9 +64,23 @@ export type PopularGameListSummary = GameListSummary & {
   saveCount: number;
 };
 
+export type PaginatedGameListsResponse = {
+  lists: GameListSummary[];
+  hasMore: boolean;
+  nextOffset: number | null;
+  totalCount: number;
+};
+
+export type PaginatedSavedGameListsResponse = {
+  lists: SavedGameListSummary[];
+  hasMore: boolean;
+  nextOffset: number | null;
+  totalCount: number;
+};
+
 // Get own lists
-async function getMyGameLists(): Promise<{ lists: GameListSummary[] }> {
-  const res = await fetch("/api/game-lists");
+async function getMyGameLists(offset = 0, limit = 20): Promise<PaginatedGameListsResponse> {
+  const res = await fetch(`/api/game-lists?offset=${offset}&limit=${limit}`);
   if (!res.ok) {
     throw new Error("Failed to fetch game lists");
   }
@@ -75,13 +89,21 @@ async function getMyGameLists(): Promise<{ lists: GameListSummary[] }> {
 
 export const myGameListsQueryOptions = queryOptions({
   queryKey: ['my-game-lists'],
-  queryFn: getMyGameLists,
+  queryFn: () => getMyGameLists(),
   staleTime: 1000 * 60 * 5, // 5 minutes
 });
 
+export const myGameListsInfiniteOptions = (limit: number = 20) => ({
+  queryKey: ['my-game-lists'],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getMyGameLists(pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: PaginatedGameListsResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
+});
+
 // Get user's public lists
-async function getUserGameLists(userId: string): Promise<{ lists: GameListSummary[] }> {
-  const res = await fetch(`/api/game-lists/user/${userId}`);
+async function getUserGameLists(userId: string, offset = 0, limit = 20): Promise<PaginatedGameListsResponse> {
+  const res = await fetch(`/api/game-lists/user/${userId}?offset=${offset}&limit=${limit}`);
   if (!res.ok) {
     throw new Error("Failed to fetch user's game lists");
   }
@@ -94,6 +116,14 @@ export const userGameListsQueryOptions = (userId: string) =>
     queryFn: () => getUserGameLists(userId),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+export const userGameListsInfiniteOptions = (userId: string, limit: number = 20) => ({
+  queryKey: ['user-game-lists', userId],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getUserGameLists(userId, pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: PaginatedGameListsResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
+});
 
 // Get single list with games (public)
 async function getGameList(listId: string): Promise<{ list: GameListDetail }> {
@@ -286,8 +316,8 @@ export function getListCoverUrl(listId: string): string {
 }
 
 // Get saved lists
-async function getMySavedLists(): Promise<{ lists: SavedGameListSummary[] }> {
-  const res = await fetch("/api/game-lists/saved");
+async function getMySavedLists(offset = 0, limit = 20): Promise<PaginatedSavedGameListsResponse> {
+  const res = await fetch(`/api/game-lists/saved?offset=${offset}&limit=${limit}`);
   if (!res.ok) {
     throw new Error("Failed to fetch saved lists");
   }
@@ -296,8 +326,16 @@ async function getMySavedLists(): Promise<{ lists: SavedGameListSummary[] }> {
 
 export const mySavedListsQueryOptions = queryOptions({
   queryKey: ['my-saved-lists'],
-  queryFn: getMySavedLists,
+  queryFn: () => getMySavedLists(),
   staleTime: 1000 * 60 * 5, // 5 minutes
+});
+
+export const mySavedListsInfiniteOptions = (limit: number = 20) => ({
+  queryKey: ['my-saved-lists'],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getMySavedLists(pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: PaginatedSavedGameListsResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
 });
 
 // Get popular public lists

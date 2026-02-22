@@ -93,6 +93,7 @@ export type PlayHistoryResponse = {
   }>;
   hasMore: boolean;
   nextOffset: number | null;
+  totalCount: number;
 };
 
 async function getPlayHistory(userId: string, offset = 0, limit = 20): Promise<PlayHistoryResponse> {
@@ -109,6 +110,14 @@ export const playHistoryQueryOptions = (userId: string) =>
     queryFn: () => getPlayHistory(userId),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+export const playHistoryInfiniteOptions = (userId: string, limit: number = 20) => ({
+  queryKey: ['play-history', userId],
+  queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getPlayHistory(userId, pageParam, limit),
+  initialPageParam: 0,
+  getNextPageParam: (lastPage: PlayHistoryResponse) => lastPage.nextOffset,
+  staleTime: 1000 * 60 * 5,
+});
 
 // Log a past game (creates an already-completed session)
 export async function logPastGame(gameId: string, status: SessionStatus = "finished"): Promise<CurrentlyPlayingResponse> {

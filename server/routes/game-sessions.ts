@@ -170,21 +170,28 @@ export const gameSessionsRoute = new Hono()
   const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
   const offset = Number(c.req.query('offset')) || 0;
 
-  const sessions = await db
-    .select({
-      session: gameSessionsTable,
-      game: {
-        id: gamesTable.id,
-        name: gamesTable.name,
-        coverUrl: gamesTable.coverUrl,
-      }
-    })
-    .from(gameSessionsTable)
-    .innerJoin(gamesTable, eq(gameSessionsTable.gameId, gamesTable.id))
-    .where(eq(gameSessionsTable.userId, userId))
-    .orderBy(desc(gameSessionsTable.startedAt))
-    .limit(limit + 1)
-    .offset(offset);
+  const [totalCountResult, sessions] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(gameSessionsTable)
+      .where(eq(gameSessionsTable.userId, userId))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        session: gameSessionsTable,
+        game: {
+          id: gamesTable.id,
+          name: gamesTable.name,
+          coverUrl: gamesTable.coverUrl,
+        }
+      })
+      .from(gameSessionsTable)
+      .innerJoin(gamesTable, eq(gameSessionsTable.gameId, gamesTable.id))
+      .where(eq(gameSessionsTable.userId, userId))
+      .orderBy(desc(gameSessionsTable.startedAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
 
   const hasMore = sessions.length > limit;
   const paginatedSessions = hasMore ? sessions.slice(0, limit) : sessions;
@@ -192,7 +199,8 @@ export const gameSessionsRoute = new Hono()
   return c.json({
     sessions: paginatedSessions,
     hasMore,
-    nextOffset: hasMore ? offset + limit : null
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
   });
 })
 

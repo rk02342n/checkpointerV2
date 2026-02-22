@@ -38,27 +38,41 @@ export const gameListsRoute = new Hono()
 // GET / - Get own lists with game counts (authenticated)
 .get('/', getAuthUser, async (c) => {
   const user = c.var.dbUser;
+  const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const lists = await db
-    .select({
-      id: gameListsTable.id,
-      name: gameListsTable.name,
-      description: gameListsTable.description,
-      coverUrl: gameListsTable.coverUrl,
-      visibility: gameListsTable.visibility,
-      createdAt: gameListsTable.createdAt,
-      updatedAt: gameListsTable.updatedAt,
-      gameCount: count(gameListItemsTable.gameId),
-    })
-    .from(gameListsTable)
-    .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
-    .where(eq(gameListsTable.userId, user.id))
-    .groupBy(gameListsTable.id)
-    .orderBy(desc(gameListsTable.updatedAt));
+  const [totalCountResult, lists] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(gameListsTable)
+      .where(eq(gameListsTable.userId, user.id))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        id: gameListsTable.id,
+        name: gameListsTable.name,
+        description: gameListsTable.description,
+        coverUrl: gameListsTable.coverUrl,
+        visibility: gameListsTable.visibility,
+        createdAt: gameListsTable.createdAt,
+        updatedAt: gameListsTable.updatedAt,
+        gameCount: count(gameListItemsTable.gameId),
+      })
+      .from(gameListsTable)
+      .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
+      .where(eq(gameListsTable.userId, user.id))
+      .groupBy(gameListsTable.id)
+      .orderBy(desc(gameListsTable.updatedAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
+
+  const hasMore = lists.length > limit;
+  const paginatedLists = hasMore ? lists.slice(0, limit) : lists;
 
   // Get first 4 game covers for each list (only if no custom cover)
   const listsWithCovers = await Promise.all(
-    lists.map(async (list) => {
+    paginatedLists.map(async (list) => {
       // If list has custom cover, don't fetch game covers
       if (list.coverUrl) {
         return {
@@ -84,42 +98,65 @@ export const gameListsRoute = new Hono()
     })
   );
 
-  return c.json({ lists: listsWithCovers });
+  return c.json({
+    lists: listsWithCovers,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
+  });
 })
 
 // GET /saved - Get user's saved lists (authenticated)
 .get('/saved', getAuthUser, async (c) => {
   const user = c.var.dbUser;
+  const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const savedLists = await db
-    .select({
-      id: gameListsTable.id,
-      name: gameListsTable.name,
-      description: gameListsTable.description,
-      coverUrl: gameListsTable.coverUrl,
-      visibility: gameListsTable.visibility,
-      createdAt: gameListsTable.createdAt,
-      updatedAt: gameListsTable.updatedAt,
-      gameCount: count(gameListItemsTable.gameId),
-      ownerUsername: usersTable.username,
-      ownerDisplayName: usersTable.displayName,
-      ownerAvatarUrl: usersTable.avatarUrl,
-      ownerId: usersTable.id,
-    })
-    .from(savedGameListsTable)
-    .innerJoin(gameListsTable, eq(savedGameListsTable.listId, gameListsTable.id))
-    .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
-    .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
-    .where(and(
-      eq(savedGameListsTable.userId, user.id),
-      eq(gameListsTable.visibility, 'public')
-    ))
-    .groupBy(gameListsTable.id, usersTable.id, savedGameListsTable.createdAt)
-    .orderBy(desc(savedGameListsTable.createdAt));
+  const [totalCountResult, savedLists] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(savedGameListsTable)
+      .innerJoin(gameListsTable, eq(savedGameListsTable.listId, gameListsTable.id))
+      .where(and(
+        eq(savedGameListsTable.userId, user.id),
+        eq(gameListsTable.visibility, 'public')
+      ))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        id: gameListsTable.id,
+        name: gameListsTable.name,
+        description: gameListsTable.description,
+        coverUrl: gameListsTable.coverUrl,
+        visibility: gameListsTable.visibility,
+        createdAt: gameListsTable.createdAt,
+        updatedAt: gameListsTable.updatedAt,
+        gameCount: count(gameListItemsTable.gameId),
+        ownerUsername: usersTable.username,
+        ownerDisplayName: usersTable.displayName,
+        ownerAvatarUrl: usersTable.avatarUrl,
+        ownerId: usersTable.id,
+      })
+      .from(savedGameListsTable)
+      .innerJoin(gameListsTable, eq(savedGameListsTable.listId, gameListsTable.id))
+      .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
+      .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
+      .where(and(
+        eq(savedGameListsTable.userId, user.id),
+        eq(gameListsTable.visibility, 'public')
+      ))
+      .groupBy(gameListsTable.id, usersTable.id, savedGameListsTable.createdAt)
+      .orderBy(desc(savedGameListsTable.createdAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
+
+  const hasMore = savedLists.length > limit;
+  const paginatedLists = hasMore ? savedLists.slice(0, limit) : savedLists;
 
   // Get first 4 game covers for each list (only if no custom cover)
   const listsWithCovers = await Promise.all(
-    savedLists.map(async (list) => {
+    paginatedLists.map(async (list) => {
       if (list.coverUrl) {
         return {
           ...list,
@@ -144,36 +181,58 @@ export const gameListsRoute = new Hono()
     })
   );
 
-  return c.json({ lists: listsWithCovers });
+  return c.json({
+    lists: listsWithCovers,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
+  });
 })
 
 // GET /user/:userId - Get user's public lists
 .get('/user/:userId', async (c) => {
   const userId = c.req.param('userId');
+  const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
+  const offset = Number(c.req.query('offset')) || 0;
 
-  const lists = await db
-    .select({
-      id: gameListsTable.id,
-      name: gameListsTable.name,
-      description: gameListsTable.description,
-      coverUrl: gameListsTable.coverUrl,
-      visibility: gameListsTable.visibility,
-      createdAt: gameListsTable.createdAt,
-      updatedAt: gameListsTable.updatedAt,
-      gameCount: count(gameListItemsTable.gameId),
-    })
-    .from(gameListsTable)
-    .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
-    .where(and(
-      eq(gameListsTable.userId, userId),
-      eq(gameListsTable.visibility, 'public')
-    ))
-    .groupBy(gameListsTable.id)
-    .orderBy(desc(gameListsTable.updatedAt));
+  const [totalCountResult, lists] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(gameListsTable)
+      .where(and(
+        eq(gameListsTable.userId, userId),
+        eq(gameListsTable.visibility, 'public')
+      ))
+      .then(res => res[0]?.count ?? 0),
+    db
+      .select({
+        id: gameListsTable.id,
+        name: gameListsTable.name,
+        description: gameListsTable.description,
+        coverUrl: gameListsTable.coverUrl,
+        visibility: gameListsTable.visibility,
+        createdAt: gameListsTable.createdAt,
+        updatedAt: gameListsTable.updatedAt,
+        gameCount: count(gameListItemsTable.gameId),
+      })
+      .from(gameListsTable)
+      .leftJoin(gameListItemsTable, eq(gameListsTable.id, gameListItemsTable.listId))
+      .where(and(
+        eq(gameListsTable.userId, userId),
+        eq(gameListsTable.visibility, 'public')
+      ))
+      .groupBy(gameListsTable.id)
+      .orderBy(desc(gameListsTable.updatedAt))
+      .limit(limit + 1)
+      .offset(offset),
+  ]);
+
+  const hasMore = lists.length > limit;
+  const paginatedLists = hasMore ? lists.slice(0, limit) : lists;
 
   // Get first 4 game covers for each list (only if no custom cover)
   const listsWithCovers = await Promise.all(
-    lists.map(async (list) => {
+    paginatedLists.map(async (list) => {
       if (list.coverUrl) {
         return {
           ...list,
@@ -198,7 +257,12 @@ export const gameListsRoute = new Hono()
     })
   );
 
-  return c.json({ lists: listsWithCovers });
+  return c.json({
+    lists: listsWithCovers,
+    hasMore,
+    nextOffset: hasMore ? offset + limit : null,
+    totalCount: totalCountResult,
+  });
 })
 
 // GET /popular - Get popular public lists ordered by save count
