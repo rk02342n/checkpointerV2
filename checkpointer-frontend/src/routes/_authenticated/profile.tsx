@@ -31,8 +31,17 @@ import {
 } from '@/components/ui/dialog'
 import Navbar from '@/components/Navbar'
 
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved'] as const
+type ProfileTab = (typeof VALID_TABS)[number]
+
 export const Route = createFileRoute('/_authenticated/profile')({
   component: Profile,
+  validateSearch: (search: Record<string, unknown>): { tab?: ProfileTab } => {
+    const tab = VALID_TABS.includes(search.tab as ProfileTab) && search.tab !== 'reviews'
+      ? (search.tab as ProfileTab)
+      : undefined
+    return { tab }
+  },
 })
 
 const REVIEWS_PER_PAGE = 10
@@ -41,7 +50,17 @@ function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const posthog = usePostHog()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists' | 'saved'>('reviews')
+  const { tab } = Route.useSearch()
+  const activeTab = tab ?? 'reviews'
+  const setActiveTab = useCallback(
+    (newTab: ProfileTab) => {
+      navigate({
+        search: { tab: newTab === 'reviews' ? undefined : newTab },
+        replace: true,
+      })
+    },
+    [navigate]
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
   const [isEditingUsername, setIsEditingUsername] = useState(false)
@@ -759,9 +778,9 @@ function Profile() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6 relative">
+          <div className="p-6">
             {/* Reviews Tab */}
-            <div className={activeTab !== 'reviews' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
               {/* Search Bar */}
               {userReviews.length > 0 && (
                 <div className="mb-4">
@@ -858,7 +877,7 @@ function Profile() {
             </div>
 
             {/* Play History Tab */}
-            <div className={activeTab !== 'history' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'history' ? 'hidden' : ''}>
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -897,7 +916,7 @@ function Profile() {
             </div>
 
             {/* Want to Play Tab */}
-            <div className={activeTab !== 'wishlist' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'wishlist' ? 'hidden' : ''}>
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -940,12 +959,12 @@ function Profile() {
             </div>
 
             {/* Lists Tab */}
-            <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'lists' ? 'hidden' : ''}>
               <ListsSection isOwnProfile={true} />
             </div>
 
             {/* Saved Tab */}
-            <div className={activeTab !== 'saved' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'saved' ? 'hidden' : ''}>
               {savedListsPending ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[1, 2].map((i) => (

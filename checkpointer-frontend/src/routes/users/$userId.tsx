@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { usePostHog } from 'posthog-js/react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getAllReviewsByUserIdQueryOptions, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
@@ -12,8 +12,17 @@ import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components
 import { ListsSection } from '@/components/ListsSection'
 import { userGameListsQueryOptions } from '@/lib/gameListsQuery'
 
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists'] as const
+type ProfileTab = (typeof VALID_TABS)[number]
+
 export const Route = createFileRoute('/users/$userId')({
   component: PublicProfile,
+  validateSearch: (search: Record<string, unknown>): { tab?: ProfileTab } => {
+    const tab = VALID_TABS.includes(search.tab as ProfileTab) && search.tab !== 'reviews'
+      ? (search.tab as ProfileTab)
+      : undefined
+    return { tab }
+  },
 })
 
 import {
@@ -31,7 +40,18 @@ function PublicProfile() {
   const { userId } = Route.useParams()
   const queryClient = useQueryClient()
   const posthog = usePostHog()
-  const [activeTab, setActiveTab] = useState<'reviews' | 'history' | 'wishlist' | 'lists'>('reviews')
+  const navigate = useNavigate()
+  const { tab } = Route.useSearch()
+  const activeTab = tab ?? 'reviews'
+  const setActiveTab = useCallback(
+    (newTab: ProfileTab) => {
+      navigate({
+        search: { tab: newTab === 'reviews' ? undefined : newTab },
+        replace: true,
+      })
+    },
+    [navigate]
+  )
   const [displayCount, setDisplayCount] = useState(REVIEWS_PER_PAGE)
 
   const { isPending: isProfilePending, data: profileData, error: profileError } = useQuery(publicUserProfileQueryOptions(userId))
@@ -289,9 +309,9 @@ function PublicProfile() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6 relative">
+          <div className="p-6">
             {/* Reviews Tab */}
-            <div className={activeTab !== 'reviews' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -339,7 +359,7 @@ function PublicProfile() {
             </div>
 
             {/* Play History Tab */}
-            <div className={activeTab !== 'history' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'history' ? 'hidden' : ''}>
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -373,7 +393,7 @@ function PublicProfile() {
             </div>
 
             {/* Want to Play Tab */}
-            <div className={activeTab !== 'wishlist' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'wishlist' ? 'hidden' : ''}>
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -406,7 +426,7 @@ function PublicProfile() {
             </div>
 
             {/* Lists Tab */}
-            <div className={activeTab !== 'lists' ? 'invisible absolute inset-0 p-6' : ''}>
+            <div className={activeTab !== 'lists' ? 'hidden' : ''}>
               <ListsSection userId={userId} isOwnProfile={false} showSaveButtons={!!dbUserData?.account} />
             </div>
           </div>
