@@ -803,7 +803,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
+                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -814,7 +814,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
+                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
               <History className="w-4 h-4" />
@@ -825,7 +825,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
+                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -836,7 +836,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
+                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -847,7 +847,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'saved'
                   ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
+                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
               <Bookmark className="w-4 h-4" />
