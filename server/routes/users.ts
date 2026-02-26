@@ -212,7 +212,8 @@ export const usersRoute = new Hono()
 
         const headers = new Headers();
         headers.set("Content-Type", response.ContentType || "image/jpeg");
-        headers.set("Cache-Control", "public, max-age=31536000");
+        headers.set("Cache-Control", "no-cache");
+        headers.set("ETag", `"${user.avatarUrl}"`);
 
         // Convert stream to web ReadableStream
         const stream = response.Body.transformToWebStream();

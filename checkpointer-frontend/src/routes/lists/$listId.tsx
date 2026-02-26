@@ -345,7 +345,7 @@ function ListDetailView() {
                       list.ownerAvatarUrl
                         ? list.ownerAvatarUrl.startsWith("http")
                           ? list.ownerAvatarUrl
-                          : `/api/user/avatar/${list.userId}`
+                          : `/api/user/avatar/${list.userId}?v=${encodeURIComponent(list.ownerAvatarUrl)}`
                         : undefined
                     }
                     alt={list.ownerUsername || "User"}

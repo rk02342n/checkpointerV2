@@ -626,7 +626,7 @@ const queryClient = useQueryClient();
                                                                 src={dbUserData?.account?.avatarUrl
                                                                     ? (dbUserData.account.avatarUrl.startsWith('http')
                                                                         ? dbUserData.account.avatarUrl
-                                                                        : `/api/user/avatar/${dbUserData.account.id}`)
+                                                                        : `/api/user/avatar/${dbUserData.account.id}?v=${encodeURIComponent(dbUserData.account.avatarUrl)}`)
                                                                     : undefined}
                                                                 alt={dbUserData?.account?.username || 'You'}
                                                             />
@@ -669,7 +669,7 @@ const queryClient = useQueryClient();
                                                             <Avatar className="w-6 h-6 border-2 border-stone-900 shrink-0">
                                                                 <AvatarImage
                                                                     src={r.avatarUrl
-                                                                        ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : `/api/user/avatar/${r.userId}`)
+                                                                        ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : `/api/user/avatar/${r.userId}?v=${encodeURIComponent(r.avatarUrl)}`)
                                                                         : undefined
                                                                     }
                                                                     alt={r.username || 'User'}

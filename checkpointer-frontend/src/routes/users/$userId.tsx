@@ -209,7 +209,7 @@ function PublicProfile() {
             {/* Avatar */}
             <Avatar className="w-24 h-24 border-4 border-border">
               <AvatarImage
-                src={user?.avatarUrl ? `/api/user/avatar/${user.id}` : undefined}
+                src={user?.avatarUrl ? `/api/user/avatar/${user.id}?v=${encodeURIComponent(user.avatarUrl)}` : undefined}
                 alt={user?.displayName || user?.username || 'User'}
               />
               <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-2xl font-bold">

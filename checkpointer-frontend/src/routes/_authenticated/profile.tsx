@@ -611,7 +611,7 @@ function Profile() {
             >
               <Avatar className="w-24 h-24 border-4 border-border group-hover:opacity-80 transition-opacity">
                 <AvatarImage
-                  src={dbUserData?.account?.avatarUrl ? `/api/user/avatar/${dbUserData.account.id}` : undefined}
+                  src={dbUserData?.account?.avatarUrl ? `/api/user/avatar/${dbUserData.account.id}?v=${encodeURIComponent(dbUserData.account.avatarUrl)}` : undefined}
                   alt={user.given_name}
                 />
                 <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-2xl font-bold">
