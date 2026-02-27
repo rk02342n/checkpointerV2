@@ -507,7 +507,7 @@ const queryClient = useQueryClient();
                     {/* Right Column: Info & Reviews */}
                     <div className="flex-1 pt-0 text-center lg:text-left min-w-0">
                         <div className="mb-6">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 font-serif">{data.game?.name}</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
                                 <span className="bg-amber-200 dark:bg-amber-950 px-2 sm:px-3 py-1 font-semibold border-2 border-border text-foreground text-xs sm:text-sm shrink-0">
                                     {data.game.releaseDate ? new Date(data.game.releaseDate).getFullYear() : "N/A"}
