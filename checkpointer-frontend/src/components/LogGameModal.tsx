@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { usePostHog } from 'posthog-js/react'
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Gamepad2, Loader2, ConciergeBell, History, X, CalendarHeart } from "lucide-react";
 import {
@@ -38,6 +39,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const posthog = usePostHog();
 
   // Set preselected game when modal opens
@@ -75,8 +77,13 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
   // Mutation for logging past game
   const logPastMutation = useMutation({
     mutationFn: (gameId: string) => logPastGame(gameId, "finished"),
-    onSuccess: () => {
-      invalidateAndClose();
+    onSuccess: (_data, gameId) => {
+      queryClient.invalidateQueries({ queryKey: ["currently-playing"] });
+      queryClient.invalidateQueries({ queryKey: ["play-history"] });
+      queryClient.invalidateQueries({ queryKey: ["game-sessions"] });
+      onOpenChange(false);
+      resetState();
+      navigate({ to: "/games/$gameId", params: { gameId }, search: { review: true } });
     },
   });
 

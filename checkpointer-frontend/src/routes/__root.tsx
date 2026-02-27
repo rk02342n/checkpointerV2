@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { Link, Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { Toaster } from "@/components/ui/sonner"
 
 interface MyRouterContext {
@@ -17,13 +17,6 @@ function Footer() {
         <div className="mx-auto px-6 sm:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="font-bold text-foreground font-alt">Checkpointer © 2026</span>
-          </div>
-          <div className="flex gap-4 sm:gap-6 text-sm text-foreground/80 font-medium">
-            <Link to="/about" className="hover:text-foreground transition-colors" activeProps={{className: 'font-bold text-secondary-foreground'}}>About</Link>
-            <Link to="/about" className="hover:text-foreground transition-colors" activeProps={{className: 'font-bold text-secondary-foreground'}}>News</Link>
-            <Link to="/about" className="hover:text-foreground transition-colors" activeProps={{className: 'font-bold text-secondary-foreground'}}>Pro</Link>
-            <Link to="/about" className="hover:text-foreground transition-colors" activeProps={{className: 'font-bold text-secondary-foreground'}}>Apps</Link>
-            <Link to="/about" className="hover:text-foreground transition-colors" activeProps={{className: 'font-bold text-secondary-foreground'}}>API</Link>
           </div>
         </div>
       </footer>

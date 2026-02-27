@@ -140,16 +140,13 @@ const Navbar: React.FC<NavbarProps> = () => {
         </div>
 
         <div className="flex items-center gap-4 md:gap-6">
-          {isAdmin && (
-            <Button
+          <Button
               variant="ghost"
               className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
-              onClick={() => { navigate({to: `/admin`});}}
+              onClick={() => { navigate({to: `/about`});}}
             >
-              <Shield className="w-4 h-4" />
-              <span>Admin</span>
+              <span>About</span>
             </Button>
-          )}
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none cursor-pointer">
@@ -158,9 +155,8 @@ const Navbar: React.FC<NavbarProps> = () => {
                   <ChevronDown className="w-5 h-5 text-foreground" />
                 </div>
                 {/* Desktop: full button with text */}
-                <div className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors">
+                <div className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-60 transition-colors">
                   <User className="w-4 h-4" />
-                  <span>Account</span>
                   <ChevronDown className="w-3 h-3" />
                 </div>
               </DropdownMenuTrigger>
