@@ -67,7 +67,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
       className="block bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
-      <div className="aspect-21/9 bg-muted relative">
+      <div className="aspect-21/9 bg-muted relative h-fit">
         {hasCustomCover ? (
           // Custom cover image
           <img
@@ -78,9 +78,15 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
           />
         ) : list.gameCoverUrls.length > 0 ? (
           // Game cover grid
-          <div className="grid grid-cols-2 h-full">
+          <div className={`grid h-full ${
+            list.gameCoverUrls.length === 1 ? 'grid-cols-1' :
+            list.gameCoverUrls.length === 3 ? 'grid-cols-2 grid-rows-2' :
+            'grid-cols-2'
+          }`}>
             {list.gameCoverUrls.slice(0, 4).map((url, i) => (
-              <div key={i} className="relative overflow-hidden">
+              <div key={i} className={`relative overflow-hidden ${
+                list.gameCoverUrls.length === 3 && i === 0 ? 'row-span-2' : ''
+              }`}>
                 {url ? (
                   <img
                     src={url}
@@ -95,12 +101,6 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
                 )}
               </div>
             ))}
-            {/* Fill remaining slots if less than 4 */}
-            {Array.from({ length: Math.max(0, 4 - list.gameCoverUrls.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="bg-muted flex items-center justify-center">
-                <Gamepad2 className="w-6 h-6 text-muted-foreground" />
-              </div>
-            ))}
           </div>
         ) : (
           // Empty state
@@ -113,7 +113,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </div>
         {/* Save button / save count */}
-        {(showSaveButton || (showSaveCount && saveData?.saveCount)) && (
+        {(showSaveButton || (showSaveCount && (saveData?.saveCount ?? 0) > 0)) && (
           <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
             {saveData?.saveCount ? (
               <span className="text-xs font-bold bg-background/80 border-2 border-border px-1.5 py-0.5">
