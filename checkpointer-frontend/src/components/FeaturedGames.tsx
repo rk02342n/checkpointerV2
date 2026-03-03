@@ -8,15 +8,12 @@ import { StandardGameCard } from "@/components/StandardGameCard"
 function FeaturedGames({
   title = "Featured games",
   games = [],
-  limit = 4,
   onGameClick,
 }: {
   title?: string
   games?: Game[]
-  limit?: number
   onGameClick?: (game: Game) => void
 }) {
-  const items = games
   const navigate = useNavigate()
 
   const { data: dbUserData, isError: isAuthError } = useQuery({
@@ -51,9 +48,11 @@ function FeaturedGames({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-        {items.slice(0, limit).map((game: Game) => (
-          <StandardGameCard key={game.id} game={game} onGameClick={onGameClick} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 max-w-400">
+        {games.slice(0, 6).map((game: Game, index: number) => (
+          <div key={game.id} className={index >= 4 ? 'hidden sm:block lg:hidden' : ''}>
+            <StandardGameCard game={game} onGameClick={onGameClick} />
+          </div>
         ))}
       </div>
     </section>

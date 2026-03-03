@@ -36,7 +36,7 @@ export default function Checkpointer() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
       <Navbar />
-      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-7xl">
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
           <div className="bg-secondary brightness-100 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
@@ -113,7 +113,6 @@ export default function Checkpointer() {
             <FeaturedGames
               title="Featured games"
               games={featuredData.games}
-              limit={4}
               onGameClick={handleGameClick}
             />
           ) : null}
@@ -129,7 +128,6 @@ export default function Checkpointer() {
             <FeaturedGames
               title="Trending this week"
               games={trendingData.games}
-              limit={4}
               onGameClick={handleGameClick}
             />
           ) : null}
@@ -143,7 +141,6 @@ export default function Checkpointer() {
             <FeaturedGames
               title="Top rated on Checkpointer"
               games={topRatedData.games}
-              limit={4}
               onGameClick={handleGameClick}
             />)}
         </section>

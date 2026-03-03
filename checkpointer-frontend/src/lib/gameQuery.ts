@@ -158,7 +158,7 @@ export async function getTopRatedGames(limit = 4): Promise<{ games: Game[] }> {
 
 export const getTopRatedGamesQueryOptions = queryOptions({
   queryKey: ["top-rated-games"],
-  queryFn: () => getTopRatedGames(),
+  queryFn: () => getTopRatedGames(6),
   staleTime: 1000 * 60 * 5,
 });
 
@@ -172,7 +172,7 @@ export async function getTrendingGames(limit = 4): Promise<{ games: Game[] }> {
 
 export const getTrendingGamesQueryOptions = queryOptions({
   queryKey: ["trending-games"],
-  queryFn: () => getTrendingGames(),
+  queryFn: () => getTrendingGames(6),
   staleTime: 1000 * 60 * 5,
 });
 
