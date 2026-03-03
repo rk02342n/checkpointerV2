@@ -234,8 +234,8 @@ export const StandardGameCard = ({
           <div
             className={
               variant === "featured"
-                ? "mt-1 sm:mt-2 flex flex-wrap gap-1"
-                : "mt-2 flex flex-wrap gap-1"
+                ? "mt-1 sm:mt-2 flex flex-wrap gap-1 h-5 overflow-hidden"
+                : "mt-2 flex flex-wrap gap-1 h-5 overflow-hidden"
             }
           >
             {platforms.slice(0, 4).map((p) => (
