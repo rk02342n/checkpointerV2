@@ -6,7 +6,8 @@ import { userQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark } from 'lucide-react'
+import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users } from 'lucide-react'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
@@ -64,6 +65,7 @@ function Profile() {
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showStopPlayingDialog, setShowStopPlayingDialog] = useState(false)
+  const [showFollowDialog, setShowFollowDialog] = useState<'followers' | 'following' | null>(null)
   const [newUsername, setNewUsername] = useState('')
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean
@@ -289,6 +291,33 @@ function Profile() {
 
   // Get user's reviews - using the database user ID (not Kinde ID)
   const dbUserId = dbUserData?.account?.id || ''
+
+  // Follow counts query
+  const { data: followCountsData } = useQuery({
+    ...followCountsQueryOptions(dbUserId),
+    enabled: !!dbUserId && !isUserPending,
+  })
+
+  // Followers/following infinite queries (only fetch when dialog is open)
+  const {
+    data: followersData,
+    hasNextPage: hasMoreFollowers,
+    isFetchingNextPage: isFetchingMoreFollowers,
+    fetchNextPage: fetchMoreFollowers,
+  } = useInfiniteQuery({
+    ...followersInfiniteOptions(dbUserId),
+    enabled: !!dbUserId && showFollowDialog === 'followers',
+  })
+
+  const {
+    data: followingData,
+    hasNextPage: hasMoreFollowing,
+    isFetchingNextPage: isFetchingMoreFollowing,
+    fetchNextPage: fetchMoreFollowing,
+  } = useInfiniteQuery({
+    ...followingInfiniteOptions(dbUserId),
+    enabled: !!dbUserId && showFollowDialog === 'following',
+  })
 
   // Infinite query for reviews
   const {
@@ -667,12 +696,20 @@ function Profile() {
                   <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
-                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
-                  <div className="text-2xl font-bold text-foreground">
-                    <Gamepad2 className="w-6 h-6 inline" />
-                  </div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground text-center font-medium">Gamer</div>
-                </div>
+                <button
+                  onClick={() => setShowFollowDialog('followers')}
+                  className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
+                </button>
+                <button
+                  onClick={() => setShowFollowDialog('following')}
+                  className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
+                </button>
               </div>
             </div>
 
@@ -1031,6 +1068,102 @@ function Profile() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Followers/Following Dialog */}
+      <Dialog open={showFollowDialog !== null} onOpenChange={(open) => !open && setShowFollowDialog(null)}>
+        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <Users className="w-5 h-5" />
+              {showFollowDialog === 'followers' ? 'Followers' : 'Following'}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {showFollowDialog === 'followers'
+                ? `${followCountsData?.followersCount ?? 0} followers`
+                : `Following ${followCountsData?.followingCount ?? 0} users`}
+            </DialogDescription>
+            {/* Tab switcher */}
+            <div className="flex border-b-4 border-border mt-2">
+              <button
+                onClick={() => setShowFollowDialog('followers')}
+                className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest ${
+                  showFollowDialog === 'followers'
+                    ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
+                }`}
+              >
+                Followers ({followCountsData?.followersCount ?? 0})
+              </button>
+              <button
+                onClick={() => setShowFollowDialog('following')}
+                className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest border-l-4 border-border ${
+                  showFollowDialog === 'following'
+                    ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
+                }`}
+              >
+                Following ({followCountsData?.followingCount ?? 0})
+              </button>
+            </div>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 -mx-6 px-6">
+            {(() => {
+              const users = showFollowDialog === 'followers'
+                ? followersData?.pages.flatMap(p => p.users) ?? []
+                : followingData?.pages.flatMap(p => p.users) ?? []
+              const hasMore = showFollowDialog === 'followers' ? hasMoreFollowers : hasMoreFollowing
+              const isFetchingMore = showFollowDialog === 'followers' ? isFetchingMoreFollowers : isFetchingMoreFollowing
+              const fetchMore = showFollowDialog === 'followers' ? fetchMoreFollowers : fetchMoreFollowing
+
+              if (users.length === 0) {
+                return (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-foreground font-bold mb-2">
+                      {showFollowDialog === 'followers' ? 'No followers yet' : 'Not following anyone yet'}
+                    </p>
+                  </div>
+                )
+              }
+
+              return (
+                <div className="space-y-2 py-2">
+                  {users.map((user) => (
+                    <Link
+                      key={user.id}
+                      to="/users/$userId"
+                      params={{ userId: user.id }}
+                      onClick={() => setShowFollowDialog(null)}
+                      className="flex items-center gap-3 p-3 border-4 border-border hover:bg-accent transition-colors"
+                    >
+                      <Avatar className="w-10 h-10 border-2 border-border">
+                        <AvatarImage
+                          src={user.avatarUrl ? `/api/user/avatar/${user.id}?v=${encodeURIComponent(user.avatarUrl)}` : undefined}
+                          alt={user.displayName || user.username}
+                        />
+                        <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-sm font-bold">
+                          {(user.username || '?').slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-foreground truncate">
+                          {user.displayName || user.username}
+                        </div>
+                        <div className="text-sm text-muted-foreground">@{user.username}</div>
+                      </div>
+                    </Link>
+                  ))}
+                  <LoadMoreButton
+                    hasNextPage={!!hasMore}
+                    isFetchingNextPage={isFetchingMore}
+                    fetchNextPage={fetchMore}
+                  />
+                </div>
+              )
+            })()}
+          </div>
         </DialogContent>
       </Dialog>
 
