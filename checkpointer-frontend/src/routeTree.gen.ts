@@ -17,6 +17,7 @@ import { Route as ListsListIdRouteImport } from './routes/lists/$listId'
 import { Route as GamesGameIdRouteImport } from './routes/games/$gameId'
 import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authenticated/totalspent'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedMockupRouteImport } from './routes/_authenticated/mockup'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCreateExpenseRouteImport } from './routes/_authenticated/create-expense'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
@@ -61,6 +62,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMockupRoute = AuthenticatedMockupRouteImport.update({
+  id: '/mockup',
+  path: '/mockup',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
+  '/_authenticated/mockup': typeof AuthenticatedMockupRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-expense'
     | '/expenses'
+    | '/mockup'
     | '/profile'
     | '/totalspent'
     | '/games/$gameId'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-expense'
     | '/expenses'
+    | '/mockup'
     | '/profile'
     | '/totalspent'
     | '/games/$gameId'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/create-expense'
     | '/_authenticated/expenses'
+    | '/_authenticated/mockup'
     | '/_authenticated/profile'
     | '/_authenticated/totalspent'
     | '/games/$gameId'
@@ -234,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mockup': {
+      id: '/_authenticated/mockup'
+      path: '/mockup'
+      fullPath: '/mockup'
+      preLoaderRoute: typeof AuthenticatedMockupRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/expenses': {
       id: '/_authenticated/expenses'
       path: '/expenses'
@@ -270,6 +289,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCreateExpenseRoute: typeof AuthenticatedCreateExpenseRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
+  AuthenticatedMockupRoute: typeof AuthenticatedMockupRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTotalspentRoute: typeof AuthenticatedTotalspentRoute
 }
@@ -279,6 +299,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCreateExpenseRoute: AuthenticatedCreateExpenseRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
+  AuthenticatedMockupRoute: AuthenticatedMockupRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTotalspentRoute: AuthenticatedTotalspentRoute,
 }
