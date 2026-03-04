@@ -155,6 +155,13 @@
       "when": 1771715713564,
       "tag": "0021_amazing_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1772583771674,
+      "tag": "0022_misty_ultron",
+      "breakpoints": true
     }
   ]
 }

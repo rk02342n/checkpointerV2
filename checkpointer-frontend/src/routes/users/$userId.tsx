@@ -6,7 +6,8 @@ import { publicUserProfileQueryOptions, dbUserQueryOptions } from '@/lib/api'
 import { getReviewsByUserIdInfiniteOptions, toggleReviewLike, type UserReviewsResponse } from '@/lib/reviewsQuery'
 import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/lib/gameSessionsQuery'
 import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
-import { Gamepad2, Heart, History, CalendarHeart, ListPlus } from 'lucide-react'
+import { followCountsQueryOptions, followStatusQueryOptions, toggleFollow, type FollowCounts } from '@/lib/followsQuery'
+import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus } from 'lucide-react'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ListsSection } from '@/components/ListsSection'
@@ -54,6 +55,21 @@ function PublicProfile() {
 
   const { isPending: isProfilePending, data: profileData, error: profileError } = useQuery(publicUserProfileQueryOptions(userId))
   const { data: dbUserData } = useQuery(dbUserQueryOptions)
+
+  const isOwnProfile = dbUserData?.account?.id === userId
+  const isAuthenticated = !!dbUserData?.account
+
+  // Get follow counts
+  const { data: followCountsData } = useQuery({
+    ...followCountsQueryOptions(userId),
+    enabled: !!userId,
+  })
+
+  // Check if current user follows this profile
+  const { data: followStatusData } = useQuery({
+    ...followStatusQueryOptions(userId),
+    enabled: isAuthenticated && !isOwnProfile,
+  })
 
   // Get user's currently playing
   const { data: currentlyPlayingData } = useQuery({
@@ -157,6 +173,48 @@ function PublicProfile() {
     },
   })
 
+  // Follow mutation with optimistic updates
+  const followMutation = useMutation({
+    mutationFn: toggleFollow,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['follow-status', userId] })
+      await queryClient.cancelQueries({ queryKey: ['follow-counts', userId] })
+
+      const previousStatus = queryClient.getQueryData(['follow-status', userId])
+      const previousCounts = queryClient.getQueryData(['follow-counts', userId])
+
+      const wasFollowing = followStatusData?.following ?? false
+
+      queryClient.setQueryData(['follow-status', userId], { following: !wasFollowing })
+      queryClient.setQueryData(['follow-counts', userId], (old: FollowCounts | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          followersCount: wasFollowing ? old.followersCount - 1 : old.followersCount + 1,
+        }
+      })
+
+      return { previousStatus, previousCounts }
+    },
+    onError: (_err, _userId, context) => {
+      if (context?.previousStatus) {
+        queryClient.setQueryData(['follow-status', userId], context.previousStatus)
+      }
+      if (context?.previousCounts) {
+        queryClient.setQueryData(['follow-counts', userId], context.previousCounts)
+      }
+      toast.error('Failed to update follow status')
+    },
+  })
+
+  const handleFollow = () => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to follow users")
+      return
+    }
+    followMutation.mutate(userId)
+  }
+
   const handleLikeReview = (reviewId: string) => {
     if (!dbUserData?.account) {
       toast.error("Please log in to like reviews")
@@ -233,12 +291,34 @@ function PublicProfile() {
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
                 <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
-                  <div className="text-2xl font-bold text-foreground">
-                    <Gamepad2 className="w-6 h-6 inline" />
-                  </div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground text-center font-medium">Gamer</div>
+                  <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
+                </div>
+                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                  <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
                 </div>
               </div>
+              {/* Follow Button */}
+              {isAuthenticated && !isOwnProfile && (
+                <div className="mt-4 flex justify-center md:justify-start">
+                  <button
+                    onClick={handleFollow}
+                    disabled={followMutation.isPending}
+                    className={`flex items-center gap-2 px-6 py-2 border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] font-bold uppercase tracking-wide text-sm transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 ${
+                      followStatusData?.following
+                        ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 hover:bg-rose-300 dark:hover:bg-rose-900/80'
+                        : 'bg-green-200 dark:bg-green-900/60 text-green-800 dark:text-green-200 hover:bg-green-300 dark:hover:bg-green-900/80'
+                    }`}
+                  >
+                    {followStatusData?.following ? (
+                      <><UserMinus className="w-4 h-4" /> Unfollow</>
+                    ) : (
+                      <><UserPlus className="w-4 h-4" /> Follow</>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
