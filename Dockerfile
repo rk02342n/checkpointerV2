@@ -31,8 +31,14 @@ COPY . .
 # Final stage for app image
 FROM base
 
+# Create non-root user
+RUN adduser --disabled-password --gecos "" appuser
+
 # Copy built application
 COPY --from=build /app /app
+
+# Run as non-root user
+USER appuser
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000

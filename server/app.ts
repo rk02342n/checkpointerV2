@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
+import { cors } from 'hono/cors'
+import { csrf } from 'hono/csrf'
 import { expensesRoute } from './routes/expenses'
 import { serveStatic } from 'hono/bun'
 import { authRoute } from './routes/auth'
@@ -17,6 +19,19 @@ import { followsRoute } from './routes/follows'
 const app = new Hono()
 
 app.use('*', logger())
+
+app.use('*', cors({
+  origin: [
+    'http://localhost:5173',
+    'https://checkpointer.io',
+    'https://www.checkpointer.io',
+  ],
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+}))
+
+app.use('*', csrf())
 
 const apiRoutes = app
   .basePath("/api")

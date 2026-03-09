@@ -842,8 +842,9 @@ export const gameListsRoute = new Hono()
     return c.json({ error: "File too large. Max size: 5MB" }, 400);
   }
 
-  // Generate unique filename
-  const ext = file.name.split(".").pop() || "jpg";
+  // Generate unique filename with safe extension derived from MIME type
+  const mimeToExt: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+  const ext = mimeToExt[file.type] || "jpg";
   const key = `list-covers/${listId}/${Date.now()}.${ext}`;
 
   // Upload to R2 via S3 API
@@ -900,13 +901,17 @@ export const gameListsRoute = new Hono()
 .get('/:listId/cover', async (c) => {
   const listId = c.req.param('listId');
 
-  // Get list's cover key from database
+  // Get list's cover key and visibility from database
   const list = await db
-    .select({ coverUrl: gameListsTable.coverUrl })
+    .select({ coverUrl: gameListsTable.coverUrl, visibility: gameListsTable.visibility })
     .from(gameListsTable)
     .where(eq(gameListsTable.id, listId))
     .limit(1)
     .then(res => res[0]);
+
+  if (list?.visibility === 'private') {
+    return c.notFound();
+  }
 
   if (!list?.coverUrl) {
     return c.notFound();

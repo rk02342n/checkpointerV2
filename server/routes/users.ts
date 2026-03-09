@@ -136,8 +136,9 @@ export const usersRoute = new Hono()
         return c.json({ error: "File too large. Max size: 5MB" }, 400);
     }
 
-    // Generate unique filename
-    const ext = file.name.split(".").pop() || "jpg";
+    // Generate unique filename with safe extension derived from MIME type
+    const mimeToExt: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+    const ext = mimeToExt[file.type] || "jpg";
     const key = `avatars/${dbUser.id}/${Date.now()}.${ext}`;
 
     // Upload to R2 via S3 API
