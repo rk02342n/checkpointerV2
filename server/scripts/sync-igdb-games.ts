@@ -43,6 +43,7 @@ import {
   getSyncState,
   setSyncState,
   bulkInsertIgnore,
+  deleteStaleJunctionRows,
   type SyncState,
 } from "../lib/sync-helpers";
 
@@ -87,6 +88,7 @@ async function processBatch(
   genreIgdbToId: Map<number | null, string>,
   platformIgdbToId: Map<number | null, string>,
   keywordIgdbToId: Map<number | null, string>,
+  isIncremental: boolean,
 ): Promise<{ maxUpdatedAt: number }> {
   if (igdbGames.length === 0) return { maxUpdatedAt: 0 };
 
@@ -131,7 +133,13 @@ async function processBatch(
           releaseDate: sql`excluded.release_date`,
           coverUrl: sql`excluded.cover_url`,
           igdbRating: sql`excluded.igdb_rating`,
-          updatedAt: sql`excluded.updated_at`,
+          updatedAt: sql`CASE WHEN (
+            games.name, games.slug, games.summary, games.release_date,
+            games.cover_url, games.igdb_rating
+          ) IS DISTINCT FROM (
+            excluded.name, excluded.slug, excluded.summary, excluded.release_date,
+            excluded.cover_url, excluded.igdb_rating
+          ) THEN now() ELSE games.updated_at END`,
         },
       });
   }
@@ -199,17 +207,9 @@ async function processBatch(
     for (const r of rows) keywordIgdbToId.set(r.igdbId, r.id);
   }
 
-  // --- 5. Delete existing junction/image/link rows for batch game UUIDs ---
+  // --- 5. Collect desired junction/image/link rows ---
   const gameUuids = Array.from(igdbToGameId.values());
-  for (const uuidChunk of chunk(gameUuids, 500)) {
-    await db.delete(gameGenresTable).where(inArray(gameGenresTable.gameId, uuidChunk));
-    await db.delete(gamePlatformsTable).where(inArray(gamePlatformsTable.gameId, uuidChunk));
-    await db.delete(gameKeywordsTable).where(inArray(gameKeywordsTable.gameId, uuidChunk));
-    await db.delete(gameImagesTable).where(inArray(gameImagesTable.gameId, uuidChunk));
-    await db.delete(gameLinksTable).where(inArray(gameLinksTable.gameId, uuidChunk));
-  }
 
-  // --- 6. Collect and insert fresh junction/image/link rows ---
   const allGenreJunctions: { gameId: string; genreId: string }[] = [];
   const allPlatformJunctions: { gameId: string; platformId: string }[] = [];
   const allKeywordJunctions: { gameId: string; keywordId: string }[] = [];
@@ -277,11 +277,56 @@ async function processBatch(
     }
   }
 
-  await bulkInsertIgnore(db, gameGenresTable, allGenreJunctions);
-  await bulkInsertIgnore(db, gamePlatformsTable, allPlatformJunctions);
-  await bulkInsertIgnore(db, gameKeywordsTable, allKeywordJunctions);
-  await bulkInsertIgnore(db, gameImagesTable, allImageRows);
-  await bulkInsertIgnore(db, gameLinksTable, allLinkRows);
+  // --- 6. Write junction/image/link rows ---
+  if (isIncremental) {
+    // Junction tables: insert new rows + delete stale (avoids unnecessary I/O)
+    await bulkInsertIgnore(db, gameGenresTable, allGenreJunctions);
+    await bulkInsertIgnore(db, gamePlatformsTable, allPlatformJunctions);
+    await bulkInsertIgnore(db, gameKeywordsTable, allKeywordJunctions);
+
+    // Build desired FK sets per game for stale deletion
+    const desiredGenres = new Map<string, string[]>();
+    for (const j of allGenreJunctions) {
+      if (!desiredGenres.has(j.gameId)) desiredGenres.set(j.gameId, []);
+      desiredGenres.get(j.gameId)!.push(j.genreId);
+    }
+    const desiredPlatforms = new Map<string, string[]>();
+    for (const j of allPlatformJunctions) {
+      if (!desiredPlatforms.has(j.gameId)) desiredPlatforms.set(j.gameId, []);
+      desiredPlatforms.get(j.gameId)!.push(j.platformId);
+    }
+    const desiredKeywords = new Map<string, string[]>();
+    for (const j of allKeywordJunctions) {
+      if (!desiredKeywords.has(j.gameId)) desiredKeywords.set(j.gameId, []);
+      desiredKeywords.get(j.gameId)!.push(j.keywordId);
+    }
+
+    await deleteStaleJunctionRows(db, gameGenresTable, gameGenresTable.gameId, gameGenresTable.genreId, gameUuids, desiredGenres);
+    await deleteStaleJunctionRows(db, gamePlatformsTable, gamePlatformsTable.gameId, gamePlatformsTable.platformId, gameUuids, desiredPlatforms);
+    await deleteStaleJunctionRows(db, gameKeywordsTable, gameKeywordsTable.gameId, gameKeywordsTable.keywordId, gameUuids, desiredKeywords);
+
+    // Images/links: delete + re-insert (no natural unique constraint)
+    for (const uuidChunk of chunk(gameUuids, 500)) {
+      await db.delete(gameImagesTable).where(inArray(gameImagesTable.gameId, uuidChunk));
+      await db.delete(gameLinksTable).where(inArray(gameLinksTable.gameId, uuidChunk));
+    }
+    await bulkInsertIgnore(db, gameImagesTable, allImageRows);
+    await bulkInsertIgnore(db, gameLinksTable, allLinkRows);
+  } else {
+    // Full sync: delete all + re-insert (faster for bulk operations)
+    for (const uuidChunk of chunk(gameUuids, 500)) {
+      await db.delete(gameGenresTable).where(inArray(gameGenresTable.gameId, uuidChunk));
+      await db.delete(gamePlatformsTable).where(inArray(gamePlatformsTable.gameId, uuidChunk));
+      await db.delete(gameKeywordsTable).where(inArray(gameKeywordsTable.gameId, uuidChunk));
+      await db.delete(gameImagesTable).where(inArray(gameImagesTable.gameId, uuidChunk));
+      await db.delete(gameLinksTable).where(inArray(gameLinksTable.gameId, uuidChunk));
+    }
+    await bulkInsertIgnore(db, gameGenresTable, allGenreJunctions);
+    await bulkInsertIgnore(db, gamePlatformsTable, allPlatformJunctions);
+    await bulkInsertIgnore(db, gameKeywordsTable, allKeywordJunctions);
+    await bulkInsertIgnore(db, gameImagesTable, allImageRows);
+    await bulkInsertIgnore(db, gameLinksTable, allLinkRows);
+  }
 
   return { maxUpdatedAt };
 }
@@ -352,7 +397,7 @@ async function runFullSync(
     const totalBatches = Math.ceil(totalCount / IGDB_BATCH_SIZE);
     console.log(`Batch ${batchNum}/${totalBatches} — processing ${igdbGames.length} games (offset ${offset})...`);
 
-    const result = await processBatch(igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId);
+    const result = await processBatch(igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId, false);
 
     if (result.maxUpdatedAt > maxUpdatedAt) {
       maxUpdatedAt = result.maxUpdatedAt;
@@ -432,7 +477,7 @@ async function runIncrementalSync(
 
     console.log(`Batch — processing ${igdbGames.length} updated games (offset ${offset})...`);
 
-    const result = await processBatch(igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId);
+    const result = await processBatch(igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId, true);
 
     if (result.maxUpdatedAt > maxUpdatedAt) {
       maxUpdatedAt = result.maxUpdatedAt;
