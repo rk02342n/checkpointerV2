@@ -1,4 +1,4 @@
-import { uuid, pgTable, pgEnum, index, timestamp, text } from "drizzle-orm/pg-core";
+import { uuid, pgTable, pgEnum, index, timestamp, text, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod'
 
@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   role: userRoleEnum("role").default("free").notNull(),
+  isPublic: boolean("is_public").default(true).notNull(),
   suspendedAt: timestamp("suspended_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (users) => [

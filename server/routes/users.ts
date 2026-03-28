@@ -15,6 +15,12 @@ const updateUsernameSchema = z.object({
         .max(32, "Username must be at most 32 characters")
         .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
 });
+
+const updateProfileSchema = z.object({
+    displayName: z.string().max(50).nullable().optional(),
+    bio: z.string().max(300).nullable().optional(),
+    isPublic: z.boolean().optional(),
+});
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
 
 export const usersRoute = new Hono()
@@ -88,6 +94,20 @@ export const usersRoute = new Hono()
     const updatedUser = await db
         .update(usersTable)
         .set({ username })
+        .where(eq(usersTable.id, dbUser.id))
+        .returning()
+        .then(res => res[0]);
+
+    return c.json({ account: updatedUser });
+})
+
+.patch("/profile", getAuthUser, zValidator("json", updateProfileSchema), async c => {
+    const dbUser = c.var.dbUser;
+    const fields = c.req.valid("json");
+
+    const updatedUser = await db
+        .update(usersTable)
+        .set(fields)
         .where(eq(usersTable.id, dbUser.id))
         .returning()
         .then(res => res[0]);

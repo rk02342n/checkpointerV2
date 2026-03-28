@@ -16,6 +16,7 @@ import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
 import { Route as ListsListIdRouteImport } from './routes/lists/$listId'
 import { Route as GamesGameIdRouteImport } from './routes/games/$gameId'
 import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authenticated/totalspent'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMockupRouteImport } from './routes/_authenticated/mockup'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
@@ -55,6 +56,11 @@ const GamesGameIdRoute = GamesGameIdRouteImport.update({
 const AuthenticatedTotalspentRoute = AuthenticatedTotalspentRouteImport.update({
   id: '/totalspent',
   path: '/totalspent',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/expenses': typeof AuthenticatedExpensesRoute
   '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthenticatedExpensesRoute
   '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/mockup': typeof AuthenticatedMockupRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/totalspent': typeof AuthenticatedTotalspentRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/mockup'
     | '/profile'
+    | '/settings'
     | '/totalspent'
     | '/games/$gameId'
     | '/lists/$listId'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/mockup'
     | '/profile'
+    | '/settings'
     | '/totalspent'
     | '/games/$gameId'
     | '/lists/$listId'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_authenticated/expenses'
     | '/_authenticated/mockup'
     | '/_authenticated/profile'
+    | '/_authenticated/settings'
     | '/_authenticated/totalspent'
     | '/games/$gameId'
     | '/lists/$listId'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTotalspentRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -291,6 +310,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedMockupRoute: typeof AuthenticatedMockupRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTotalspentRoute: typeof AuthenticatedTotalspentRoute
 }
 
@@ -301,6 +321,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedMockupRoute: AuthenticatedMockupRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTotalspentRoute: AuthenticatedTotalspentRoute,
 }
 

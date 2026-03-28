@@ -137,6 +137,22 @@ export async function getAppSettings(): Promise<AppSettings> {
   return res.json();
 }
 
+export async function updateUserProfile(data: {
+  displayName?: string | null;
+  bio?: string | null;
+  isPublic?: boolean;
+}): Promise<{ account: { displayName: string | null; bio: string | null; isPublic: boolean } }> {
+  const res = await fetch("/api/user/profile", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error("Failed to update profile");
+  }
+  return res.json();
+}
+
 export async function updateAppSetting(key: string, value: unknown): Promise<void> {
   const res = await fetch("/api/admin/settings", {
     method: "PATCH",

@@ -1,6 +1,5 @@
-import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Sun, Moon, Signature } from "lucide-react";
+import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Signature, Settings } from "lucide-react";
 import { usePostHog } from 'posthog-js/react'
-import { useTheme } from "next-themes";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
@@ -10,7 +9,6 @@ import { getSearchGamesQueryOptions } from "@/lib/gameQuery";
 import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
 import { dbUserQueryOptions } from "@/lib/api";
-import { useSettings } from "@/lib/settingsContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,8 +27,6 @@ const Navbar: React.FC<NavbarProps> = () => {
     const [logGameModalOpen, setLogGameModalOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
-    const { theme, setTheme } = useTheme();
-    const { settings } = useSettings();
     const posthog = usePostHog();
 
     // Debounce search query to avoid excessive API calls
@@ -168,6 +164,13 @@ const Navbar: React.FC<NavbarProps> = () => {
                   <User className="w-4 h-4" />
                   Profile
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate({to: `/settings`})}
+                  className="font-medium rounded-none hover:bg-primary/20"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border/50" />
                 {isAdmin && <DropdownMenuItem
                   onClick={() => navigate({to: `/admin`})}
@@ -177,16 +180,6 @@ const Navbar: React.FC<NavbarProps> = () => {
                   Admin
                 </DropdownMenuItem>}
                 {isAdmin && <DropdownMenuSeparator className="bg-border/50" />}
-                {settings.darkModeEnabled && (
-                  <DropdownMenuItem
-                    onClick={() => { const newTheme = theme === 'dark' ? 'light' : 'dark'; posthog.capture('dark_mode_toggled', { new_theme: newTheme }); setTheme(newTheme); }}
-                    className="font-medium rounded-none hover:bg-primary/20"
-                  >
-                    <Sun className="w-4 h-4 hidden dark:block" />
-                    <Moon className="w-4 h-4 dark:hidden" />
-                    {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator className="bg-border/50" />
                 <DropdownMenuItem asChild variant="destructive" className="font-medium rounded-none">
                   <a href="/api/logout">
