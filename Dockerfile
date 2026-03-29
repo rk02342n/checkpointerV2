@@ -32,7 +32,7 @@ COPY . .
 FROM base
 
 # Create non-root user
-RUN adduser --disabled-password --gecos "" appuser
+RUN useradd --no-create-home --shell /bin/false appuser
 
 # Copy built application
 COPY --from=build /app /app
