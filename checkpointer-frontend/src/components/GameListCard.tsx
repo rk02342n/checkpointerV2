@@ -149,6 +149,12 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
           )}
         </div>
         <p className="text-muted-foreground text-sm mt-1 line-clamp-2 min-h-10">{list.description || `${list.gameCount} ${list.gameCount === 1 ? "game" : "games"}`}</p>
+        {showSaveCount && saveData && saveData.saveCount > 0 && (
+          <p className="text-muted-foreground text-xs mt-1 flex items-center gap-1">
+            <Bookmark className="w-3 h-3" />
+            {saveData.saveCount} {saveData.saveCount === 1 ? "save" : "saves"}
+          </p>
+        )}
       </div>
     </Link>
   );

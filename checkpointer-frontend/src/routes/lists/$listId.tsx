@@ -75,11 +75,11 @@ function ListDetailView() {
   const list = data?.list;
   const isOwner = (list as GameListDetail & { isOwner?: boolean })?.isOwner ?? false;
 
-  // Save status query (only when logged in, not owner, public list)
+  // Save status query (non-owner: save button; owner: save count display)
   const canSave = isLoggedIn && !isOwner && list?.visibility === 'public';
   const { data: saveData } = useQuery({
     ...listSavedQueryOptions(listId),
-    enabled: canSave,
+    enabled: canSave || (isLoggedIn && isOwner),
   });
 
   // Track list view
@@ -387,6 +387,12 @@ function ListDetailView() {
                 <span>
                   {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
                 </span>
+                {isOwner && saveData && saveData.saveCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Bookmark className="w-3.5 h-3.5" />
+                    {saveData.saveCount} {saveData.saveCount === 1 ? "save" : "saves"}
+                  </span>
+                )}
                 <span>
                   Updated {new Date(list.updatedAt).toLocaleDateString()}
                 </span>
