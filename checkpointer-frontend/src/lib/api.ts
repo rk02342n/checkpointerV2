@@ -88,6 +88,7 @@ export type PublicUserProfile = {
   id: string
   username: string | null
   displayName: string | null
+  bio: string | null
   avatarUrl: string | null
   createdAt: string
 }

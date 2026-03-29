@@ -283,6 +283,9 @@ function PublicProfile() {
               {user?.username && (
                 <p className="text-muted-foreground text-sm font-medium mt-1">@{user.username}</p>
               )}
+              {user?.bio && (
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">{user.bio}</p>
+              )}
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">

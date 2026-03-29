@@ -190,6 +190,7 @@ export const usersRoute = new Hono()
             id: usersTable.id,
             username: usersTable.username,
             displayName: usersTable.displayName,
+            bio: usersTable.bio,
             avatarUrl: usersTable.avatarUrl,
             createdAt: usersTable.createdAt,
         })

@@ -689,6 +689,9 @@ function Profile() {
                 </div>
               )}
               <p className="text-muted-foreground text-sm mt-1">{user.email}</p>
+              {dbUserData?.account?.bio && (
+                <p className="text-sm text-muted-foreground mt-2 max-w-md">{dbUserData.account.bio}</p>
+              )}
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
