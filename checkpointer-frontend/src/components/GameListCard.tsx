@@ -110,7 +110,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
           </div>
         )}
         {/* Game count badge */}
-        <div className="absolute bottom-2 right-2 bg-stone-900 dark:bg-stone-700 text-white text-xs font-bold px-2 py-1">
+        <div className={`absolute bottom-2 right-2 bg-stone-900 ${themed ? '' : 'dark:bg-stone-700'} text-white text-xs font-bold px-2 py-1`}>
           {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
         </div>
         {/* Save button / save count */}
