@@ -48,7 +48,7 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className={`block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-background dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
+      className={`block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-background dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -160,9 +160,10 @@ type SessionCardProps = {
       coverUrl: string | null
     }
   }
+  themed?: boolean
 }
 
-export const SessionCard = memo(function SessionCard({ session }: SessionCardProps) {
+export const SessionCard = memo(function SessionCard({ session, themed }: SessionCardProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
@@ -181,7 +182,7 @@ export const SessionCard = memo(function SessionCard({ session }: SessionCardPro
     <Link
       to="/games/$gameId"
       params={{ gameId: session.game.id }}
-      className="block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
+      className="block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -213,15 +214,15 @@ export const SessionCard = memo(function SessionCard({ session }: SessionCardPro
               </div>
             </div>
             {isActive ? (
-              <span className="bg-green-400 dark:bg-green-700 text-foreground px-2 py-1 text-xs font-bold uppercase border-2 border-border">
+              <span className={`bg-green-400 ${themed ? '' : 'dark:bg-green-700'} text-foreground px-2 py-1 text-xs font-bold uppercase border-2 border-border`}>
                 Playing Now
               </span>
             ) : session.session.status === 'finished' ? (
-              <span className="bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 text-xs font-medium border-2 border-border">
+              <span className={`bg-green-200 ${themed ? '' : 'dark:bg-green-900'} text-green-800 ${themed ? '' : 'dark:text-green-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
                 Finished
               </span>
             ) : session.session.status === 'stashed' ? (
-              <span className="bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-300 px-2 py-1 text-xs font-medium border-2 border-border">
+              <span className={`bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-amber-800 ${themed ? '' : 'dark:text-amber-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
                 Stashed
               </span>
             ) : (
@@ -248,9 +249,10 @@ type WishlistCardProps = {
   item: WishlistItem
   onRemove?: (gameId: string) => void
   isRemoving?: boolean
+  themed?: boolean
 }
 
-export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemoving }: WishlistCardProps) {
+export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemoving, themed }: WishlistCardProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
@@ -264,7 +266,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
     <Link
       to="/games/$gameId"
       params={{ gameId: item.gameId }}
-      className={`block bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
+      className={`block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -295,7 +297,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
                 <span>Added {formatDate(item.createdAt)}</span>
               </div>
             </div>
-            <span className="bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-300 px-2 py-1 text-xs font-medium border-2 border-border">
+            <span className={`bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-amber-800 ${themed ? '' : 'dark:text-amber-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
               Want to Play
             </span>
           </div>

@@ -17,9 +17,10 @@ interface ListsSectionProps {
   userId?: string; // If provided, show user's public lists; otherwise show own lists
   isOwnProfile?: boolean;
   showSaveButtons?: boolean;
+  themed?: boolean;
 }
 
-export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = false }: ListsSectionProps) {
+export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = false, themed = false }: ListsSectionProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { data: dbUserData } = useQuery({ ...dbUserQueryOptions, retry: false });
   const isLoggedIn = !!dbUserData?.account;
@@ -86,7 +87,7 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {lists.map((list) => (
-          <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} showSaveCount={isOwnProfile} />
+          <GameListCard key={list.id} list={list} showSaveButton={showSaveButtons} showSaveCount={isOwnProfile} themed={themed} />
         ))}
       </div>
 

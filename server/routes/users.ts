@@ -16,11 +16,25 @@ const updateUsernameSchema = z.object({
         .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
 });
 
+const hexColorRegex = /^#[0-9a-fA-F]{6}$/;
+
+const profileThemeSchema = z.object({
+    backgroundColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    headerColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    headerFontColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    contentFontColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    cardColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    fontFamily: z.enum(ALLOWED_FONTS).optional(),
+    fontSize: z.enum(FONT_SIZES).optional(),
+}).optional().nullable();
+
 const updateProfileSchema = z.object({
     displayName: z.string().max(50).nullable().optional(),
     bio: z.string().max(300).nullable().optional(),
     isPublic: z.boolean().optional(),
+    profileTheme: profileThemeSchema,
 });
+import { ALLOWED_FONTS, FONT_SIZES } from "../lib/profileThemeConstants";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
 
 export const usersRoute = new Hono()
@@ -192,6 +206,7 @@ export const usersRoute = new Hono()
             displayName: usersTable.displayName,
             bio: usersTable.bio,
             avatarUrl: usersTable.avatarUrl,
+            profileTheme: usersTable.profileTheme,
             createdAt: usersTable.createdAt,
         })
         .from(usersTable)

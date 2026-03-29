@@ -8,6 +8,8 @@ import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, 
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
 import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users } from 'lucide-react'
+import { getProfileHeaderStyle, getProfileContentStyle, hasCustomTheme } from '@/lib/profileTheme'
+import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
@@ -76,6 +78,9 @@ function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
+
+  useProfileFont(dbUserData?.account?.profileTheme?.fontFamily)
+  const themed = hasCustomTheme(dbUserData?.account?.profileTheme)
 
   // Currently playing query
   const { data: currentlyPlayingData } = useQuery({
@@ -566,9 +571,12 @@ function Profile() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
       <Navbar />
-      <div className="container mx-auto max-w-4xl px-6 py-8 bg-background">
+      <div className="container mx-auto max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
         {/* Profile Header */}
-        <div className="bg-blue-600/40 dark:bg-blue-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
+        <div
+          className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
+          style={getProfileHeaderStyle(dbUserData?.account?.profileTheme, "rgb(96 165 250 / 0.4)")}
+        >
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <input
@@ -787,7 +795,7 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'reviews' }); setActiveTab('reviews'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
@@ -798,7 +806,7 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'history' }); setActiveTab('history'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
@@ -809,7 +817,7 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'wishlist' }); setActiveTab('wishlist'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
@@ -820,7 +828,7 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'lists' }); setActiveTab('lists'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
@@ -831,7 +839,7 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'saved' }); setActiveTab('saved'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'saved'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
               }`}
             >
@@ -913,7 +921,7 @@ function Profile() {
               ) : playSessions.length > 0 ? (
                 <div className="space-y-4">
                   {playSessions.map((session) => (
-                    <SessionCard key={session.session.id} session={session} />
+                    <SessionCard key={session.session.id} session={session} themed={themed} />
                   ))}
                   <LoadMoreButton
                     hasNextPage={!!hasMoreHistory}
@@ -961,6 +969,7 @@ function Profile() {
                       item={item}
                       onRemove={handleRemoveFromWishlist}
                       isRemoving={removeWishlistMutation.isPending && removeWishlistMutation.variables === item.gameId}
+                      themed={themed}
                     />
                   ))}
                   <LoadMoreButton
@@ -987,7 +996,7 @@ function Profile() {
 
             {/* Lists Tab */}
             <div className={activeTab !== 'lists' ? 'hidden' : ''}>
-              <ListsSection isOwnProfile={true} />
+              <ListsSection isOwnProfile={true} themed={themed} />
             </div>
 
             {/* Saved Tab */}
@@ -1009,7 +1018,7 @@ function Profile() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {savedLists.map((list: SavedGameListSummary) => (
                       <div key={list.id} className="relative">
-                        <GameListCard list={list} showSaveButton />
+                        <GameListCard list={list} showSaveButton themed={themed} />
                         <div className="absolute top-2 left-2 z-10 bg-stone-900/80 text-white text-xs font-medium px-2 py-0.5">
                           @{list.ownerUsername}
                         </div>
@@ -1093,7 +1102,7 @@ function Profile() {
                 onClick={() => setShowFollowDialog('followers')}
                 className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest ${
                   showFollowDialog === 'followers'
-                    ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                    ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                     : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
                 }`}
               >
@@ -1103,7 +1112,7 @@ function Profile() {
                 onClick={() => setShowFollowDialog('following')}
                 className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest border-l-4 border-border ${
                   showFollowDialog === 'following'
-                    ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                    ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                     : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
                 }`}
               >

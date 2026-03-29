@@ -155,5 +155,11 @@
     letter-spacing: 0.10em;
     font-weight: 300;
   }
- 
+
+}
+
+/* Profile theme: override card background for individual cards only.
+   Outside @layer so it beats Tailwind's bg-card utility. */
+.profile-themed-content .profile-card {
+  background-color: var(--profile-card-bg, var(--card));
 }

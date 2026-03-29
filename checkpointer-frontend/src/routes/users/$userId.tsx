@@ -8,6 +8,8 @@ import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/
 import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followStatusQueryOptions, toggleFollow, type FollowCounts } from '@/lib/followsQuery'
 import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus } from 'lucide-react'
+import { getProfileHeaderStyle, getProfileContentStyle, hasCustomTheme } from '@/lib/profileTheme'
+import { useProfileFont } from '@/lib/useProfileFont'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ListsSection } from '@/components/ListsSection'
@@ -58,6 +60,9 @@ function PublicProfile() {
 
   const isOwnProfile = dbUserData?.account?.id === userId
   const isAuthenticated = !!dbUserData?.account
+
+  useProfileFont(profileData?.profileTheme?.fontFamily)
+  const themed = hasCustomTheme(profileData?.profileTheme)
 
   // Get follow counts
   const { data: followCountsData } = useQuery({
@@ -260,9 +265,12 @@ function PublicProfile() {
     <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
       <Navbar />
 
-      <div className="container mx-auto max-w-4xl px-6 py-8">
+      <div className="container mx-auto max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
         {/* Profile Header */}
-        <div className="bg-orange-100 dark:bg-orange-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
+        <div
+          className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
+          style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(255 237 213)")}
+        >
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <Avatar className="w-24 h-24 border-4 border-border">
@@ -368,7 +376,7 @@ function PublicProfile() {
               onClick={() => setActiveTab('reviews')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -379,7 +387,7 @@ function PublicProfile() {
               onClick={() => setActiveTab('history')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -390,7 +398,7 @@ function PublicProfile() {
               onClick={() => setActiveTab('wishlist')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -401,7 +409,7 @@ function PublicProfile() {
               onClick={() => setActiveTab('lists')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
-                  ? 'bg-amber-200 dark:bg-amber-900 text-foreground'
+                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -477,7 +485,7 @@ function PublicProfile() {
               ) : playSessions.length > 0 ? (
                 <div className="space-y-4">
                   {playSessions.map((session) => (
-                    <SessionCard key={session.session.id} session={session} />
+                    <SessionCard key={session.session.id} session={session} themed={themed} />
                   ))}
                   <LoadMoreButton
                     hasNextPage={!!hasMoreHistory}
@@ -515,7 +523,7 @@ function PublicProfile() {
               ) : wishlistItems.length > 0 ? (
                 <div className="space-y-4">
                   {wishlistItems.map((item) => (
-                    <WishlistCard key={item.gameId} item={item} />
+                    <WishlistCard key={item.gameId} item={item} themed={themed} />
                   ))}
                   <LoadMoreButton
                     hasNextPage={!!hasMoreWishlist}
@@ -536,7 +544,7 @@ function PublicProfile() {
 
             {/* Lists Tab */}
             <div className={activeTab !== 'lists' ? 'hidden' : ''}>
-              <ListsSection userId={userId} isOwnProfile={false} showSaveButtons={!!dbUserData?.account} />
+              <ListsSection userId={userId} isOwnProfile={false} showSaveButtons={!!dbUserData?.account} themed={themed} />
             </div>
           </div>
         </div>

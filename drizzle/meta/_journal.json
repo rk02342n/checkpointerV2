@@ -162,6 +162,13 @@
       "when": 1772583771674,
       "tag": "0022_misty_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774809433175,
+      "tag": "0023_special_apocalypse",
+      "breakpoints": true
     }
   ]
 }

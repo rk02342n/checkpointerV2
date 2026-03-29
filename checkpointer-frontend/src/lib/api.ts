@@ -6,6 +6,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { type CreateExpense} from "../../../server/sharedTypes";
+import type { ProfileTheme } from "../../../server/lib/profileThemeConstants";
 
 async function getCurrentUser() {
     const res = await fetch("/api/me")
@@ -90,6 +91,7 @@ export type PublicUserProfile = {
   displayName: string | null
   bio: string | null
   avatarUrl: string | null
+  profileTheme: ProfileTheme | null
   createdAt: string
 }
 
@@ -142,7 +144,8 @@ export async function updateUserProfile(data: {
   displayName?: string | null;
   bio?: string | null;
   isPublic?: boolean;
-}): Promise<{ account: { displayName: string | null; bio: string | null; isPublic: boolean } }> {
+  profileTheme?: ProfileTheme | null;
+}): Promise<{ account: { displayName: string | null; bio: string | null; isPublic: boolean; profileTheme: ProfileTheme | null } }> {
   const res = await fetch("/api/user/profile", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

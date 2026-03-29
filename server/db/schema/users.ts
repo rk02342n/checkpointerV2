@@ -1,4 +1,5 @@
-import { uuid, pgTable, pgEnum, index, timestamp, text, boolean } from "drizzle-orm/pg-core";
+import { uuid, pgTable, pgEnum, index, timestamp, text, boolean, jsonb } from "drizzle-orm/pg-core";
+import type { ProfileTheme } from "../../lib/profileThemeConstants";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod'
 
@@ -14,6 +15,7 @@ export const usersTable = pgTable("users", {
   role: userRoleEnum("role").default("free").notNull(),
   isPublic: boolean("is_public").default(true).notNull(),
   suspendedAt: timestamp("suspended_at"),
+  profileTheme: jsonb("profile_theme").$type<ProfileTheme>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (users) => [
   index("users_auth_idx").on(users.kindeId),

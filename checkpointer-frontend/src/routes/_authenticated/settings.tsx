@@ -3,7 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { usePostHog } from 'posthog-js/react'
-import { AlertTriangle, Loader2, Moon, Sun, ExternalLink } from 'lucide-react'
+import { AlertTriangle, Loader2, Moon, Sun, ExternalLink, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { dbUserQueryOptions, updateUserProfile } from '@/lib/api'
 import { useSettings } from '@/lib/settingsContext'
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import ToggleSwitch from '@/components/ui/toggle-switch'
 import Navbar from '@/components/Navbar'
+import { ProfileThemeEditor } from '@/components/profile/ProfileThemeEditor'
 
 export const Route = createFileRoute('/_authenticated/settings')({
   component: SettingsPage,
@@ -173,6 +174,24 @@ function SettingsPage() {
                   </Button>
                 </div>
               </div>
+            </section>
+
+            {/* ── Profile Theme Section ── */}
+            <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-6">
+              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Palette className="w-5 h-5" />
+                Profile Theme
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Customize how your profile looks to you and visitors.
+              </p>
+              <div className="flex items-start gap-2 bg-amber-100 dark:bg-amber-900/40 border-2 border-border px-3 py-2 mb-4">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  Dark mode will not apply to your profile page while custom theme settings are active. Reset to default to re-enable dark mode on your profile.
+                </p>
+              </div>
+              <ProfileThemeEditor currentTheme={account?.profileTheme} />
             </section>
 
             {/* ── Preferences Section ── */}
