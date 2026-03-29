@@ -28,9 +28,10 @@ type ReviewCardProps = {
   isDeleting?: boolean
   onLike: (id: string) => void
   isLiking: boolean
+  themed?: boolean
 }
 
-export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking }: ReviewCardProps) {
+export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking, themed }: ReviewCardProps) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)
@@ -48,7 +49,7 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className={`block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:bg-background dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
+      className={`block bg-card profile-card ${themed ? 'profile-card-hover' : 'hover:bg-background'} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -182,7 +183,7 @@ export const SessionCard = memo(function SessionCard({ session, themed }: Sessio
     <Link
       to="/games/$gameId"
       params={{ gameId: session.game.id }}
-      className="block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4"
+      className={`block bg-card profile-card ${themed ? 'profile-card-hover' : ''} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -266,7 +267,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
     <Link
       to="/games/$gameId"
       params={{ gameId: item.gameId }}
-      className={`block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
+      className={`block bg-card profile-card ${themed ? 'profile-card-hover' : ''} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}

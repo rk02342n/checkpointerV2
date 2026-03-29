@@ -877,6 +877,7 @@ function Profile() {
                       isDeleting={deleteMutation.isPending && deleteMutation.variables === String(review.id)}
                       onLike={handleLikeReview}
                       isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
+                      themed={themed}
                     />
                   ))}
                   <LoadMoreButton

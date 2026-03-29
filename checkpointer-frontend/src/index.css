@@ -173,3 +173,7 @@
 .profile-themed-content .profile-accent-muted {
   background-color: color-mix(in srgb, var(--profile-accent, #fde68a) 35%, transparent);
 }
+
+.profile-themed-content .profile-card-hover:hover {
+  background-color: color-mix(in srgb, var(--profile-card-bg, var(--card)) 80%, white);
+}

@@ -445,6 +445,7 @@ function PublicProfile() {
                       review={review}
                       onLike={handleLikeReview}
                       isLiking={likeMutation.isPending && likeMutation.variables === String(review.id)}
+                      themed={themed}
                     />
                   ))}
 
