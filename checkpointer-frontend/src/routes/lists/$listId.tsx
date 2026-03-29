@@ -13,6 +13,7 @@ import {
   listSavedQueryOptions,
   saveList,
   unsaveList,
+  updateList,
   type GameListDetail,
   type GameListGame,
 } from "@/lib/gameListsQuery";
@@ -29,6 +30,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import ToggleSwitch from "@/components/ui/toggle-switch";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -170,6 +172,28 @@ function ListDetailView() {
     },
     onError: (err) => {
       toast.error(err.message || "Failed to remove cover");
+    },
+  });
+
+  // Update visibility mutation
+  const updateVisibilityMutation = useMutation({
+    mutationFn: (visibility: "public" | "private") =>
+      updateList(listId, { visibility }),
+    onSuccess: (_data, visibility) => {
+      queryClient.invalidateQueries({ queryKey: ["game-list", listId] });
+      queryClient.invalidateQueries({ queryKey: ["game-list-auth", listId] });
+      queryClient.invalidateQueries({ queryKey: ["my-game-lists"] });
+      posthog.capture("list_visibility_changed", {
+        list_id: listId,
+        list_name: list?.name,
+        visibility,
+      });
+      toast.success(
+        visibility === "public" ? "List is now public" : "List is now private"
+      );
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update visibility");
     },
   });
 
@@ -371,7 +395,25 @@ function ListDetailView() {
 
             {/* Owner Actions */}
             {isOwner && (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {list.visibility === "public" ? (
+                    <Globe className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {list.visibility === "public" ? "Public" : "Private"}
+                  </span>
+                  <ToggleSwitch
+                    checked={list.visibility === "public"}
+                    onChange={(isPublic) =>
+                      updateVisibilityMutation.mutate(
+                        isPublic ? "public" : "private"
+                      )
+                    }
+                  />
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
