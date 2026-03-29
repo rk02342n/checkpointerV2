@@ -1,7 +1,27 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   gameListQueryOptions,
   gameListAuthQueryOptions,
@@ -14,6 +34,7 @@ import {
   saveList,
   unsaveList,
   updateList,
+  reorderListGames,
   type GameListDetail,
   type GameListGame,
 } from "@/lib/gameListsQuery";
@@ -28,6 +49,7 @@ import {
   Camera,
   X,
   Bookmark,
+  GripVertical,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import ToggleSwitch from "@/components/ui/toggle-switch";
@@ -196,6 +218,83 @@ function ListDetailView() {
       toast.error(err.message || "Failed to update visibility");
     },
   });
+
+  // Reorder games mutation
+  const previousGamesRef = useRef<GameListGame[] | null>(null);
+  const reorderMutation = useMutation({
+    mutationFn: (gameIds: string[]) => reorderListGames(listId, gameIds),
+    onError: () => {
+      // Rollback to previous order
+      if (previousGamesRef.current) {
+        queryClient.setQueryData<{ list: GameListDetail }>(
+          ["game-list-auth", listId],
+          (old) => old ? { list: { ...old.list, games: previousGamesRef.current! } } : old
+        );
+        previousGamesRef.current = null;
+      }
+      toast.error("Failed to reorder games");
+    },
+    onSuccess: () => {
+      previousGamesRef.current = null;
+      queryClient.invalidateQueries({ queryKey: ["game-list", listId] });
+    },
+  });
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const [activeDragGame, setActiveDragGame] = useState<GameListGame | null>(null);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const game = list?.games.find((g) => g.gameId === event.active.id);
+    if (game) setActiveDragGame(game);
+  }, [list?.games]);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragGame(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id || !list) return;
+
+    const oldIndex = list.games.findIndex((g) => g.gameId === active.id);
+    const newIndex = list.games.findIndex((g) => g.gameId === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(list.games, oldIndex, newIndex);
+    const newGameIds = newOrder.map((g) => g.gameId);
+
+    // Save previous order for rollback, then optimistically update cache
+    previousGamesRef.current = list.games;
+    queryClient.setQueryData<{ list: GameListDetail }>(
+      ["game-list-auth", listId],
+      (old) => old ? {
+        list: {
+          ...old.list,
+          games: newOrder.map((g, idx) => ({ ...g, position: idx + 1 })),
+        },
+      } : old
+    );
+
+    reorderMutation.mutate(newGameIds);
+    posthog.capture("list_games_reordered", {
+      list_id: listId,
+      list_name: list.name,
+      game_count: list.games.length,
+    });
+  }, [list, listId, reorderMutation, posthog, queryClient]);
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragGame(null);
+  }, []);
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -486,73 +585,40 @@ function ListDetailView() {
                   : "This list is empty."}
               </p>
             </div>
+          ) : isOwner ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <SortableContext
+                items={list.games.map((g) => g.gameId)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="divide-y-4 divide-border">
+                  {list.games.map((game, index) => (
+                    <SortableGameRow
+                      key={game.gameId}
+                      game={game}
+                      index={index}
+                      isOwner
+                      onRemove={setGameToRemove}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+              <DragOverlay dropAnimation={null}>
+                {activeDragGame ? (
+                  <GameRowOverlay game={activeDragGame} />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           ) : (
             <div className="divide-y-4 divide-border">
               {list.games.map((game, index) => (
-                <div
-                  key={game.gameId}
-                  className="flex items-center gap-4 p-4 hover:bg-accent transition-colors"
-                >
-                  {/* Position Number */}
-                  <div className="w-8 h-8 flex items-center justify-center bg-stone-900 dark:bg-stone-700 text-white font-bold text-sm shrink-0">
-                    {index + 1}
-                  </div>
-
-                  {/* Game Cover */}
-                  <Link
-                    to="/games/$gameId"
-                    params={{ gameId: game.gameId }}
-                    className="shrink-0"
-                  >
-                    {game.gameCoverUrl ? (
-                      <img
-                        src={game.gameCoverUrl}
-                        alt={game.gameName}
-                        className="w-16 h-20 object-cover border-2 border-border"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
-                        <Gamepad2 className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </Link>
-
-                  {/* Game Info */}
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      to="/games/$gameId"
-                      params={{ gameId: game.gameId }}
-                      className="font-bold text-foreground hover:underline block truncate"
-                    >
-                      {game.gameName}
-                    </Link>
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      {game.gameReleaseDate && (
-                        <span>{new Date(game.gameReleaseDate).getFullYear()}</span>
-                      )}
-                      {game.gameReleaseDate && game.addedAt && (
-                        <span className="text-muted-foreground/50">•</span>
-                      )}
-                      {game.addedAt && (
-                        <span className="text-muted-foreground">
-                          Added {new Date(game.addedAt).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Remove Button (Owner only) */}
-                  {isOwner && (
-                    <button
-                      onClick={() => setGameToRemove(game)}
-                      className="p-2 text-muted-foreground hover:text-rose-600 transition-colors"
-                      title="Remove from list"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+                <GameRow key={game.gameId} game={game} index={index} />
               ))}
             </div>
           )}
@@ -663,5 +729,197 @@ function ListDetailSkeleton() {
         </div>
       </div>
     </>
+  );
+}
+
+function SortableGameRow({
+  game,
+  index,
+  isOwner,
+  onRemove,
+}: {
+  game: GameListGame;
+  index: number;
+  isOwner: boolean;
+  onRemove: (game: GameListGame) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: game.gameId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-4 hover:bg-accent transition-colors bg-background ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      {/* Position Number */}
+      <div className="w-8 h-8 flex items-center justify-center bg-stone-900 dark:bg-stone-700 text-white font-bold text-sm shrink-0">
+        {index + 1}
+      </div>
+
+      {/* Game Cover */}
+      <Link
+        to="/games/$gameId"
+        params={{ gameId: game.gameId }}
+        className="shrink-0"
+      >
+        {game.gameCoverUrl ? (
+          <img
+            src={game.gameCoverUrl}
+            alt={game.gameName}
+            className="w-16 h-20 object-cover border-2 border-border"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+            <Gamepad2 className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+      </Link>
+
+      {/* Game Info */}
+      <div className="flex-1 min-w-0">
+        <Link
+          to="/games/$gameId"
+          params={{ gameId: game.gameId }}
+          className="font-bold text-foreground hover:underline block truncate"
+        >
+          {game.gameName}
+        </Link>
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          {game.gameReleaseDate && (
+            <span>{new Date(game.gameReleaseDate).getFullYear()}</span>
+          )}
+          {game.gameReleaseDate && game.addedAt && (
+            <span className="text-muted-foreground/50">•</span>
+          )}
+          {game.addedAt && (
+            <span className="text-muted-foreground">
+              Added {new Date(game.addedAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Remove Button */}
+      {isOwner && (
+        <button
+          onClick={() => onRemove(game)}
+          className="p-2 text-muted-foreground hover:text-rose-600 transition-colors"
+          title="Remove from list"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Drag Handle */}
+      {isOwner && (
+        <button
+          className="touch-none p-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing transition-colors"
+          aria-label="Drag to reorder"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-5 h-5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function GameRow({ game, index }: { game: GameListGame; index: number }) {
+  return (
+    <div className="flex items-center gap-4 p-4 hover:bg-accent transition-colors">
+      {/* Position Number */}
+      <div className="w-8 h-8 flex items-center justify-center bg-stone-900 dark:bg-stone-700 text-white font-bold text-sm shrink-0">
+        {index + 1}
+      </div>
+
+      {/* Game Cover */}
+      <Link
+        to="/games/$gameId"
+        params={{ gameId: game.gameId }}
+        className="shrink-0"
+      >
+        {game.gameCoverUrl ? (
+          <img
+            src={game.gameCoverUrl}
+            alt={game.gameName}
+            className="w-16 h-20 object-cover border-2 border-border"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+            <Gamepad2 className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+      </Link>
+
+      {/* Game Info */}
+      <div className="flex-1 min-w-0">
+        <Link
+          to="/games/$gameId"
+          params={{ gameId: game.gameId }}
+          className="font-bold text-foreground hover:underline block truncate"
+        >
+          {game.gameName}
+        </Link>
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          {game.gameReleaseDate && (
+            <span>{new Date(game.gameReleaseDate).getFullYear()}</span>
+          )}
+          {game.gameReleaseDate && game.addedAt && (
+            <span className="text-muted-foreground/50">•</span>
+          )}
+          {game.addedAt && (
+            <span className="text-muted-foreground">
+              Added {new Date(game.addedAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GameRowOverlay({ game }: { game: GameListGame }) {
+  return (
+    <div className="flex items-center gap-4 p-4 bg-background border-4 border-border shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
+      <div className="p-1 text-muted-foreground">
+        <GripVertical className="w-5 h-5" />
+      </div>
+      <div className="w-8 h-8 flex items-center justify-center bg-stone-900 dark:bg-stone-700 text-white font-bold text-sm shrink-0">
+        #
+      </div>
+      {game.gameCoverUrl ? (
+        <img
+          src={game.gameCoverUrl}
+          alt={game.gameName}
+          className="w-16 h-20 object-cover border-2 border-border"
+        />
+      ) : (
+        <div className="w-16 h-20 bg-muted border-2 border-border flex items-center justify-center">
+          <Gamepad2 className="w-6 h-6 text-muted-foreground" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <span className="font-bold text-foreground block truncate">
+          {game.gameName}
+        </span>
+      </div>
+    </div>
   );
 }
