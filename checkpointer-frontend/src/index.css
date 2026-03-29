@@ -163,3 +163,13 @@
 .profile-themed-content .profile-card {
   background-color: var(--profile-card-bg, var(--card));
 }
+
+/* Profile theme: override accent backgrounds (tabs, stat boxes).
+   Falls back to amber-200 when no accent color is explicitly set. */
+.profile-themed-content .profile-accent {
+  background-color: var(--profile-accent, #fde68a);
+}
+
+.profile-themed-content .profile-accent-muted {
+  background-color: color-mix(in srgb, var(--profile-accent, #fde68a) 35%, transparent);
+}

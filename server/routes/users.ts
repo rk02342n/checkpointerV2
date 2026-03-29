@@ -24,6 +24,7 @@ const profileThemeSchema = z.object({
     headerFontColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
     contentFontColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
     cardColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
+    accentColor: z.string().regex(hexColorRegex, "Must be a valid hex color").optional(),
     fontFamily: z.enum(ALLOWED_FONTS).optional(),
     fontSize: z.enum(FONT_SIZES).optional(),
 }).optional().nullable();

@@ -58,6 +58,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
   const [headerFontColor, setHeaderFontColor] = useState(currentTheme?.headerFontColor ?? '')
   const [contentFontColor, setContentFontColor] = useState(currentTheme?.contentFontColor ?? '')
   const [cardColor, setCardColor] = useState(currentTheme?.cardColor ?? '')
+  const [accentColor, setAccentColor] = useState(currentTheme?.accentColor ?? '')
   const [fontFamily, setFontFamily] = useState(currentTheme?.fontFamily ?? '')
   const [fontSize, setFontSize] = useState<ProfileTheme['fontSize']>(currentTheme?.fontSize ?? 'base')
 
@@ -69,6 +70,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
       setHeaderFontColor(currentTheme.headerFontColor ?? '')
       setContentFontColor(currentTheme.contentFontColor ?? '')
       setCardColor(currentTheme.cardColor ?? '')
+      setAccentColor(currentTheme.accentColor ?? '')
       setFontFamily(currentTheme.fontFamily ?? '')
       setFontSize(currentTheme.fontSize ?? 'base')
     }
@@ -98,6 +100,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
     if (headerFontColor && isValidHex(headerFontColor)) theme.headerFontColor = headerFontColor
     if (contentFontColor && isValidHex(contentFontColor)) theme.contentFontColor = contentFontColor
     if (cardColor && isValidHex(cardColor)) theme.cardColor = cardColor
+    if (accentColor && isValidHex(accentColor)) theme.accentColor = accentColor
     if (fontFamily) theme.fontFamily = fontFamily
     if (fontSize && fontSize !== 'base') theme.fontSize = fontSize
 
@@ -110,6 +113,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
     setHeaderFontColor('')
     setContentFontColor('')
     setCardColor('')
+    setAccentColor('')
     setFontFamily('')
     setFontSize('base')
     saveMutation.mutate(null)
@@ -122,6 +126,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
     headerFontColor: headerFontColor || undefined,
     contentFontColor: contentFontColor || undefined,
     cardColor: cardColor || undefined,
+    accentColor: accentColor || undefined,
     fontFamily: fontFamily || undefined,
     fontSize,
   }
@@ -170,6 +175,13 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
           onChange={setCardColor}
           placeholder="Default"
           hint="Review cards, game cards, etc."
+        />
+        <ColorPicker
+          label="Accent Color"
+          value={accentColor}
+          onChange={setAccentColor}
+          placeholder="Default"
+          hint="Active tabs, stat boxes"
         />
       </div>
 
@@ -232,6 +244,15 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
                   <div className="font-bold text-foreground">Your Display Name</div>
                   <div className="text-sm text-muted-foreground">@username</div>
                 </div>
+              </div>
+            </div>
+            {/* Preview accent (tab) */}
+            <div className="mt-2 flex border-2 border-border">
+              <div className={`flex-1 px-3 py-1.5 text-xs font-bold uppercase text-foreground ${accentColor ? 'profile-accent' : 'bg-amber-200'}`}>
+                Tab
+              </div>
+              <div className="flex-1 px-3 py-1.5 text-xs text-muted-foreground bg-muted border-l-2 border-border">
+                Tab
               </div>
             </div>
             {/* Preview tab content with card */}

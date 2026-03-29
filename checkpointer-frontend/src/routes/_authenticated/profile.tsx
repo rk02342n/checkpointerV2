@@ -703,20 +703,20 @@ function Profile() {
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2">
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
                 <button
                   onClick={() => setShowFollowDialog('followers')}
-                  className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer"
+                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
                 </button>
                 <button
                   onClick={() => setShowFollowDialog('following')}
-                  className="bg-background border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer"
+                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
@@ -795,8 +795,8 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'reviews' }); setActiveTab('reviews'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
-                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -806,8 +806,8 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'history' }); setActiveTab('history'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
-                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <History className="w-4 h-4" />
@@ -817,8 +817,8 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'wishlist' }); setActiveTab('wishlist'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
-                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -828,8 +828,8 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'lists' }); setActiveTab('lists'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
-                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -839,8 +839,8 @@ function Profile() {
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'saved' }); setActiveTab('saved'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'saved'
-                  ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                  : 'cursor-pointer bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <Bookmark className="w-4 h-4" />
@@ -1102,8 +1102,8 @@ function Profile() {
                 onClick={() => setShowFollowDialog('followers')}
                 className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest ${
                   showFollowDialog === 'followers'
-                    ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                    : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
+                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                    : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'} cursor-pointer`
                 }`}
               >
                 Followers ({followCountsData?.followersCount ?? 0})
@@ -1112,8 +1112,8 @@ function Profile() {
                 onClick={() => setShowFollowDialog('following')}
                 className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest border-l-4 border-border ${
                   showFollowDialog === 'following'
-                    ? `bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-foreground`
-                    : 'bg-muted text-muted-foreground hover:bg-accent cursor-pointer'
+                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                    : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'} cursor-pointer`
                 }`}
               >
                 Following ({followCountsData?.followingCount ?? 0})

@@ -19,6 +19,7 @@ export type ProfileTheme = {
   headerFontColor?: string;
   contentFontColor?: string;
   cardColor?: string;
+  accentColor?: string;
   fontFamily?: string;
   fontSize?: "sm" | "base" | "lg" | "xl";
 };

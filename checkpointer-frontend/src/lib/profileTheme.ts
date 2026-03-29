@@ -53,6 +53,9 @@ export function getProfileContentStyle(theme: ProfileTheme | null | undefined): 
   if (theme.cardColor) {
     style["--profile-card-bg"] = theme.cardColor;
   }
+  if (theme.accentColor) {
+    style["--profile-accent"] = theme.accentColor;
+  }
 
   return style as React.CSSProperties;
 }
