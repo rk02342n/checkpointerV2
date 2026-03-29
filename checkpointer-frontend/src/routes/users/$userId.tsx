@@ -8,7 +8,7 @@ import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/
 import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followStatusQueryOptions, toggleFollow, type FollowCounts } from '@/lib/followsQuery'
 import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus } from 'lucide-react'
-import { getProfileHeaderStyle, getProfileContentStyle, hasCustomTheme } from '@/lib/profileTheme'
+import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
@@ -62,7 +62,7 @@ function PublicProfile() {
   const isAuthenticated = !!dbUserData?.account
 
   useProfileFont(profileData?.profileTheme?.fontFamily)
-  const themed = hasCustomTheme(profileData?.profileTheme)
+  const themed = hasCustomColors(profileData?.profileTheme)
 
   // Get follow counts
   const { data: followCountsData } = useQuery({
@@ -269,7 +269,7 @@ function PublicProfile() {
         {/* Profile Header */}
         <div
           className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
-          style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(255 237 213)")}
+          style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}

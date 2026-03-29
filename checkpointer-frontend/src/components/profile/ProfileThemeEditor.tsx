@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { ALLOWED_FONTS, FONT_SIZES, type ProfileTheme } from '../../../../server/lib/profileThemeConstants'
+import { FONT_CATEGORIES, FONT_SIZES, type ProfileTheme } from '../../../../server/lib/profileThemeConstants'
 
 interface ProfileThemeEditorProps {
   currentTheme: ProfileTheme | null | undefined
@@ -195,8 +195,12 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
             className="bg-input border-4 border-border rounded-none px-3 py-2 text-sm text-foreground h-10"
           >
             <option value="">Default (System Font)</option>
-            {ALLOWED_FONTS.map((font) => (
-              <option key={font} value={font}>{font}</option>
+            {Object.entries(FONT_CATEGORIES).map(([category, fonts]) => (
+              <optgroup key={category} label={category}>
+                {fonts.map((font) => (
+                  <option key={font} value={font}>{font}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>

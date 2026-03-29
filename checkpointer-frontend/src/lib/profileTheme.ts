@@ -2,10 +2,24 @@ import { FONT_SIZE_MAP, type ProfileTheme } from "../../../server/lib/profileThe
 
 export type { ProfileTheme } from "../../../server/lib/profileThemeConstants";
 
+const COLOR_KEYS: (keyof ProfileTheme)[] = [
+  "backgroundColor", "headerColor", "headerFontColor",
+  "contentFontColor", "cardColor", "accentColor",
+];
+
 /** Returns true when any customization is set (non-null theme with at least one key). */
 export function hasCustomTheme(theme: ProfileTheme | null | undefined): boolean {
   if (!theme) return false;
   return Object.values(theme).some((v) => v !== undefined && v !== null && v !== "");
+}
+
+/** Returns true when any color field is set — font-only themes don't force light mode. */
+export function hasCustomColors(theme: ProfileTheme | null | undefined): boolean {
+  if (!theme) return false;
+  return COLOR_KEYS.some((k) => {
+    const v = theme[k];
+    return v !== undefined && v !== null && v !== "";
+  });
 }
 
 // Light-mode values for the core CSS variables that dark mode overrides.
@@ -28,14 +42,17 @@ const LIGHT_MODE_VARS: Record<string, string> = {
 /**
  * Inline style for the profile content container (everything below Navbar).
  * Applies background, font-family, font-size, and content font color.
- * When any customization is active, forces light-mode variables so dark mode
- * doesn't conflict with the user-chosen colors.
+ * When a color is customized, forces light-mode variables so dark mode
+ * doesn't conflict with the user-chosen colors. Font-only changes
+ * leave dark mode intact.
  */
 export function getProfileContentStyle(theme: ProfileTheme | null | undefined): React.CSSProperties {
   if (!theme || !hasCustomTheme(theme)) return {};
 
-  // Force light mode variables as a base, then layer customizations on top
-  const style: Record<string, string> = { ...LIGHT_MODE_VARS };
+  const colors = hasCustomColors(theme);
+
+  // Only force light mode variables when colors are customized
+  const style: Record<string, string> = colors ? { ...LIGHT_MODE_VARS } : {};
 
   if (theme.backgroundColor) {
     style.backgroundColor = theme.backgroundColor;

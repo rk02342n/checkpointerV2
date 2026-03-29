@@ -8,7 +8,7 @@ import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, 
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
 import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users } from 'lucide-react'
-import { getProfileHeaderStyle, getProfileContentStyle, hasCustomTheme } from '@/lib/profileTheme'
+import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
@@ -80,7 +80,7 @@ function Profile() {
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
   useProfileFont(dbUserData?.account?.profileTheme?.fontFamily)
-  const themed = hasCustomTheme(dbUserData?.account?.profileTheme)
+  const themed = hasCustomColors(dbUserData?.account?.profileTheme)
 
   // Currently playing query
   const { data: currentlyPlayingData } = useQuery({
