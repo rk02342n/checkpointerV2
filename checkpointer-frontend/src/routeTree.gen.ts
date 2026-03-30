@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsersUserIdRouteImport } from './routes/users/$userId'
 import { Route as ListsListIdRouteImport } from './routes/lists/$listId'
 import { Route as GamesGameIdRouteImport } from './routes/games/$gameId'
+import { Route as BlogPostIdRouteImport } from './routes/blog/$postId'
 import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authenticated/totalspent'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -52,6 +53,11 @@ const ListsListIdRoute = ListsListIdRouteImport.update({
 const GamesGameIdRoute = GamesGameIdRouteImport.update({
   id: '/games/$gameId',
   path: '/games/$gameId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogPostIdRoute = BlogPostIdRouteImport.update({
+  id: '/blog/$postId',
+  path: '/blog/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTotalspentRoute = AuthenticatedTotalspentRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
+  '/blog/$postId': typeof BlogPostIdRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
+  '/blog/$postId': typeof BlogPostIdRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/totalspent': typeof AuthenticatedTotalspentRoute
+  '/blog/$postId': typeof BlogPostIdRoute
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/totalspent'
+    | '/blog/$postId'
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/settings'
     | '/totalspent'
+    | '/blog/$postId'
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/settings'
     | '/_authenticated/totalspent'
+    | '/blog/$postId'
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AboutRoute: typeof AboutRoute
+  BlogPostIdRoute: typeof BlogPostIdRoute
   GamesGameIdRoute: typeof GamesGameIdRoute
   ListsListIdRoute: typeof ListsListIdRoute
   UsersUserIdRoute: typeof UsersUserIdRoute
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/games/$gameId'
       fullPath: '/games/$gameId'
       preLoaderRoute: typeof GamesGameIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$postId': {
+      id: '/blog/$postId'
+      path: '/blog/$postId'
+      fullPath: '/blog/$postId'
+      preLoaderRoute: typeof BlogPostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/totalspent': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AboutRoute: AboutRoute,
+  BlogPostIdRoute: BlogPostIdRoute,
   GamesGameIdRoute: GamesGameIdRoute,
   ListsListIdRoute: ListsListIdRoute,
   UsersUserIdRoute: UsersUserIdRoute,

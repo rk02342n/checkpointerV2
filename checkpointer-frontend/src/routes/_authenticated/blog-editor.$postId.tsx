@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Loader2,
-  Plus,
   Trash2,
   GripVertical,
   ChevronUp,
@@ -40,6 +39,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import Navbar from '@/components/Navbar'
+import { BlogPostView } from '@/components/BlogPostView'
 
 export const Route = createFileRoute('/_authenticated/blog-editor/$postId')({
   component: BlogEditorPage,
@@ -61,6 +61,9 @@ function BlogEditorPage() {
   const { data, isPending, isError } = useQuery(blogPostQueryOptions(postId))
   const post = data?.post
   const blocks = data?.blocks ?? []
+
+  // ── Preview toggle ──
+  const [showPreview, setShowPreview] = useState(false)
 
   // ── Post metadata local state ──
   const [title, setTitle] = useState('')
@@ -245,6 +248,17 @@ function BlogEditorPage() {
           </Button>
 
           <div className="flex items-center gap-2">
+            {/* Preview toggle */}
+            <Button
+              variant={showPreview ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+              className="border-4 border-border"
+            >
+              {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="hidden sm:inline">{showPreview ? 'Edit' : 'Preview'}</span>
+            </Button>
+
             {/* Save indicator */}
             {saveMeta.isPending && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -315,6 +329,12 @@ function BlogEditorPage() {
 
       {/* ── Main editor area ── */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {showPreview ? (
+          <article className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden">
+            <BlogPostView post={post} blocks={blocks} isPreview />
+          </article>
+        ) : (
+        <>
         {/* Status badge */}
         <div className="mb-6">
           <span
@@ -459,6 +479,8 @@ function BlogEditorPage() {
             ))}
           </div>
         </section>
+        </>
+        )}
       </main>
     </div>
   )
