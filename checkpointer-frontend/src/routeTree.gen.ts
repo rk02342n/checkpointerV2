@@ -23,6 +23,7 @@ import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCreateExpenseRouteImport } from './routes/_authenticated/create-expense'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedBlogEditorPostIdRouteImport } from './routes/_authenticated/blog-editor.$postId'
 
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
@@ -94,6 +95,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBlogEditorPostIdRoute =
+  AuthenticatedBlogEditorPostIdRouteImport.update({
+    id: '/blog-editor/$postId',
+    path: '/blog-editor/$postId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
+  '/blog-editor/$postId': typeof AuthenticatedBlogEditorPostIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
+  '/blog-editor/$postId': typeof AuthenticatedBlogEditorPostIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/games/$gameId': typeof GamesGameIdRoute
   '/lists/$listId': typeof ListsListIdRoute
   '/users/$userId': typeof UsersUserIdRoute
+  '/_authenticated/blog-editor/$postId': typeof AuthenticatedBlogEditorPostIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
+    | '/blog-editor/$postId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
+    | '/blog-editor/$postId'
   id:
     | '__root__'
     | '/'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/games/$gameId'
     | '/lists/$listId'
     | '/users/$userId'
+    | '/_authenticated/blog-editor/$postId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -300,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/blog-editor/$postId': {
+      id: '/_authenticated/blog-editor/$postId'
+      path: '/blog-editor/$postId'
+      fullPath: '/blog-editor/$postId'
+      preLoaderRoute: typeof AuthenticatedBlogEditorPostIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -312,6 +332,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTotalspentRoute: typeof AuthenticatedTotalspentRoute
+  AuthenticatedBlogEditorPostIdRoute: typeof AuthenticatedBlogEditorPostIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -323,6 +344,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTotalspentRoute: AuthenticatedTotalspentRoute,
+  AuthenticatedBlogEditorPostIdRoute: AuthenticatedBlogEditorPostIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

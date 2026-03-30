@@ -52,6 +52,8 @@ export const createBlockSchema = blogPostBlocksInsertSchema.omit({
   id: true,
   postId: true,
   createdAt: true,
+}).extend({
+  position: z.number().int().min(0).optional(),
 });
 
 export type CreateBlock = z.infer<typeof createBlockSchema>;

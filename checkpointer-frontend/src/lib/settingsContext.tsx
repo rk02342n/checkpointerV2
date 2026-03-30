@@ -9,6 +9,7 @@ interface SettingsContextType {
 
 const defaultSettings: AppSettings = {
   darkModeEnabled: true,
+  blogPostsEnabled: false,
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)

@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -17,6 +17,7 @@ import { ListsSection } from '@/components/ListsSection'
 import { GameListCard } from '@/components/GameListCard'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { myGameListsInfiniteOptions, mySavedListsInfiniteOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
+import { createBlogPost, myBlogPostsQueryOptions, type BlogPost } from '@/lib/blogPostsQuery'
 import { compressImage } from '@/lib/compressImage'
 import {
   Avatar,
@@ -34,8 +35,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import Navbar from '@/components/Navbar'
+import { useSettings } from '@/lib/settingsContext'
 
-const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved'] as const
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -79,6 +81,10 @@ function Profile() {
   const { isPending, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
+  const { settings } = useSettings()
+  const isAdmin = dbUserData?.account?.role === 'admin'
+  const showBlogPosts = isAdmin || !!settings.blogPostsEnabled
+
   useProfileFont(dbUserData?.account?.profileTheme?.fontFamily)
   const themed = hasCustomColors(dbUserData?.account?.profileTheme)
 
@@ -110,6 +116,20 @@ function Profile() {
       navigate({ to: '/games/$gameId', params: { gameId }, search: { review: true } })
     }
   }
+
+  // Create blog post mutation
+  const createPostMutation = useMutation({
+    mutationFn: () => {
+      const slug = `post-${Date.now()}`
+      return createBlogPost({ title: 'Untitled Post', slug })
+    },
+    onSuccess: (data) => {
+      navigate({ to: '/blog-editor/$postId', params: { postId: data.post.id } })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create post')
+    },
+  })
 
   // Avatar upload mutation
   const avatarMutation = useMutation({
@@ -387,6 +407,20 @@ function Profile() {
   const totalListsCount = gameListsData?.pages[0]?.totalCount ?? 0
   const savedLists = savedListsData?.pages.flatMap(p => p.lists) ?? []
   const totalSavedCount = savedListsData?.pages[0]?.totalCount ?? 0
+
+  // Blog posts query
+  const { data: blogPostsData, isPending: blogPostsPending } = useQuery({
+    ...myBlogPostsQueryOptions,
+    enabled: !!dbUserData?.account && showBlogPosts,
+  })
+  const blogPosts = blogPostsData?.posts ?? []
+
+  // Redirect away from posts tab if blog posts are not accessible
+  useEffect(() => {
+    if (!isUserPending && !showBlogPosts && activeTab === 'posts') {
+      setActiveTab('reviews')
+    }
+  }, [isUserPending, showBlogPosts, activeTab, setActiveTab])
 
   const deleteMutation = useMutation({
     mutationFn: async (reviewId: string) => {
@@ -726,6 +760,21 @@ function Profile() {
 
             {/* Account Actions */}
             <div className="shrink-0 flex flex-col gap-2">
+              {showBlogPosts && (
+                <Button
+                  variant="outline"
+                  className="px-6"
+                  onClick={() => createPostMutation.mutate()}
+                  disabled={createPostMutation.isPending}
+                >
+                  {createPostMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FileText className="w-4 h-4" />
+                  )}
+                  New Post
+                </Button>
+              )}
               <Button
                 asChild
                 variant="destructive"
@@ -846,6 +895,19 @@ function Profile() {
               <Bookmark className="w-4 h-4" />
               Saved ({totalSavedCount})
             </button>
+            {showBlogPosts && (
+              <button
+                onClick={() => { posthog.capture('profile_tab_changed', { tab: 'posts' }); setActiveTab('posts'); }}
+                className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
+                  activeTab === 'posts'
+                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                    : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Posts ({blogPosts.length})
+              </button>
+            )}
           </div>
 
           {/* Tab Content */}
@@ -1042,6 +1104,81 @@ function Profile() {
                 </div>
               )}
             </div>
+
+            {/* Posts Tab */}
+            {showBlogPosts && <div className={activeTab !== 'posts' ? 'hidden' : ''}>
+              {blogPostsPending ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                      <div className="h-5 w-48 bg-muted-foreground/20 mb-2" />
+                      <div className="h-4 w-full bg-muted-foreground/20" />
+                    </div>
+                  ))}
+                </div>
+              ) : blogPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {blogPosts.map((post: BlogPost) => (
+                    <div
+                      key={post.id}
+                      onClick={() => navigate({ to: '/blog-editor/$postId', params: { postId: post.id } })}
+                      className={`block bg-card profile-card ${themed ? 'profile-card-hover' : 'hover:bg-background'} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border-2 border-border ${
+                                post.status === 'published'
+                                  ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'
+                                  : 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                              }`}
+                            >
+                              {post.status}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-foreground truncate">{post.title}</h3>
+                          {post.subtitle && (
+                            <p className="text-sm text-muted-foreground truncate mt-0.5">{post.subtitle}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Updated {new Date(post.updatedAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-muted-foreground">
+                          <Pencil className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No posts yet</p>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Write your first blog post!
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => createPostMutation.mutate()}
+                    disabled={createPostMutation.isPending}
+                    className="border-4 border-border"
+                  >
+                    {createPostMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                    New Post
+                  </Button>
+                </div>
+              )}
+            </div>}
           </div>
         </div>
       </div>
