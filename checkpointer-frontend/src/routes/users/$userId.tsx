@@ -16,7 +16,7 @@ import { ListsSection } from '@/components/ListsSection'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
 import { userPublishedPostsQueryOptions, type BlogPostDetail } from '@/lib/blogPostsQuery'
-import { BlogPostView } from '@/components/BlogPostView'
+import { BlogPostCard } from '@/components/BlogPostCard'
 
 const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'posts'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
@@ -594,20 +594,9 @@ function PublicProfile() {
                   ))}
                 </div>
               ) : blogPosts.length > 0 ? (
-                <div className="space-y-8">
+                <div className="space-y-4">
                   {blogPosts.map(({ post, blocks }: BlogPostDetail) => (
-                    <Link
-                      key={post.id}
-                      to="/blog/$postId"
-                      params={{ postId: post.id }}
-                      className="block"
-                    >
-                      <article
-                        className={`bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] transition-shadow`}
-                      >
-                        <BlogPostView post={post} blocks={blocks} />
-                      </article>
-                    </Link>
+                    <BlogPostCard key={post.id} post={post} blocks={blocks} themed={themed} />
                   ))}
                 </div>
               ) : (
