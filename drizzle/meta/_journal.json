@@ -169,6 +169,13 @@
       "when": 1774809433175,
       "tag": "0023_special_apocalypse",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774847921516,
+      "tag": "0024_true_fantastic_four",
+      "breakpoints": true
     }
   ]
 }
