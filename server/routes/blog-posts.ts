@@ -391,6 +391,10 @@ export const blogPostsRoute = new Hono()
     return c.json({ error: "Post is already published" }, 400);
   }
 
+  if (!post.title || post.title.trim().length === 0) {
+    return c.json({ error: "Post must have a title before publishing" }, 400);
+  }
+
   const updated = await db
     .update(blogPostsTable)
     .set({

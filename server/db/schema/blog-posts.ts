@@ -38,7 +38,7 @@ export const blogPostStatuses = ["draft", "published"] as const;
 export type BlogPostStatus = (typeof blogPostStatuses)[number];
 
 export const blogPostsInsertSchema = createInsertSchema(blogPostsTable, {
-  title: z.string().min(1).max(200),
+  title: z.string().min(0).max(200),
   subtitle: z.string().max(400).optional(),
   slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase alphanumeric with hyphens"),
   status: z.enum(blogPostStatuses).optional(),

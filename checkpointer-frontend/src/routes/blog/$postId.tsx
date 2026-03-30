@@ -5,7 +5,7 @@ import { dbUserQueryOptions } from '@/lib/api'
 import { useSettings } from '@/lib/settingsContext'
 import Navbar from '@/components/Navbar'
 import { BlogPostView } from '@/components/BlogPostView'
-import { Loader2, FileText } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 export const Route = createFileRoute('/blog/$postId')({
   component: BlogPostPage,
@@ -38,7 +38,7 @@ function BlogPostPage() {
   if (isPending) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <Navbar/>
         <div className="container mx-auto px-4 py-8 max-w-3xl">
           <div className="bg-card border-4 border-border p-6 animate-pulse">
             <div className="h-8 w-64 bg-muted-foreground/20 mb-3" />
