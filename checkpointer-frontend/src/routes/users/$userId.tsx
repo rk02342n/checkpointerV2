@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, toggleReviewLike, type UserReviewsRe
 import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/lib/gameSessionsQuery'
 import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followStatusQueryOptions, toggleFollow, type FollowCounts } from '@/lib/followsQuery'
-import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus } from 'lucide-react'
+import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus, FileText } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { toast } from 'sonner'
@@ -15,8 +15,9 @@ import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components
 import { ListsSection } from '@/components/ListsSection'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
+import { userPublishedPostsQueryOptions, type BlogPostDetail, type BlogPostBlock } from '@/lib/blogPostsQuery'
 
-const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists'] as const
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'posts'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
 
 export const Route = createFileRoute('/users/$userId')({
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/avatar"
 import Navbar from '@/components/Navbar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useSettings } from '@/lib/settingsContext'
 
 function PublicProfile() {
   const { userId } = Route.useParams()
@@ -60,6 +62,9 @@ function PublicProfile() {
 
   const isOwnProfile = dbUserData?.account?.id === userId
   const isAuthenticated = !!dbUserData?.account
+  const { settings } = useSettings()
+  const isAdmin = dbUserData?.account?.role === 'admin'
+  const showBlogPosts = isAdmin || !!settings.blogPostsEnabled
 
   useProfileFont(profileData?.profileTheme?.fontFamily)
   const themed = hasCustomColors(profileData?.profileTheme)
@@ -126,10 +131,24 @@ function PublicProfile() {
     enabled: !!userId
   })
 
+  // Get user's published blog posts
+  const { data: blogPostsData, isPending: blogPostsPending } = useQuery({
+    ...userPublishedPostsQueryOptions(userId),
+    enabled: !!userId && showBlogPosts,
+  })
+  const blogPosts = blogPostsData?.posts ?? []
+
   // Track public profile view
   useEffect(() => {
     posthog.capture('public_profile_viewed', { viewed_user_id: userId })
   }, [userId])
+
+  // Redirect away from posts tab if blog posts are not accessible
+  useEffect(() => {
+    if (!showBlogPosts && activeTab === 'posts') {
+      setActiveTab('reviews')
+    }
+  }, [showBlogPosts, activeTab, setActiveTab])
 
   const userReviews = reviewsData?.pages.flatMap(p => p.reviews) ?? []
   const totalReviewCount = reviewsData?.pages[0]?.totalCount ?? 0
@@ -416,6 +435,19 @@ function PublicProfile() {
               <ListPlus className="w-4 h-4" />
               Lists ({totalListsCount})
             </button>
+            {showBlogPosts && (
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
+                  activeTab === 'posts'
+                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                    : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Posts ({blogPosts.length})
+              </button>
+            )}
           </div>
 
           {/* Tab Content */}
@@ -547,11 +579,151 @@ function PublicProfile() {
             <div className={activeTab !== 'lists' ? 'hidden' : ''}>
               <ListsSection userId={userId} isOwnProfile={false} showSaveButtons={!!dbUserData?.account} themed={themed} />
             </div>
+
+            {/* Posts Tab */}
+            {showBlogPosts && <div className={activeTab !== 'posts' ? 'hidden' : ''}>
+              {blogPostsPending ? (
+                <div className="space-y-6">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-muted border-4 border-border p-6 animate-pulse">
+                      <div className="h-6 w-48 bg-muted-foreground/20 mb-3" />
+                      <div className="h-4 w-full bg-muted-foreground/20 mb-2" />
+                      <div className="h-4 w-2/3 bg-muted-foreground/20" />
+                    </div>
+                  ))}
+                </div>
+              ) : blogPosts.length > 0 ? (
+                <div className="space-y-8">
+                  {blogPosts.map(({ post, blocks }: BlogPostDetail) => (
+                    <article
+                      key={post.id}
+                      className={`bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden`}
+                    >
+                      {/* Post header */}
+                      <div className="p-6 pb-4">
+                        <h2 className="text-2xl font-bold text-foreground font-alt">{post.title}</h2>
+                        {post.subtitle && (
+                          <p className="text-base text-muted-foreground mt-1">{post.subtitle}</p>
+                        )}
+                        {post.publishedAt && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Blocks */}
+                      {blocks.length > 0 && (
+                        <div className="px-6 pb-6 space-y-4">
+                          {blocks.map((block: BlogPostBlock) => (
+                            <PublicBlock key={block.id} block={block} />
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-foreground font-bold mb-2">No posts yet</p>
+                  <p className="text-muted-foreground text-sm">
+                    This user hasn't published any posts yet.
+                  </p>
+                </div>
+              )}
+            </div>}
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+function PublicBlock({ block }: { block: BlogPostBlock }) {
+  if (block.blockType === 'text' && block.content) {
+    return (
+      <div className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
+        {block.content}
+      </div>
+    )
+  }
+
+  if (block.blockType === 'image') {
+    return (
+      <div>
+        {block.imageUrl && (
+          <img
+            src={`/api/blog-posts/${block.postId}/blocks/${block.id}/image`}
+            alt={block.imageCaption || 'Post image'}
+            className="w-full max-h-96 object-contain bg-muted/30 border-2 border-border/30"
+          />
+        )}
+        {block.imageCaption && (
+          <p className="text-xs text-muted-foreground mt-1 italic">{block.imageCaption}</p>
+        )}
+      </div>
+    )
+  }
+
+  if (block.blockType === 'game_embed' && block.game) {
+    return (
+      <Link
+        to="/games/$gameId"
+        params={{ gameId: block.game.id }}
+        className="flex items-center gap-3 p-3 bg-muted/30 border-2 border-border/30 hover:bg-muted/60 transition-colors"
+      >
+        {block.game.coverUrl ? (
+          <img
+            src={block.game.coverUrl}
+            alt={block.game.name}
+            className="w-12 h-16 object-cover border-2 border-border"
+          />
+        ) : (
+          <div className="w-12 h-16 bg-muted border-2 border-border flex items-center justify-center">
+            <Gamepad2 className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+        <div>
+          <p className="font-semibold text-foreground text-sm">{block.game.name}</p>
+        </div>
+      </Link>
+    )
+  }
+
+  if (block.blockType === 'list_embed' && block.list) {
+    return (
+      <Link
+        to="/lists/$listId"
+        params={{ listId: block.list.id }}
+        className="flex items-center gap-3 p-3 bg-muted/30 border-2 border-border/30 hover:bg-muted/60 transition-colors"
+      >
+        {block.list.coverUrl ? (
+          <img
+            src={block.list.coverUrl}
+            alt={block.list.name}
+            className="w-12 h-12 object-cover border-2 border-border"
+          />
+        ) : (
+          <div className="w-12 h-12 bg-muted border-2 border-border flex items-center justify-center">
+            <ListPlus className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
+        <div>
+          <p className="font-semibold text-foreground text-sm">{block.list.name}</p>
+          {block.list.description && (
+            <p className="text-xs text-muted-foreground line-clamp-1">{block.list.description}</p>
+          )}
+        </div>
+      </Link>
+    )
+  }
+
+  return null
 }
 
 function ProfileSkeleton() {

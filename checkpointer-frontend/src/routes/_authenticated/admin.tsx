@@ -36,6 +36,7 @@ import {
   ArrowUp,
   ArrowDown,
   Save,
+  FileText,
 } from 'lucide-react'
 import { useSettings } from '@/lib/settingsContext'
 import { toast } from 'sonner'
@@ -638,6 +639,7 @@ function Pagination({
 function SettingsPanel() {
   const { settings, isLoading, updateSettings } = useSettings()
   const [isSaving, setIsSaving] = useState(false)
+  const [isSavingBlog, setIsSavingBlog] = useState(false)
 
   const handleToggle = async () => {
     setIsSaving(true)
@@ -648,6 +650,18 @@ function SettingsPanel() {
       toast.error('Failed to update setting')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleBlogToggle = async () => {
+    setIsSavingBlog(true)
+    try {
+      await updateSettings({ blogPostsEnabled: !settings.blogPostsEnabled })
+      toast.success('Setting updated')
+    } catch {
+      toast.error('Failed to update setting')
+    } finally {
+      setIsSavingBlog(false)
     }
   }
 
@@ -696,6 +710,49 @@ function SettingsPanel() {
               {settings.darkModeEnabled ? 'Enabled' : 'Disabled'}
             </span>
             {' '}- Users {settings.darkModeEnabled ? 'can' : 'cannot'} see the theme toggle button
+          </div>
+        </div>
+      </div>
+
+      {/* Features Settings */}
+      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <FileText className="w-6 h-6 text-stone-900" />
+          <h3 className="text-lg font-bold text-stone-900">Features</h3>
+        </div>
+
+        <div className="space-y-4">
+          {/* Blog Posts Toggle */}
+          <div className="flex items-center justify-between p-4 bg-stone-50 border-4 border-stone-900">
+            <div>
+              <h4 className="font-bold text-stone-900">Blog Posts</h4>
+              <p className="text-sm text-stone-600 mt-1">
+                Show the Posts tab on user profiles. When disabled, only admins can see blog posts.
+              </p>
+            </div>
+            <Button
+              onClick={handleBlogToggle}
+              disabled={isSavingBlog}
+              className={`relative w-14 h-8 border-4 border-stone-900 transition-colors ${
+                settings.blogPostsEnabled ? 'bg-green-400' : 'bg-stone-300'
+              } ${isSavingBlog ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label={settings.blogPostsEnabled ? 'Disable blog posts' : 'Enable blog posts'}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border-2 border-stone-900 transition-transform ${
+                  settings.blogPostsEnabled ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </Button>
+          </div>
+
+          {/* Status indicator */}
+          <div className="text-sm text-stone-600">
+            Status:{' '}
+            <span className={`font-bold ${settings.blogPostsEnabled ? 'text-green-700' : 'text-stone-500'}`}>
+              {settings.blogPostsEnabled ? 'Enabled' : 'Admin only'}
+            </span>
+            {' '}- {settings.blogPostsEnabled ? 'All users can see blog posts on profiles' : 'Only admins can see the Posts tab'}
           </div>
         </div>
       </div>

@@ -130,6 +130,7 @@ export async function deleteExpense({id}: {id: number}) {
 export type AppSettings = {
   darkModeEnabled: boolean;
   featuredGameIds?: string[];
+  blogPostsEnabled?: boolean;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
