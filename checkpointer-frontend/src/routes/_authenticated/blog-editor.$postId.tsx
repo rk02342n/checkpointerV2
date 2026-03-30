@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   Upload,
   X,
-  Save,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -65,32 +64,46 @@ function BlogEditorPage() {
   // ── Preview toggle ──
   const [showPreview, setShowPreview] = useState(false)
 
+  // ── Auto-discard empty drafts on leave ──
+  const postRef = useRef(post)
+  const blocksRef = useRef(blocks)
+  useEffect(() => { postRef.current = post }, [post])
+  useEffect(() => { blocksRef.current = blocks }, [blocks])
+
+  useEffect(() => {
+    return () => {
+      const p = postRef.current
+      const b = blocksRef.current
+      if (!p) return
+      // Only discard draft posts that are completely empty
+      const isEmpty =
+        p.status === 'draft' &&
+        (!p.title || p.title.trim() === '') &&
+        !p.subtitle &&
+        !p.headerImageUrl &&
+        b.length === 0
+      if (isEmpty) {
+        deleteBlogPost(p.id).catch(() => {})
+      }
+    }
+  }, [])
+
   // ── Post metadata local state ──
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [slug, setSlug] = useState('')
-  const [metaDirty, setMetaDirty] = useState(false)
+  const initializedRef = useRef(false)
 
   useEffect(() => {
-    if (post) {
+    if (post && !initializedRef.current) {
       setTitle(post.title)
       setSubtitle(post.subtitle ?? '')
       setSlug(post.slug)
-      setMetaDirty(false)
+      initializedRef.current = true
     }
   }, [post])
 
-  // Track changes to metadata
-  useEffect(() => {
-    if (!post) return
-    const changed =
-      title !== post.title ||
-      subtitle !== (post.subtitle ?? '') ||
-      slug !== post.slug
-    setMetaDirty(changed)
-  }, [title, subtitle, slug, post])
-
-  // ── Save metadata ──
+  // ── Save metadata (auto-save on blur) ──
   const saveMeta = useMutation({
     mutationFn: (data: { title?: string; subtitle?: string | null; slug?: string }) =>
       updateBlogPost(postId, data),
@@ -101,6 +114,17 @@ function BlogEditorPage() {
       toast.error(err.message)
     },
   })
+
+  const handleMetaBlur = useCallback(() => {
+    if (!post) return
+    const updates: Record<string, string | null> = {}
+    if (title !== post.title) updates.title = title
+    if (subtitle !== (post.subtitle ?? '')) updates.subtitle = subtitle || null
+    if (slug !== post.slug) updates.slug = slug
+    if (Object.keys(updates).length > 0) {
+      saveMeta.mutate(updates)
+    }
+  }, [post, title, subtitle, slug, saveMeta])
 
   // ── Publish / Unpublish ──
   const publishMutation = useMutation({
@@ -187,20 +211,6 @@ function BlogEditorPage() {
     [blocks, reorderMutation]
   )
 
-  // ── Manual save ���─
-  const handleManualSave = () => {
-    if (!metaDirty) return
-    const updates: Record<string, string | null> = {}
-    if (title !== post?.title) updates.title = title
-    if (subtitle !== (post?.subtitle ?? '')) updates.subtitle = subtitle || null
-    if (slug !== post?.slug) updates.slug = slug
-    if (Object.keys(updates).length > 0) {
-      saveMeta.mutate(updates, {
-        onSuccess: () => toast.success('Saved!'),
-      })
-    }
-  }
-
   // ── Loading / Error ──
   if (isPending) {
     return (
@@ -265,12 +275,6 @@ function BlogEditorPage() {
                 <Loader2 className="w-3 h-3 animate-spin" />
                 Saving...
               </span>
-            )}
-            {metaDirty && !saveMeta.isPending && (
-              <Button variant="ghost" size="sm" onClick={handleManualSave}>
-                <Save className="w-4 h-4" />
-                <span className="hidden sm:inline">Save</span>
-              </Button>
             )}
 
             {/* Publish toggle */}
@@ -415,6 +419,8 @@ function BlogEditorPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Post title..."
+            autoFocus
+            onBlur={handleMetaBlur}
             className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-alt placeholder:text-muted-foreground/40 focus:outline-none border-b-4 border-transparent focus:border-border pb-2 transition-colors"
           />
           <input
@@ -422,6 +428,7 @@ function BlogEditorPage() {
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
             placeholder="Subtitle (optional)..."
+            onBlur={handleMetaBlur}
             className="w-full bg-transparent text-lg text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none border-b-2 border-transparent focus:border-border/50 pb-1 transition-colors"
           />
           <div className="flex items-center gap-2">
@@ -431,6 +438,7 @@ function BlogEditorPage() {
               value={slug}
               onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               placeholder="my-post-slug"
+              onBlur={handleMetaBlur}
               className="flex-1 bg-transparent text-sm text-foreground font-mono placeholder:text-muted-foreground/30 focus:outline-none border-b-2 border-transparent focus:border-border/50 pb-0.5 transition-colors"
             />
           </div>
@@ -519,23 +527,18 @@ function BlockEditor({
     mutationFn: (data: Record<string, unknown>) => updateBlock(postId, block.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blog-post', postId] })
-      toast.success('Block saved')
     },
     onError: (err) => toast.error(err.message),
   })
 
-  // ── Save block content manually ──
-  const saveBlockContent = () => {
-    if (block.blockType === 'text') {
+  // ── Auto-save block content on blur ──
+  const handleBlockBlur = useCallback(() => {
+    if (block.blockType === 'text' && content !== (block.content ?? '')) {
       updateMutation.mutate({ content: content || null })
-    } else if (block.blockType === 'image') {
+    } else if (block.blockType === 'image' && caption !== (block.imageCaption ?? '')) {
       updateMutation.mutate({ imageCaption: caption || null })
     }
-  }
-
-  const blockDirty =
-    (block.blockType === 'text' && content !== (block.content ?? '')) ||
-    (block.blockType === 'image' && caption !== (block.imageCaption ?? ''))
+  }, [block.blockType, block.content, block.imageCaption, content, caption, updateMutation])
 
   // ── Delete block ──
   const deleteMutation = useMutation({
@@ -590,21 +593,6 @@ function BlockEditor({
           )}
         </div>
         <div className="flex items-center gap-1">
-          {blockDirty && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={saveBlockContent}
-              disabled={updateMutation.isPending}
-              className="text-emerald-600 hover:text-emerald-700"
-            >
-              {updateMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-            </Button>
-          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -645,6 +633,7 @@ function BlockEditor({
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onBlur={handleBlockBlur}
             placeholder="Write something..."
             rows={6}
             className="w-full bg-transparent border-0 focus-visible:ring-0 shadow-none resize-y text-foreground placeholder:text-muted-foreground/30 p-0 min-h-[120px]"
@@ -687,6 +676,7 @@ function BlockEditor({
             <Input
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
+              onBlur={handleBlockBlur}
               placeholder="Image caption (optional)"
               className="bg-transparent border-2 border-border/30 rounded-none text-sm"
             />

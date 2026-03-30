@@ -121,7 +121,7 @@ function Profile() {
   const createPostMutation = useMutation({
     mutationFn: () => {
       const slug = `post-${Date.now()}`
-      return createBlogPost({ title: 'Untitled Post', slug })
+      return createBlogPost({ title: '', slug })
     },
     onSuccess: (data) => {
       navigate({ to: '/blog-editor/$postId', params: { postId: data.post.id } })
