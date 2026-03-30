@@ -5,6 +5,7 @@ import { blogPostsTable, createBlogPostSchema, type BlogPostCustomization } from
 import { blogPostBlocksTable, createBlockSchema } from "../db/schema/blog-post-blocks";
 import { gamesTable } from "../db/schema/games";
 import { gameListsTable } from "../db/schema/game-lists";
+import { usersTable } from "../db/schema/users";
 import { eq, and, desc, asc, max, sql } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
@@ -173,6 +174,92 @@ export const blogPostsRoute = new Hono()
   }));
 
   return c.json({ posts: postsWithBlocks });
+})
+
+// GET /public/:postId - Get a single published post (public, no auth)
+.get('/public/:postId', async (c) => {
+  const postId = c.req.param('postId');
+
+  // Fetch the post with author info, only if published
+  const result = await db
+    .select({
+      post: blogPostsTable,
+      author: {
+        id: usersTable.id,
+        username: usersTable.username,
+        displayName: usersTable.displayName,
+        avatarUrl: usersTable.avatarUrl,
+      },
+    })
+    .from(blogPostsTable)
+    .innerJoin(usersTable, eq(blogPostsTable.userId, usersTable.id))
+    .where(and(
+      eq(blogPostsTable.id, postId),
+      eq(blogPostsTable.status, "published")
+    ))
+    .limit(1)
+    .then(res => res[0]);
+
+  if (!result) {
+    return c.json({ error: "Post not found" }, 404);
+  }
+
+  // Fetch blocks ordered by position
+  const blocks = await db
+    .select()
+    .from(blogPostBlocksTable)
+    .where(eq(blogPostBlocksTable.postId, postId))
+    .orderBy(asc(blogPostBlocksTable.position));
+
+  // Resolve game/list embeds
+  const gameIds = blocks
+    .filter(b => b.blockType === "game_embed" && b.gameId)
+    .map(b => b.gameId!);
+
+  const listIds = blocks
+    .filter(b => b.blockType === "list_embed" && b.listId)
+    .map(b => b.listId!);
+
+  let gamesMap: Record<string, any> = {};
+  let listsMap: Record<string, any> = {};
+
+  if (gameIds.length > 0) {
+    const games = await db
+      .select({
+        id: gamesTable.id,
+        name: gamesTable.name,
+        slug: gamesTable.slug,
+        coverUrl: gamesTable.coverUrl,
+      })
+      .from(gamesTable)
+      .where(sql`${gamesTable.id} IN ${gameIds}`);
+    gamesMap = Object.fromEntries(games.map(g => [g.id, g]));
+  }
+
+  if (listIds.length > 0) {
+    const lists = await db
+      .select({
+        id: gameListsTable.id,
+        name: gameListsTable.name,
+        description: gameListsTable.description,
+        coverUrl: gameListsTable.coverUrl,
+      })
+      .from(gameListsTable)
+      .where(sql`${gameListsTable.id} IN ${listIds}`);
+    listsMap = Object.fromEntries(lists.map(l => [l.id, l]));
+  }
+
+  const blocksWithEmbeds = blocks.map(block => ({
+    ...block,
+    game: block.gameId ? gamesMap[block.gameId] ?? null : null,
+    list: block.listId ? listsMap[block.listId] ?? null : null,
+  }));
+
+  return c.json({
+    post: result.post,
+    blocks: blocksWithEmbeds,
+    author: result.author,
+  });
 })
 
 // GET /:postId - Get own post by ID with all blocks (authenticated)

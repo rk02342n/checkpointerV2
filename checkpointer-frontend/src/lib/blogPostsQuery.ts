@@ -57,6 +57,19 @@ export type BlogPostDetail = {
   blocks: BlogPostBlock[];
 };
 
+export type PublicBlogPostAuthor = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+};
+
+export type PublicBlogPostDetail = {
+  post: BlogPost;
+  blocks: BlogPostBlock[];
+  author: PublicBlogPostAuthor;
+};
+
 // Get own posts list
 async function getMyBlogPosts(): Promise<{ posts: BlogPost[] }> {
   const res = await fetch("/api/blog-posts");
@@ -81,6 +94,23 @@ export const userPublishedPostsQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ["user-published-posts", userId],
     queryFn: () => getUserPublishedPosts(userId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+// Get a single published post (public)
+async function getPublicBlogPost(postId: string): Promise<PublicBlogPostDetail> {
+  const res = await fetch(`/api/blog-posts/public/${postId}`);
+  if (!res.ok) {
+    if (res.status === 404) throw new Error("Post not found");
+    throw new Error("Failed to fetch blog post");
+  }
+  return res.json();
+}
+
+export const publicBlogPostQueryOptions = (postId: string) =>
+  queryOptions({
+    queryKey: ["public-blog-post", postId],
+    queryFn: () => getPublicBlogPost(postId),
     staleTime: 1000 * 60 * 5,
   });
 
