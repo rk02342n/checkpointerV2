@@ -177,3 +177,55 @@
 .profile-themed-content .profile-card-hover:hover {
   background-color: color-mix(in srgb, var(--profile-card-bg, var(--card)) 80%, white);
 }
+
+/* Tiptap / ProseMirror editor styles */
+.tiptap {
+  outline: none;
+}
+
+.tiptap p {
+  margin: 0.5em 0;
+}
+
+.tiptap h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+  font-family: var(--font-alt);
+}
+
+.tiptap h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.75em 0 0.4em;
+  font-family: var(--font-alt);
+}
+
+.tiptap strong {
+  font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+.tiptap a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.75em 0;
+  border: 2px solid color-mix(in srgb, var(--border) 30%, transparent);
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  pointer-events: none;
+  height: 0;
+}

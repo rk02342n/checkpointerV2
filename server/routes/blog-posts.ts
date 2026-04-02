@@ -2,11 +2,10 @@ import { Hono } from "hono";
 import { getAuthUser } from "../kinde";
 import { db } from "../db";
 import { blogPostsTable, createBlogPostSchema, type BlogPostCustomization } from "../db/schema/blog-posts";
-import { blogPostBlocksTable, createBlockSchema } from "../db/schema/blog-post-blocks";
 import { gamesTable } from "../db/schema/games";
 import { gameListsTable } from "../db/schema/game-lists";
 import { usersTable } from "../db/schema/users";
-import { eq, and, desc, asc, max, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
@@ -16,6 +15,7 @@ const updatePostSchema = z.object({
   subtitle: z.string().max(400).optional().nullable(),
   slug: z.string().min(1).max(200).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase alphanumeric with hyphens").optional(),
   headerImageUrl: z.string().optional().nullable(),
+  content: z.record(z.string(), z.unknown()).optional().nullable(),
   customization: z.object({
     backgroundColor: z.string().optional(),
     headerColor: z.string().optional(),
@@ -23,20 +23,6 @@ const updatePostSchema = z.object({
     fontSize: z.enum(["sm", "base", "lg", "xl"]).optional(),
     accentColor: z.string().optional(),
   }).optional().nullable(),
-});
-
-const updateBlockSchema = z.object({
-  blockType: z.enum(["text", "image", "game_embed", "list_embed"]).optional(),
-  content: z.string().max(50000).optional().nullable(),
-  imageUrl: z.string().optional().nullable(),
-  imageCaption: z.string().max(500).optional().nullable(),
-  gameId: z.string().uuid().optional().nullable(),
-  listId: z.string().uuid().optional().nullable(),
-  data: z.record(z.string(), z.unknown()).optional().nullable(),
-});
-
-const reorderBlocksSchema = z.object({
-  blockIds: z.array(z.string().uuid()),
 });
 
 async function getOwnedPost(postId: string, userId: string) {
@@ -49,6 +35,64 @@ async function getOwnedPost(postId: string, userId: string) {
     ))
     .limit(1)
     .then(res => res[0]);
+}
+
+// Extract game/list embed IDs from Tiptap JSON content
+function extractEmbedIds(content: Record<string, unknown> | null): { gameIds: string[]; listIds: string[] } {
+  const gameIds: string[] = [];
+  const listIds: string[] = [];
+  if (!content) return { gameIds, listIds };
+
+  function walk(node: Record<string, unknown>) {
+    if (node.type === "gameEmbed" && node.attrs && typeof (node.attrs as Record<string, unknown>).gameId === "string") {
+      gameIds.push((node.attrs as Record<string, unknown>).gameId as string);
+    }
+    if (node.type === "listEmbed" && node.attrs && typeof (node.attrs as Record<string, unknown>).listId === "string") {
+      listIds.push((node.attrs as Record<string, unknown>).listId as string);
+    }
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) {
+        walk(child as Record<string, unknown>);
+      }
+    }
+  }
+
+  walk(content);
+  return { gameIds: [...new Set(gameIds)], listIds: [...new Set(listIds)] };
+}
+
+// Batch-resolve game and list embeds
+async function resolveEmbeds(gameIds: string[], listIds: string[]) {
+  let games: Record<string, unknown> = {};
+  let lists: Record<string, unknown> = {};
+
+  if (gameIds.length > 0) {
+    const rows = await db
+      .select({
+        id: gamesTable.id,
+        name: gamesTable.name,
+        slug: gamesTable.slug,
+        coverUrl: gamesTable.coverUrl,
+      })
+      .from(gamesTable)
+      .where(sql`${gamesTable.id} IN ${gameIds}`);
+    games = Object.fromEntries(rows.map(g => [g.id, g]));
+  }
+
+  if (listIds.length > 0) {
+    const rows = await db
+      .select({
+        id: gameListsTable.id,
+        name: gameListsTable.name,
+        description: gameListsTable.description,
+        coverUrl: gameListsTable.coverUrl,
+      })
+      .from(gameListsTable)
+      .where(sql`${gameListsTable.id} IN ${listIds}`);
+    lists = Object.fromEntries(rows.map(l => [l.id, l]));
+  }
+
+  return { games, lists };
 }
 
 export const blogPostsRoute = new Hono()
@@ -107,80 +151,13 @@ export const blogPostsRoute = new Hono()
     ))
     .orderBy(desc(blogPostsTable.publishedAt));
 
-  // Fetch blocks for all posts
-  const postIds = posts.map(p => p.id);
-  if (postIds.length === 0) {
-    return c.json({ posts: [] });
-  }
-
-  const allBlocks = await db
-    .select()
-    .from(blogPostBlocksTable)
-    .where(sql`${blogPostBlocksTable.postId} IN ${postIds}`)
-    .orderBy(asc(blogPostBlocksTable.position));
-
-  // Resolve game/list embeds
-  const gameIds = allBlocks
-    .filter(b => b.blockType === "game_embed" && b.gameId)
-    .map(b => b.gameId!);
-
-  const listIds = allBlocks
-    .filter(b => b.blockType === "list_embed" && b.listId)
-    .map(b => b.listId!);
-
-  let gamesMap: Record<string, any> = {};
-  let listsMap: Record<string, any> = {};
-
-  if (gameIds.length > 0) {
-    const games = await db
-      .select({
-        id: gamesTable.id,
-        name: gamesTable.name,
-        slug: gamesTable.slug,
-        coverUrl: gamesTable.coverUrl,
-      })
-      .from(gamesTable)
-      .where(sql`${gamesTable.id} IN ${gameIds}`);
-    gamesMap = Object.fromEntries(games.map(g => [g.id, g]));
-  }
-
-  if (listIds.length > 0) {
-    const lists = await db
-      .select({
-        id: gameListsTable.id,
-        name: gameListsTable.name,
-        description: gameListsTable.description,
-        coverUrl: gameListsTable.coverUrl,
-      })
-      .from(gameListsTable)
-      .where(sql`${gameListsTable.id} IN ${listIds}`);
-    listsMap = Object.fromEntries(lists.map(l => [l.id, l]));
-  }
-
-  // Group blocks by post with embeds resolved
-  const blocksByPost: Record<string, any[]> = {};
-  for (const block of allBlocks) {
-    if (!blocksByPost[block.postId]) blocksByPost[block.postId] = [];
-    blocksByPost[block.postId]!.push({
-      ...block,
-      game: block.gameId ? gamesMap[block.gameId] ?? null : null,
-      list: block.listId ? listsMap[block.listId] ?? null : null,
-    });
-  }
-
-  const postsWithBlocks = posts.map(post => ({
-    post,
-    blocks: blocksByPost[post.id] ?? [],
-  }));
-
-  return c.json({ posts: postsWithBlocks });
+  return c.json({ posts });
 })
 
 // GET /public/:postId - Get a single published post (public, no auth)
 .get('/public/:postId', async (c) => {
   const postId = c.req.param('postId');
 
-  // Fetch the post with author info, only if published
   const result = await db
     .select({
       post: blogPostsTable,
@@ -204,65 +181,18 @@ export const blogPostsRoute = new Hono()
     return c.json({ error: "Post not found" }, 404);
   }
 
-  // Fetch blocks ordered by position
-  const blocks = await db
-    .select()
-    .from(blogPostBlocksTable)
-    .where(eq(blogPostBlocksTable.postId, postId))
-    .orderBy(asc(blogPostBlocksTable.position));
-
-  // Resolve game/list embeds
-  const gameIds = blocks
-    .filter(b => b.blockType === "game_embed" && b.gameId)
-    .map(b => b.gameId!);
-
-  const listIds = blocks
-    .filter(b => b.blockType === "list_embed" && b.listId)
-    .map(b => b.listId!);
-
-  let gamesMap: Record<string, any> = {};
-  let listsMap: Record<string, any> = {};
-
-  if (gameIds.length > 0) {
-    const games = await db
-      .select({
-        id: gamesTable.id,
-        name: gamesTable.name,
-        slug: gamesTable.slug,
-        coverUrl: gamesTable.coverUrl,
-      })
-      .from(gamesTable)
-      .where(sql`${gamesTable.id} IN ${gameIds}`);
-    gamesMap = Object.fromEntries(games.map(g => [g.id, g]));
-  }
-
-  if (listIds.length > 0) {
-    const lists = await db
-      .select({
-        id: gameListsTable.id,
-        name: gameListsTable.name,
-        description: gameListsTable.description,
-        coverUrl: gameListsTable.coverUrl,
-      })
-      .from(gameListsTable)
-      .where(sql`${gameListsTable.id} IN ${listIds}`);
-    listsMap = Object.fromEntries(lists.map(l => [l.id, l]));
-  }
-
-  const blocksWithEmbeds = blocks.map(block => ({
-    ...block,
-    game: block.gameId ? gamesMap[block.gameId] ?? null : null,
-    list: block.listId ? listsMap[block.listId] ?? null : null,
-  }));
+  // Resolve game/list embeds from content
+  const { gameIds, listIds } = extractEmbedIds(result.post.content);
+  const embeds = await resolveEmbeds(gameIds, listIds);
 
   return c.json({
     post: result.post,
-    blocks: blocksWithEmbeds,
     author: result.author,
+    embeds,
   });
 })
 
-// GET /:postId - Get own post by ID with all blocks (authenticated)
+// GET /:postId - Get own post by ID (authenticated)
 .get('/:postId', getAuthUser, async (c) => {
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
@@ -272,61 +202,14 @@ export const blogPostsRoute = new Hono()
     return c.json({ error: "Post not found" }, 404);
   }
 
-  // Fetch blocks ordered by position
-  const blocks = await db
-    .select()
-    .from(blogPostBlocksTable)
-    .where(eq(blogPostBlocksTable.postId, postId))
-    .orderBy(asc(blogPostBlocksTable.position));
+  // Resolve embeds for editor preview
+  const { gameIds, listIds } = extractEmbedIds(post.content);
+  const embeds = await resolveEmbeds(gameIds, listIds);
 
-  // Fetch game data for game_embed blocks
-  const gameIds = blocks
-    .filter(b => b.blockType === "game_embed" && b.gameId)
-    .map(b => b.gameId!);
-
-  const listIds = blocks
-    .filter(b => b.blockType === "list_embed" && b.listId)
-    .map(b => b.listId!);
-
-  let gamesMap: Record<string, any> = {};
-  let listsMap: Record<string, any> = {};
-
-  if (gameIds.length > 0) {
-    const games = await db
-      .select({
-        id: gamesTable.id,
-        name: gamesTable.name,
-        slug: gamesTable.slug,
-        coverUrl: gamesTable.coverUrl,
-      })
-      .from(gamesTable)
-      .where(sql`${gamesTable.id} IN ${gameIds}`);
-    gamesMap = Object.fromEntries(games.map(g => [g.id, g]));
-  }
-
-  if (listIds.length > 0) {
-    const lists = await db
-      .select({
-        id: gameListsTable.id,
-        name: gameListsTable.name,
-        description: gameListsTable.description,
-        coverUrl: gameListsTable.coverUrl,
-      })
-      .from(gameListsTable)
-      .where(sql`${gameListsTable.id} IN ${listIds}`);
-    listsMap = Object.fromEntries(lists.map(l => [l.id, l]));
-  }
-
-  const blocksWithEmbeds = blocks.map(block => ({
-    ...block,
-    game: block.gameId ? gamesMap[block.gameId] ?? null : null,
-    list: block.listId ? listsMap[block.listId] ?? null : null,
-  }));
-
-  return c.json({ post, blocks: blocksWithEmbeds });
+  return c.json({ post, embeds });
 })
 
-// PATCH /:postId - Update post metadata (authenticated, owner only)
+// PATCH /:postId - Update post (authenticated, owner only)
 .patch('/:postId', getAuthUser, zValidator('json', updatePostSchema), async (c) => {
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
@@ -434,143 +317,6 @@ export const blogPostsRoute = new Hono()
   return c.json({ post: updated[0] });
 })
 
-// POST /:postId/blocks - Add a block to a post (authenticated, owner only)
-.post('/:postId/blocks', getAuthUser, zValidator('json', createBlockSchema), async (c) => {
-  const postId = c.req.param('postId');
-  const user = c.var.dbUser;
-  const data = c.req.valid('json');
-
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
-
-  // Get next position
-  const maxPos = await db
-    .select({ maxPosition: max(blogPostBlocksTable.position) })
-    .from(blogPostBlocksTable)
-    .where(eq(blogPostBlocksTable.postId, postId))
-    .then(res => res[0]?.maxPosition ?? -1);
-
-  const newBlock = await db
-    .insert(blogPostBlocksTable)
-    .values({
-      postId,
-      blockType: data.blockType,
-      position: maxPos + 1,
-      content: data.content,
-      imageUrl: data.imageUrl,
-      imageCaption: data.imageCaption,
-      gameId: data.gameId,
-      listId: data.listId,
-      data: data.data,
-    })
-    .returning();
-
-  // Update post's updatedAt
-  await db
-    .update(blogPostsTable)
-    .set({ updatedAt: new Date() })
-    .where(eq(blogPostsTable.id, postId));
-
-  return c.json({ block: newBlock[0] }, 201);
-})
-
-// PATCH /:postId/blocks/reorder - Reorder blocks (must be before :blockId route)
-.patch('/:postId/blocks/reorder', getAuthUser, zValidator('json', reorderBlocksSchema), async (c) => {
-  const postId = c.req.param('postId');
-  const user = c.var.dbUser;
-  const { blockIds } = c.req.valid('json');
-
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
-
-  await Promise.all(
-    blockIds.map((blockId, index) =>
-      db
-        .update(blogPostBlocksTable)
-        .set({ position: index })
-        .where(and(
-          eq(blogPostBlocksTable.postId, postId),
-          eq(blogPostBlocksTable.id, blockId)
-        ))
-    )
-  );
-
-  await db
-    .update(blogPostsTable)
-    .set({ updatedAt: new Date() })
-    .where(eq(blogPostsTable.id, postId));
-
-  return c.json({ reordered: true });
-})
-
-// PATCH /:postId/blocks/:blockId - Update a block (authenticated, owner only)
-.patch('/:postId/blocks/:blockId', getAuthUser, zValidator('json', updateBlockSchema), async (c) => {
-  const postId = c.req.param('postId');
-  const blockId = c.req.param('blockId');
-  const user = c.var.dbUser;
-  const data = c.req.valid('json');
-
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
-
-  const updated = await db
-    .update(blogPostBlocksTable)
-    .set(data)
-    .where(and(
-      eq(blogPostBlocksTable.id, blockId),
-      eq(blogPostBlocksTable.postId, postId)
-    ))
-    .returning();
-
-  if (updated.length === 0) {
-    return c.json({ error: "Block not found" }, 404);
-  }
-
-  await db
-    .update(blogPostsTable)
-    .set({ updatedAt: new Date() })
-    .where(eq(blogPostsTable.id, postId));
-
-  return c.json({ block: updated[0] });
-})
-
-// DELETE /:postId/blocks/:blockId - Delete a block (authenticated, owner only)
-.delete('/:postId/blocks/:blockId', getAuthUser, async (c) => {
-  const postId = c.req.param('postId');
-  const blockId = c.req.param('blockId');
-  const user = c.var.dbUser;
-
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
-
-  const deleted = await db
-    .delete(blogPostBlocksTable)
-    .where(and(
-      eq(blogPostBlocksTable.id, blockId),
-      eq(blogPostBlocksTable.postId, postId)
-    ))
-    .returning();
-
-  if (deleted.length === 0) {
-    return c.json({ error: "Block not found" }, 404);
-  }
-
-  await db
-    .update(blogPostsTable)
-    .set({ updatedAt: new Date() })
-    .where(eq(blogPostsTable.id, postId));
-
-  return c.json({ deleted: true });
-})
-
 // POST /:postId/header-image - Upload header image (authenticated, owner only)
 .post('/:postId/header-image', getAuthUser, async (c) => {
   const postId = c.req.param('postId');
@@ -640,75 +386,6 @@ export const blogPostsRoute = new Hono()
   return c.json({ removed: true });
 })
 
-// POST /:postId/blocks/:blockId/image - Upload image for a block (authenticated, owner only)
-.post('/:postId/blocks/:blockId/image', getAuthUser, async (c) => {
-  const postId = c.req.param('postId');
-  const blockId = c.req.param('blockId');
-  const user = c.var.dbUser;
-
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
-
-  // Verify block belongs to this post
-  const block = await db
-    .select()
-    .from(blogPostBlocksTable)
-    .where(and(
-      eq(blogPostBlocksTable.id, blockId),
-      eq(blogPostBlocksTable.postId, postId)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!block) {
-    return c.json({ error: "Block not found" }, 404);
-  }
-
-  const formData = await c.req.formData();
-  const fileEntry = formData.get("image");
-
-  if (!fileEntry || typeof fileEntry === "string") {
-    return c.json({ error: "No file provided" }, 400);
-  }
-
-  const file = fileEntry as File;
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-  if (!allowedTypes.includes(file.type)) {
-    return c.json({ error: "Invalid file type. Allowed: jpeg, png, webp, gif" }, 400);
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    return c.json({ error: "File too large. Max size: 5MB" }, 400);
-  }
-
-  const mimeToExt: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
-  const ext = mimeToExt[file.type] || "jpg";
-  const key = `blog-blocks/${postId}/${blockId}/${Date.now()}.${ext}`;
-
-  await s3Client.send(new PutObjectCommand({
-    Bucket: R2_BUCKET,
-    Key: key,
-    Body: Buffer.from(await file.arrayBuffer()),
-    ContentType: file.type,
-  }));
-
-  const updated = await db
-    .update(blogPostBlocksTable)
-    .set({ imageUrl: key })
-    .where(eq(blogPostBlocksTable.id, blockId))
-    .returning();
-
-  await db
-    .update(blogPostsTable)
-    .set({ updatedAt: new Date() })
-    .where(eq(blogPostsTable.id, postId));
-
-  return c.json({ block: updated[0] });
-})
-
 // GET /:postId/header-image - Serve header image (public)
 .get('/:postId/header-image', async (c) => {
   const postId = c.req.param('postId');
@@ -749,29 +426,65 @@ export const blogPostsRoute = new Hono()
   }
 })
 
-// GET /:postId/blocks/:blockId/image - Serve block image (public)
-.get('/:postId/blocks/:blockId/image', async (c) => {
+// POST /:postId/image - Upload inline image for post content (authenticated, owner only)
+.post('/:postId/image', getAuthUser, async (c) => {
   const postId = c.req.param('postId');
-  const blockId = c.req.param('blockId');
+  const user = c.var.dbUser;
 
-  const block = await db
-    .select({ imageUrl: blogPostBlocksTable.imageUrl })
-    .from(blogPostBlocksTable)
-    .where(and(
-      eq(blogPostBlocksTable.id, blockId),
-      eq(blogPostBlocksTable.postId, postId)
-    ))
-    .limit(1)
-    .then(res => res[0]);
+  const post = await getOwnedPost(postId, user.id);
+  if (!post) {
+    return c.json({ error: "Post not found" }, 404);
+  }
 
-  if (!block?.imageUrl) {
+  const formData = await c.req.formData();
+  const fileEntry = formData.get("image");
+
+  if (!fileEntry || typeof fileEntry === "string") {
+    return c.json({ error: "No file provided" }, 400);
+  }
+
+  const file = fileEntry as File;
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!allowedTypes.includes(file.type)) {
+    return c.json({ error: "Invalid file type. Allowed: jpeg, png, webp, gif" }, 400);
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    return c.json({ error: "File too large. Max size: 5MB" }, 400);
+  }
+
+  const mimeToExt: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+  const ext = mimeToExt[file.type] || "jpg";
+  const key = `blog-images/${postId}/${Date.now()}.${ext}`;
+
+  await s3Client.send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: Buffer.from(await file.arrayBuffer()),
+    ContentType: file.type,
+  }));
+
+  await db
+    .update(blogPostsTable)
+    .set({ updatedAt: new Date() })
+    .where(eq(blogPostsTable.id, postId));
+
+  return c.json({ imageUrl: `/api/blog-posts/${postId}/image/${encodeURIComponent(key)}` });
+})
+
+// GET /:postId/image/:imageKey - Serve inline content image (public)
+.get('/:postId/image/*', async (c) => {
+  const imageKey = decodeURIComponent(c.req.path.split('/image/')[1]);
+
+  if (!imageKey) {
     return c.notFound();
   }
 
   try {
     const response = await s3Client.send(new GetObjectCommand({
       Bucket: R2_BUCKET,
-      Key: block.imageUrl,
+      Key: imageKey,
     }));
 
     if (!response.Body) return c.notFound();

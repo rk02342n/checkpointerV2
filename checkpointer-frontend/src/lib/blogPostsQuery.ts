@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import type { JSONContent } from "@tiptap/react";
 
 export type BlogPostStatus = "draft" | "published";
 
@@ -17,6 +18,7 @@ export type BlogPost = {
   subtitle: string | null;
   slug: string;
   headerImageUrl: string | null;
+  content: JSONContent | null;
   status: BlogPostStatus;
   customization: BlogPostCustomization | null;
   publishedAt: string | null;
@@ -24,37 +26,28 @@ export type BlogPost = {
   updatedAt: string;
 };
 
-export type BlockType = "text" | "image" | "game_embed" | "list_embed";
-
-export type BlogPostBlock = {
+export type EmbedGame = {
   id: string;
-  postId: string;
-  blockType: BlockType;
-  position: number;
-  content: string | null;
-  imageUrl: string | null;
-  imageCaption: string | null;
-  gameId: string | null;
-  listId: string | null;
-  data: Record<string, unknown> | null;
-  createdAt: string;
-  game?: {
-    id: string;
-    name: string;
-    slug: string | null;
-    coverUrl: string | null;
-  } | null;
-  list?: {
-    id: string;
-    name: string;
-    description: string | null;
-    coverUrl: string | null;
-  } | null;
+  name: string;
+  slug: string | null;
+  coverUrl: string | null;
+};
+
+export type EmbedList = {
+  id: string;
+  name: string;
+  description: string | null;
+  coverUrl: string | null;
+};
+
+export type Embeds = {
+  games: Record<string, EmbedGame>;
+  lists: Record<string, EmbedList>;
 };
 
 export type BlogPostDetail = {
   post: BlogPost;
-  blocks: BlogPostBlock[];
+  embeds: Embeds;
 };
 
 export type PublicBlogPostAuthor = {
@@ -66,8 +59,8 @@ export type PublicBlogPostAuthor = {
 
 export type PublicBlogPostDetail = {
   post: BlogPost;
-  blocks: BlogPostBlock[];
   author: PublicBlogPostAuthor;
+  embeds: Embeds;
 };
 
 // Get own posts list
@@ -84,7 +77,7 @@ export const myBlogPostsQueryOptions = queryOptions({
 });
 
 // Get published posts for a user (public)
-async function getUserPublishedPosts(userId: string): Promise<{ posts: BlogPostDetail[] }> {
+async function getUserPublishedPosts(userId: string): Promise<{ posts: BlogPost[] }> {
   const res = await fetch(`/api/blog-posts/user/${userId}`);
   if (!res.ok) throw new Error("Failed to fetch user posts");
   return res.json();
@@ -114,7 +107,7 @@ export const publicBlogPostQueryOptions = (postId: string) =>
     staleTime: 1000 * 60 * 5,
   });
 
-// Get own post by ID with blocks
+// Get own post by ID
 async function getBlogPost(postId: string): Promise<BlogPostDetail> {
   const res = await fetch(`/api/blog-posts/${postId}`);
   if (!res.ok) {
@@ -150,13 +143,14 @@ export async function createBlogPost(data: {
   return res.json();
 }
 
-// Update blog post metadata
+// Update blog post (metadata + content)
 export async function updateBlogPost(
   postId: string,
   data: {
     title?: string;
     subtitle?: string | null;
     slug?: string;
+    content?: JSONContent | null;
     customization?: BlogPostCustomization | null;
   }
 ): Promise<{ post: BlogPost }> {
@@ -198,67 +192,6 @@ export async function unpublishBlogPost(postId: string): Promise<{ post: BlogPos
   return res.json();
 }
 
-// Add a block
-export async function addBlock(
-  postId: string,
-  data: {
-    blockType: BlockType;
-    content?: string;
-    imageUrl?: string;
-    imageCaption?: string;
-    gameId?: string;
-    listId?: string;
-    data?: Record<string, unknown>;
-  }
-): Promise<{ block: BlogPostBlock }> {
-  const res = await fetch(`/api/blog-posts/${postId}/blocks`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to add block");
-  return res.json();
-}
-
-// Update a block
-export async function updateBlock(
-  postId: string,
-  blockId: string,
-  data: {
-    blockType?: BlockType;
-    content?: string | null;
-    imageUrl?: string | null;
-    imageCaption?: string | null;
-    gameId?: string | null;
-    listId?: string | null;
-    data?: Record<string, unknown> | null;
-  }
-): Promise<{ block: BlogPostBlock }> {
-  const res = await fetch(`/api/blog-posts/${postId}/blocks/${blockId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Failed to update block");
-  return res.json();
-}
-
-// Delete a block
-export async function deleteBlock(postId: string, blockId: string): Promise<void> {
-  const res = await fetch(`/api/blog-posts/${postId}/blocks/${blockId}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete block");
-}
-
-// Reorder blocks
-export async function reorderBlocks(postId: string, blockIds: string[]): Promise<void> {
-  const res = await fetch(`/api/blog-posts/${postId}/blocks/reorder`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ blockIds }),
-  });
-  if (!res.ok) throw new Error("Failed to reorder blocks");
-}
-
 // Upload header image
 export async function uploadHeaderImage(postId: string, file: File): Promise<{ headerImageUrl: string }> {
   const formData = new FormData();
@@ -280,21 +213,17 @@ export async function removeHeaderImage(postId: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to remove header image");
 }
 
-// Upload block image
-export async function uploadBlockImage(
-  postId: string,
-  blockId: string,
-  file: File
-): Promise<{ block: BlogPostBlock }> {
+// Upload inline content image
+export async function uploadPostImage(postId: string, file: File): Promise<{ imageUrl: string }> {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(`/api/blog-posts/${postId}/blocks/${blockId}/image`, {
+  const res = await fetch(`/api/blog-posts/${postId}/image`, {
     method: "POST",
     body: formData,
   });
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.error || "Failed to upload block image");
+    throw new Error(error.error || "Failed to upload image");
   }
   return res.json();
 }

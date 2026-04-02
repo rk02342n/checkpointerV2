@@ -39,16 +39,14 @@ function BlogPostPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar/>
-        <div className="container mx-auto px-4 py-8 max-w-3xl">
-          <div className="bg-card border-4 border-border p-6 animate-pulse">
-            <div className="h-8 w-64 bg-muted-foreground/20 mb-3" />
-            <div className="h-5 w-96 bg-muted-foreground/20 mb-4" />
-            <div className="h-4 w-32 bg-muted-foreground/20 mb-8" />
-            <div className="space-y-3">
-              <div className="h-4 w-full bg-muted-foreground/20" />
-              <div className="h-4 w-full bg-muted-foreground/20" />
-              <div className="h-4 w-2/3 bg-muted-foreground/20" />
-            </div>
+        <div className="container mx-auto px-4 py-8 max-w-3xl animate-pulse">
+          <div className="h-8 w-64 bg-muted-foreground/20 mb-3" />
+          <div className="h-5 w-96 bg-muted-foreground/20 mb-4" />
+          <div className="h-4 w-32 bg-muted-foreground/20 mb-8" />
+          <div className="space-y-3">
+            <div className="h-4 w-full bg-muted-foreground/20" />
+            <div className="h-4 w-full bg-muted-foreground/20" />
+            <div className="h-4 w-2/3 bg-muted-foreground/20" />
           </div>
         </div>
       </div>
@@ -72,13 +70,11 @@ function BlogPostPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <article className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden">
-          <BlogPostView
-            post={data.post}
-            blocks={data.blocks}
-            author={data.author}
-          />
-        </article>
+        <BlogPostView
+          post={data.post}
+          author={data.author}
+          embeds={data.embeds}
+        />
       </main>
     </div>
   )
