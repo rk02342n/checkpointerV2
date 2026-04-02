@@ -22,6 +22,7 @@ export const blogPostsTable = pgTable("blog_posts", {
   subtitle: text("subtitle"),
   slug: text("slug").notNull().unique(),
   headerImageUrl: text("header_image_url"),
+  content: jsonb("content").$type<Record<string, unknown>>(),
   status: blogPostStatusEnum("status").default("draft").notNull(),
   customization: jsonb("customization").$type<BlogPostCustomization>(),
   publishedAt: timestamp("published_at"),

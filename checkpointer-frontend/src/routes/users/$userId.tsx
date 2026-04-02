@@ -15,7 +15,7 @@ import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components
 import { ListsSection } from '@/components/ListsSection'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
-import { userPublishedPostsQueryOptions, type BlogPostDetail } from '@/lib/blogPostsQuery'
+import { userPublishedPostsQueryOptions, type BlogPost } from '@/lib/blogPostsQuery'
 import { BlogPostCard } from '@/components/BlogPostCard'
 
 const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'posts'] as const
@@ -595,8 +595,8 @@ function PublicProfile() {
                 </div>
               ) : blogPosts.length > 0 ? (
                 <div className="space-y-4">
-                  {blogPosts.map(({ post, blocks }: BlogPostDetail) => (
-                    <BlogPostCard key={post.id} post={post} blocks={blocks} themed={themed} />
+                  {blogPosts.map((post: BlogPost) => (
+                    <BlogPostCard key={post.id} post={post} themed={themed} />
                   ))}
                 </div>
               ) : (

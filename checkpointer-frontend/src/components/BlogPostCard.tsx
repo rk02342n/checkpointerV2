@@ -1,22 +1,37 @@
 import { Link } from "@tanstack/react-router"
 import { Calendar, FileText } from "lucide-react"
-import type { BlogPost, BlogPostBlock } from "@/lib/blogPostsQuery"
+import type { BlogPost } from "@/lib/blogPostsQuery"
+import type { JSONContent } from "@tiptap/react"
 
 interface BlogPostCardProps {
   post: BlogPost
-  blocks?: BlogPostBlock[]
   themed?: boolean
 }
 
-function getTextSnippet(blocks: BlogPostBlock[]): string | null {
-  const textBlock = blocks.find((b) => b.blockType === "text" && b.content)
-  if (!textBlock?.content) return null
-  const plain = textBlock.content.replace(/<[^>]*>/g, "").trim()
-  return plain.length > 120 ? plain.slice(0, 120) + "..." : plain
+function getTextFromContent(content: JSONContent | null): string | null {
+  if (!content) return null
+  const parts: string[] = []
+
+  function walk(node: JSONContent) {
+    if (node.type === 'text' && node.text) {
+      parts.push(node.text)
+    }
+    if (node.content) {
+      for (const child of node.content) {
+        walk(child)
+        if (parts.join('').length > 150) return
+      }
+    }
+  }
+
+  walk(content)
+  const text = parts.join('').trim()
+  if (!text) return null
+  return text.length > 120 ? text.slice(0, 120) + '...' : text
 }
 
-export function BlogPostCard({ post, blocks, themed }: BlogPostCardProps) {
-  const snippet = post.subtitle || (blocks ? getTextSnippet(blocks) : null)
+export function BlogPostCard({ post, themed }: BlogPostCardProps) {
+  const snippet = post.subtitle || getTextFromContent(post.content)
 
   return (
     <Link
