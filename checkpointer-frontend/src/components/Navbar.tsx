@@ -20,9 +20,10 @@ import { LogGameModal } from "./LogGameModal";
 
 interface NavbarProps {
   logModalTrigger?: boolean;
+  sticky?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = () => {
+const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [logGameModalOpen, setLogGameModalOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +62,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     }
 
     return(
-      <nav className="sticky top-0 z-40 bg-primary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] mb-0 mx-4 mt-0">
+      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 bg-primary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] mb-0 mx-4 mt-0`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
         <Button

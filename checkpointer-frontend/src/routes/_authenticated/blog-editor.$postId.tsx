@@ -205,7 +205,7 @@ function BlogEditorPage() {
   if (isPending) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <Navbar sticky={false} />
         <div className="flex items-center justify-center py-32">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
@@ -216,7 +216,7 @@ function BlogEditorPage() {
   if (isError || !post) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <Navbar sticky={false} />
         <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
           <h1 className="text-2xl font-bold text-foreground font-sans mb-4">Post not found</h1>
           <Button variant="outline" onClick={() => navigate({ to: '/profile' })}>
@@ -232,10 +232,10 @@ function BlogEditorPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar sticky={false} />
 
       {/* ── Top bar: nav + toolbar + actions ── */}
-      <div className="sticky top-16 z-30 bg-card border-b-4 border-border mx-4">
+      <div className="sticky top-0 z-30 bg-card border-b-4 border-border mx-4">
         <div className="container mx-auto max-w-3xl px-4 py-3">
           {/* Row 1: Back | actions */}
           <div className="flex items-center justify-between gap-3">
