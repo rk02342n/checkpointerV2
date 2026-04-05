@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { useEditor, EditorContent, type JSONContent, type Editor } from '@tiptap/react'
+import { useEditor, useEditorState, EditorContent, type JSONContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -57,6 +57,19 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
   const [showListInput, setShowListInput] = useState(false)
   const [embedInputValue, setEmbedInputValue] = useState('')
 
+  // Only re-render when formatting state actually changes
+  const activeState = useEditorState({
+    editor,
+    selector: ({ editor: e }) => ({
+      bold: e.isActive('bold'),
+      italic: e.isActive('italic'),
+      h2: e.isActive('heading', { level: 2 }),
+      h3: e.isActive('heading', { level: 3 }),
+      canUndo: e.can().undo(),
+      canRedo: e.can().redo(),
+    }),
+  })
+
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -98,14 +111,14 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
       <div className="flex flex-wrap items-center gap-1">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive('bold')}
+          active={activeState.bold}
           title="Bold"
         >
           <Bold className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive('italic')}
+          active={activeState.italic}
           title="Italic"
         >
           <Italic className="w-4 h-4" />
@@ -115,14 +128,14 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive('heading', { level: 2 })}
+          active={activeState.h2}
           title="Heading 2"
         >
           <Heading2 className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive('heading', { level: 3 })}
+          active={activeState.h3}
           title="Heading 3"
         >
           <Heading3 className="w-4 h-4" />
@@ -164,14 +177,14 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
 
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
+          disabled={!activeState.canUndo}
           title="Undo"
         >
           <Undo2 className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
+          disabled={!activeState.canRedo}
           title="Redo"
         >
           <Redo2 className="w-4 h-4" />
@@ -230,7 +243,7 @@ export function TiptapViewer({ content, embeds }: TiptapViewerProps) {
     editable: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none',
+        class: 'prose prose-sm dark:prose-invert prose-headings:font-sans max-w-none focus:outline-none',
       },
     },
   })
