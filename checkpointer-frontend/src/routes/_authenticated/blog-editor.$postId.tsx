@@ -169,7 +169,7 @@ function BlogEditorPage() {
     mutationFn: () => deleteBlogPost(postId),
     onSuccess: () => {
       toast.success('Post deleted')
-      navigate({ to: '/profile' })
+      navigate({ to: '/profile', search: { tab: 'posts' } })
     },
     onError: (err) => toast.error(err.message),
   })
@@ -235,14 +235,14 @@ function BlogEditorPage() {
       <Navbar />
 
       {/* ── Top bar: nav + toolbar + actions ── */}
-      <div className="top-16 z-30 bg-card border-b-4 border-border mx-4">
+      <div className="sticky top-16 z-30 bg-card border-b-4 border-border mx-4">
         <div className="container mx-auto max-w-3xl px-4 py-3">
           {/* Row 1: Back | actions */}
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate({ to: '/profile' })}
+              onClick={() => navigate({ to: '/profile', search: { tab: 'posts' } })}
               className="text-muted-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
