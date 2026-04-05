@@ -61,7 +61,7 @@ function BlogEditorPage() {
     editable: true,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[200px]',
+        class: 'prose prose-sm dark:prose-invert prose-headings:font-sans max-w-none focus:outline-none min-h-[200px]',
       },
     },
     onUpdate: ({ editor }) => {
@@ -218,7 +218,7 @@ function BlogEditorPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
-          <h1 className="text-2xl font-bold text-foreground font-alt mb-4">Post not found</h1>
+          <h1 className="text-2xl font-bold text-foreground font-sans mb-4">Post not found</h1>
           <Button variant="outline" onClick={() => navigate({ to: '/profile' })}>
             <ArrowLeft className="w-4 h-4" />
             Back to profile
@@ -345,7 +345,7 @@ function BlogEditorPage() {
             )}
 
             {/* Title / Subtitle */}
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-alt">{post.title}</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-sans">{post.title}</h1>
             {post.subtitle && <p className="text-lg text-muted-foreground mt-2">{post.subtitle}</p>}
 
             {/* Content */}
@@ -439,7 +439,7 @@ function BlogEditorPage() {
                 placeholder="Post title..."
                 autoFocus
                 onBlur={handleMetaBlur}
-                className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-alt placeholder:text-muted-foreground/40 focus:outline-none border-b-4 border-transparent focus:border-border pb-2 transition-colors"
+                className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-sans placeholder:text-muted-foreground/40 focus:outline-none border-b-4 border-transparent focus:border-border pb-2 transition-colors"
               />
               <input
                 type="text"

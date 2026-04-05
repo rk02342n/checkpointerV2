@@ -31,7 +31,7 @@ export function BlogPostView({ post, author, embeds }: BlogPostViewProps) {
       )}
 
       {/* Title */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-alt">
+      <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-sans">
         {post.title}
       </h1>
       {post.subtitle && (
