@@ -191,14 +191,14 @@
   font-size: 1.5em;
   font-weight: 700;
   margin: 1em 0 0.5em;
-  font-family: var(--font-alt);
+  font-family: var(--font-sans);
 }
 
 .tiptap h3 {
   font-size: 1.25em;
   font-weight: 600;
   margin: 0.75em 0 0.4em;
-  font-family: var(--font-alt);
+  font-family: var(--font-sans);
 }
 
 .tiptap strong {
