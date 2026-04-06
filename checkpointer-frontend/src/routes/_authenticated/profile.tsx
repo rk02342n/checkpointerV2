@@ -773,14 +773,14 @@ function Profile() {
                 </div>
                 <button
                   onClick={() => setShowFollowDialog('followers')}
-                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer`}
+                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
                 </button>
                 <button
                   onClick={() => setShowFollowDialog('following')}
-                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:bg-accent transition-colors cursor-pointer`}
+                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
@@ -793,7 +793,7 @@ function Profile() {
               {showBlogPosts && (
                 <Button
                   variant="outline"
-                  className="px-6"
+                  className="px-6 text-accent-foreground"
                   onClick={() => createPostMutation.mutate()}
                   disabled={createPostMutation.isPending}
                 >
@@ -840,16 +840,16 @@ function Profile() {
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Currently Playing</div>
+              <div className="text-xs uppercase tracking-wide font-medium">Currently Playing</div>
               <Link
                 to="/games/$gameId"
                 params={{ gameId: currentlyPlayingData.game.id }}
-                className="font-bold hover:underline truncate block text-foreground"
+                className="font-bold hover:underline truncate block"
               >
                 {currentlyPlayingData.game.name}
               </Link>
               {currentlyPlayingData.session?.startedAt && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs">
                   Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
                 </div>
               )}
@@ -859,7 +859,7 @@ function Profile() {
               size="sm"
               onClick={() => setShowStopPlayingDialog(true)}
               disabled={stopPlayingMutation.isPending}
-              className="shrink-0 text-black"
+              className="shrink-0 text-accent-foreground"
             >
               Done with this game?
             </Button>
@@ -869,7 +869,7 @@ function Profile() {
         {/* Tabbed Content Section */}
         <div className=" bg-transparent border-0 border-border">
           {/* Tab Headers */}
-          <div className="flex border-4 border-border">
+          <div className="flex border-4 border-border" style={themed && dbUserData?.account?.profileTheme?.headerFontColor ? { "--foreground": dbUserData.account.profileTheme.headerFontColor } as React.CSSProperties : undefined}>
             <button
               onClick={() => { posthog.capture('profile_tab_changed', { tab: 'reviews' }); setActiveTab('reviews'); }}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
