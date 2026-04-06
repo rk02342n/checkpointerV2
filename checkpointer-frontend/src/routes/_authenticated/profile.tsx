@@ -875,7 +875,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -886,7 +886,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <History className="w-4 h-4" />
@@ -897,7 +897,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -908,7 +908,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -919,7 +919,7 @@ function Profile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'saved'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
               }`}
             >
               <Bookmark className="w-4 h-4" />
@@ -931,7 +931,7 @@ function Profile() {
                 className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                   activeTab === 'posts'
                     ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                    : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+                    : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -944,6 +944,7 @@ function Profile() {
           <div className="p-6">
             {/* Reviews Tab */}
             <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
+              {/* Reviews Skeleton */}
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -1152,7 +1153,7 @@ function Profile() {
                 <div className="space-y-4">
                   {blogPosts.map((post: BlogPost) =>
                     post.status === 'draft' ? (
-                      // ✏️ Editable Draft Card (old version)
+                      // Editable Draft Card (old version)
                       <div
                         key={post.id}
                         onClick={() =>
@@ -1161,9 +1162,8 @@ function Profile() {
                             params: { postId: post.id },
                           })
                         }
-                        className={`block bg-card profile-card ${
-                          themed ? 'profile-card-hover' : 'hover:bg-background'
-                        } border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
+                        className={`block bg-card profile-card profile-card-hover
+                          border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
@@ -1203,7 +1203,7 @@ function Profile() {
                         </div>
                       </div>
                     ) : (
-                      // 👀 Read-only Published Card (new version)
+                      // Read-only Published Card (new version)
                       <BlogPostCard key={post.id} post={post} themed={themed} />
                     )
                   )}

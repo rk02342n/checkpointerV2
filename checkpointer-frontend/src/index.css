@@ -175,7 +175,7 @@
 }
 
 .profile-themed-content .profile-card-hover:hover {
-  background-color: color-mix(in srgb, var(--profile-card-bg, var(--card)) 80%, white);
+  opacity: 0.8;
 }
 
 /* Tiptap / ProseMirror editor styles */

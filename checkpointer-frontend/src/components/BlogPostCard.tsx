@@ -30,18 +30,22 @@ function getTextFromContent(content: JSONContent | null): string | null {
   return text.length > 120 ? text.slice(0, 120) + '...' : text
 }
 
-export function BlogPostCard({ post, themed }: BlogPostCardProps) {
+export function BlogPostCard({ post }: BlogPostCardProps) {
   const snippet = post.subtitle || getTextFromContent(post.content)
 
   return (
     <Link
       to="/blog/$postId"
       params={{ postId: post.id }}
-      className={`block bg-card profile-card ${themed ? "profile-card-hover" : "hover:bg-background"} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
+      className={`block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
     >
       <div className="flex gap-4">
         {/* Post content */}
         <div className="flex-1 min-w-0 flex flex-col">
+        <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border-2
+          border-border bg-green-200 dark:bg-green-900/60 text-green-900 dark:text-green-200 mb-1 max-w-22 text-center">
+            Published
+        </span>
           <div className="min-w-0">
             <h4 className="text-foreground font-bold truncate">{post.title}</h4>
             {post.publishedAt && (
