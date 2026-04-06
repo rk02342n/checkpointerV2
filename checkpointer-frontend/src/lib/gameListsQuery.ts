@@ -78,6 +78,27 @@ export type PaginatedSavedGameListsResponse = {
   totalCount: number;
 };
 
+// Search public lists by name
+export async function searchGameLists(searchQuery: string): Promise<{ lists: GameListSummary[] }> {
+  if (!searchQuery || searchQuery.trim().length === 0) {
+    return { lists: [] };
+  }
+  const res = await fetch(`/api/game-lists/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  if (!res.ok) {
+    throw new Error(`Server error while searching lists: ${res.status}`);
+  }
+  return res.json();
+}
+
+export function getSearchGameListsQueryOptions(searchQuery: string) {
+  return queryOptions({
+    queryKey: ['search-game-lists', searchQuery.trim()],
+    queryFn: () => searchGameLists(searchQuery),
+    enabled: searchQuery.trim().length > 0,
+    staleTime: 1000 * 30,
+  });
+}
+
 // Get own lists
 async function getMyGameLists(offset = 0, limit = 20): Promise<PaginatedGameListsResponse> {
   const res = await fetch(`/api/game-lists?offset=${offset}&limit=${limit}`);

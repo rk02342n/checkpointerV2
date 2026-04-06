@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useEditor, useEditorState, EditorContent, type JSONContent, type Editor } from '@tiptap/react'
+import { useQuery } from '@tanstack/react-query'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -11,16 +12,18 @@ import {
   Heading3,
   ImagePlus,
   Gamepad2,
-  List,
+  ListPlus,
   Undo2,
   Redo2,
   Loader2,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { GameEmbed } from '@/components/extensions/GameEmbed'
 import { ListEmbed } from '@/components/extensions/ListEmbed'
 import { uploadPostImage, type Embeds } from '@/lib/blogPostsQuery'
+import { getSearchGamesQueryOptions, type Game } from '@/lib/gameQuery'
+import { getSearchGameListsQueryOptions } from '@/lib/gameListsQuery'
+import { useDebounce } from '@/lib/useDebounce'
+import { SearchDropdown, type SearchDropdownItem } from './SearchDropdown'
 
 // Shared extensions config
 export function getTiptapExtensions(options?: { placeholder?: string }) {
@@ -55,7 +58,36 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
   const [uploading, setUploading] = useState(false)
   const [showGameInput, setShowGameInput] = useState(false)
   const [showListInput, setShowListInput] = useState(false)
-  const [embedInputValue, setEmbedInputValue] = useState('')
+
+  // Game embed search
+  const [gameSearchQuery, setGameSearchQuery] = useState('')
+  const debouncedGameSearch = useDebounce(gameSearchQuery, 300)
+  const { data: gameSearchData, isLoading: gameSearchLoading, isError: gameSearchError } = useQuery({
+    ...getSearchGamesQueryOptions(debouncedGameSearch),
+    enabled: showGameInput && debouncedGameSearch.trim().length > 0,
+  })
+  const gameSearchItems: SearchDropdownItem[] = (gameSearchData?.games ?? []).map((game: Game) => ({
+    id: game.id,
+    name: game.name,
+    imageUrl: game.coverUrl,
+    secondary: game.releaseDate
+      ? new Date(game.releaseDate).getFullYear().toString()
+      : null,
+  }))
+
+  // List embed search
+  const [listSearchQuery, setListSearchQuery] = useState('')
+  const debouncedListSearch = useDebounce(listSearchQuery, 300)
+  const { data: listSearchData, isLoading: listSearchLoading, isError: listSearchError } = useQuery({
+    ...getSearchGameListsQueryOptions(debouncedListSearch),
+    enabled: showListInput && debouncedListSearch.trim().length > 0,
+  })
+  const listSearchItems: SearchDropdownItem[] = (listSearchData?.lists ?? []).map((list) => ({
+    id: list.id,
+    name: list.name,
+    imageUrl: list.coverUrl ?? null,
+    secondary: list.description ?? null,
+  }))
 
   // Only re-render when formatting state actually changes
   const activeState = useEditorState({
@@ -86,25 +118,55 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
     }
   }, [editor, postId])
 
-  const insertGameEmbed = useCallback(() => {
-    if (!embedInputValue.trim()) return
+  const handleGameSelect = useCallback((item: SearchDropdownItem) => {
+    const gameId = String(item.id)
+    // Inject embed data into storage so the card renders immediately
+    const game = (gameSearchData?.games ?? []).find((g: Game) => String(g.id) === gameId)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const storage = editor.storage as any
+    storage.gameEmbed.games = {
+      ...storage.gameEmbed.games,
+      [gameId]: {
+        id: gameId,
+        name: item.name,
+        slug: null,
+        coverUrl: item.imageUrl,
+        releaseDate: game?.releaseDate ?? null,
+        igdbRating: null,
+      },
+    }
     editor.chain().focus().insertContent({
       type: 'gameEmbed',
-      attrs: { gameId: embedInputValue.trim() },
+      attrs: { gameId },
     }).run()
-    setEmbedInputValue('')
+    setGameSearchQuery('')
     setShowGameInput(false)
-  }, [editor, embedInputValue])
+  }, [editor, gameSearchData])
 
-  const insertListEmbed = useCallback(() => {
-    if (!embedInputValue.trim()) return
+  const handleListSelect = useCallback((item: SearchDropdownItem) => {
+    const listId = String(item.id)
+    // Inject embed data into storage so the card renders immediately
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const storage = editor.storage as any
+    storage.listEmbed.lists = {
+      ...storage.listEmbed.lists,
+      [listId]: {
+        id: listId,
+        name: item.name,
+        description: item.secondary ?? null,
+        coverUrl: item.imageUrl,
+        gameCount: 0,
+        ownerUsername: '',
+        ownerDisplayName: null,
+      },
+    }
     editor.chain().focus().insertContent({
       type: 'listEmbed',
-      attrs: { listId: embedInputValue.trim() },
+      attrs: { listId },
     }).run()
-    setEmbedInputValue('')
+    setListSearchQuery('')
     setShowListInput(false)
-  }, [editor, embedInputValue])
+  }, [editor])
 
   return (
     <>
@@ -159,18 +221,18 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
         />
 
         <ToolbarButton
-          onClick={() => { setShowGameInput(!showGameInput); setShowListInput(false); setEmbedInputValue('') }}
+          onClick={() => { setShowGameInput(!showGameInput); setShowListInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
           active={showGameInput}
           title="Embed game"
         >
           <Gamepad2 className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton
-          onClick={() => { setShowListInput(!showListInput); setShowGameInput(false); setEmbedInputValue('') }}
+          onClick={() => { setShowListInput(!showListInput); setShowGameInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
           active={showListInput}
           title="Embed list"
         >
-          <List className="w-4 h-4" />
+          <ListPlus className="w-4 h-4" />
         </ToolbarButton>
 
         <div className="w-px h-5 bg-border/50 mx-1" />
@@ -191,38 +253,41 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
         </ToolbarButton>
       </div>
 
-      {/* Embed input row */}
-      {(showGameInput || showListInput) && (
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {showGameInput ? 'Game' : 'List'} ID:
-          </span>
-          <Input
-            value={embedInputValue}
-            onChange={(e) => setEmbedInputValue(e.target.value)}
-            placeholder="Paste UUID..."
-            className="flex-1 h-8 bg-transparent border-2 border-border/30 rounded-none text-sm font-mono"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                showGameInput ? insertGameEmbed() : insertListEmbed()
-              }
-              if (e.key === 'Escape') {
-                setShowGameInput(false)
-                setShowListInput(false)
-                setEmbedInputValue('')
-              }
-            }}
+      {/* Embed search rows */}
+      {showGameInput && (
+        <div className="mt-2">
+          <SearchDropdown
+            query={gameSearchQuery}
+            onQueryChange={setGameSearchQuery}
+            items={gameSearchItems}
+            isLoading={gameSearchLoading}
+            isError={gameSearchError}
+            onSelect={handleGameSelect}
+            placeholder="Search games..."
+            fallbackIcon={<Gamepad2 className="w-5 h-5 text-muted-foreground" />}
+            emptyMessage="No games found."
+            showDropdown={!!debouncedGameSearch}
             autoFocus
+            onEscape={() => { setShowGameInput(false); setGameSearchQuery('') }}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={showGameInput ? insertGameEmbed : insertListEmbed}
-            disabled={!embedInputValue.trim()}
-            className="border-4 border-border h-8"
-          >
-            Insert
-          </Button>
+        </div>
+      )}
+      {showListInput && (
+        <div className="mt-2">
+          <SearchDropdown
+            query={listSearchQuery}
+            onQueryChange={setListSearchQuery}
+            items={listSearchItems}
+            isLoading={listSearchLoading}
+            isError={listSearchError}
+            onSelect={handleListSelect}
+            placeholder="Search lists..."
+            fallbackIcon={<ListPlus className="w-5 h-5 text-muted-foreground" />}
+            emptyMessage="No lists found."
+            showDropdown={!!debouncedListSearch}
+            autoFocus
+            onEscape={() => { setShowListInput(false); setListSearchQuery('') }}
+          />
         </div>
       )}
     </>
