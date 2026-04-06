@@ -18,50 +18,47 @@ function GameEmbedView({ node, deleteNode, editor }: NodeViewProps) {
   const editable = editor.isEditable
 
   const year = game ? formatYear(game.releaseDate) : null
-  const rating = game?.igdbRating ? parseFloat(game.igdbRating) : null
 
   const card = (
-    <div className={`flex items-stretch bg-card border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden ${!editable ? 'hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px]' : ''} transition-all`}>
-      {/* Cover image */}
-      {game?.coverUrl ? (
-        <img
-          src={game.coverUrl}
-          alt={game.name}
-          className="w-20 h-28 object-cover border-r-4 border-border shrink-0"
-        />
-      ) : (
-        <div className="w-20 h-28 bg-muted border-r-4 border-border flex items-center justify-center shrink-0">
-          <Gamepad2 className="w-8 h-8 text-muted-foreground" />
-        </div>
-      )}
-
-      {/* Info */}
-      <div className="flex-1 p-3 flex flex-col justify-center min-w-0 relative">
-        {game ? (
-          <>
-            <p className="font-bold text-foreground text-sm leading-tight truncate pr-6">{game.name}</p>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              {year && (
-                <span className="text-xs font-semibold bg-primary/10 text-primary px-1.5 py-0.5 border-2 border-border">
-                  {year}
-                </span>
-              )}
-              {rating !== null && rating > 0 && (
-                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  {(rating / 10).toFixed(1)}
-                </span>
-              )}
+    <div className={`bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] ${!editable ? 'hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px]' : ''} transition-all p-4`}>
+      <div className="flex gap-4 items-start">
+        {/* Cover image */}
+        <div className="shrink-0">
+          {game?.coverUrl ? (
+            <img
+              src={game.coverUrl}
+              alt={game.name}
+              className="w-22 h-30 object-cover border-2 border-border"
+            />
+          ) : (
+            <div className="w-22 h-30 bg-muted border-2 border-border flex items-center justify-center">
+              <Gamepad2 className="w-6 h-6 text-muted-foreground" />
             </div>
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground">Game: {gameId}</p>
-        )}
-        {editable && (
-          <button onClick={deleteNode} className="absolute top-2 right-2 p-1 hover:bg-destructive/10 rounded">
-            <X className="w-4 h-4 text-destructive" />
-          </button>
-        )}
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0 flex flex-col relative">
+          {game ? (
+            <>
+              <h4 className="text-foreground font-bold truncate pr-6">{game.name}</h4>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {year && (
+                  <span className="text-xs font-semibold bg-primary/10 text-primary px-1.5 py-0.5 border-2 border-border">
+                    {year}
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Game: {gameId}</p>
+          )}
+          {editable && (
+            <button onClick={deleteNode} className="absolute top-2 right-2 p-1 hover:bg-destructive/10 rounded">
+              <X className="w-4 h-4 text-destructive" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
