@@ -148,6 +148,7 @@ function BlogEditorPage() {
     onSuccess: () => {
       toast.success('Post published!')
       queryClient.invalidateQueries({ queryKey: ['blog-post', postId] })
+      navigate({ to: '/profile', search: { tab: 'posts' } });
     },
     onError: (err) => toast.error(err.message),
   })
@@ -216,7 +217,7 @@ function BlogEditorPage() {
         <Navbar sticky={false} />
         <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
           <h1 className="text-2xl font-bold text-foreground font-sans mb-4">Post not found</h1>
-          <Button variant="outline" onClick={() => navigate({ to: '/profile' })}>
+          <Button variant="outline" onClick={() => navigate({ to: '/profile', search: { tab: 'posts' } })}>
             <ArrowLeft className="w-4 h-4" />
             Back to profile
           </Button>
@@ -243,7 +244,7 @@ function BlogEditorPage() {
               className="text-muted-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back</span>
+              <span className="hidden sm:inline">Back to profile</span>
             </Button>
 
             <div className="flex items-center gap-2">
