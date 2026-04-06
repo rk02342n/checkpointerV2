@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dialog'
 import Navbar from '@/components/Navbar'
 import { useSettings } from '@/lib/settingsContext'
+import { BlogPostCard } from '@/components/BlogPostCard'
 
 const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
@@ -1106,55 +1107,67 @@ function Profile() {
             </div>
 
             {/* Posts Tab */}
-            {showBlogPosts && <div className={activeTab !== 'posts' ? 'hidden' : ''}>
+            {showBlogPosts && (
+            <div className={activeTab !== 'posts' ? 'hidden' : ''}>
               {blogPostsPending ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {[1, 2].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
-                      <div className="h-5 w-48 bg-muted-foreground/20 mb-2" />
-                      <div className="h-4 w-full bg-muted-foreground/20" />
+                    <div key={i} className="bg-muted border-4 border-border p-6 animate-pulse">
+                      <div className="h-6 w-48 bg-muted-foreground/20 mb-3" />
+                      <div className="h-4 w-full bg-muted-foreground/20 mb-2" />
+                      <div className="h-4 w-2/3 bg-muted-foreground/20" />
                     </div>
                   ))}
                 </div>
               ) : blogPosts.length > 0 ? (
                 <div className="space-y-4">
-                  {blogPosts.map((post: BlogPost) => (
-                    <div
-                      key={post.id}
-                      onClick={() => navigate({ to: '/blog-editor/$postId', params: { postId: post.id } })}
-                      className={`block bg-card profile-card ${themed ? 'profile-card-hover' : 'hover:bg-background'} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border-2 border-border ${
-                                post.status === 'published'
-                                  ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'
-                                  : 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
-                              }`}
-                            >
-                              {post.status}
+                  {blogPosts.map((post: BlogPost) =>
+                    post.status === 'draft' ? (
+                      // ✏️ Editable Draft Card (old version)
+                      <div
+                        key={post.id}
+                        onClick={() =>
+                          navigate({
+                            to: '/blog-editor/$postId',
+                            params: { postId: post.id },
+                          })
+                        }
+                        className={`block bg-card profile-card ${
+                          themed ? 'profile-card-hover' : 'hover:bg-background'
+                        } border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border-2 border-border bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 mb-1">
+                              draft
                             </span>
+                            <h3 className="font-bold text-foreground truncate">
+                              {post.title}
+                            </h3>
+                            {post.subtitle && (
+                              <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                {post.subtitle}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated{' '}
+                              {new Date(post.updatedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </p>
                           </div>
-                          <h3 className="font-bold text-foreground truncate">{post.title}</h3>
-                          {post.subtitle && (
-                            <p className="text-sm text-muted-foreground truncate mt-0.5">{post.subtitle}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Updated {new Date(post.updatedAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </p>
-                        </div>
-                        <div className="shrink-0 text-muted-foreground">
-                          <Pencil className="w-4 h-4" />
+                          <div className="shrink-0 text-muted-foreground">
+                            <Pencil className="w-4 h-4" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ) : (
+                      // 👀 Read-only Published Card (new version)
+                      <BlogPostCard key={post.id} post={post} themed={themed} />
+                    )
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -1178,7 +1191,8 @@ function Profile() {
                   </Button>
                 </div>
               )}
-            </div>}
+            </div>
+            )}
           </div>
         </div>
       </div>
