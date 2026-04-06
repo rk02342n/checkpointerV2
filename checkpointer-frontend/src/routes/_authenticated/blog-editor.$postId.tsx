@@ -65,7 +65,7 @@ function BlogEditorPage() {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
         saveContent.mutate(editor.getJSON())
-      }, 1500)
+      }, 1000)
     },
   }, [post?.id])
 
@@ -346,9 +346,9 @@ function BlogEditorPage() {
             {post.subtitle && <p className="text-lg text-muted-foreground mt-2">{post.subtitle}</p>}
 
             {/* Content */}
-            {post.content && (
+            {(editor?.getJSON() || post.content) && (
               <div className="mt-6">
-                <TiptapViewer content={post.content} embeds={embeds} />
+                <TiptapViewer content={editor?.getJSON() || post.content} embeds={embeds} />
               </div>
             )}
           </>
