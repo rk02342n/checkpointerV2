@@ -72,8 +72,10 @@ function BlogEditorPage() {
   // Sync embed data into extension storage
   useEffect(() => {
     if (editor && embeds) {
-      editor.storage.gameEmbed.games = embeds.games
-      editor.storage.listEmbed.lists = embeds.lists
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const storage = editor.storage as any
+      storage.gameEmbed.games = embeds.games
+      storage.listEmbed.lists = embeds.lists
     }
   }, [editor, embeds])
 
