@@ -65,7 +65,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all overflow-hidden"
+      className="block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
       <div className="aspect-21/9 bg-muted relative h-fit">
