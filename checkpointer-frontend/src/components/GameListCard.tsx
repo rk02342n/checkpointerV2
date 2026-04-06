@@ -65,7 +65,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden"
+      className="block bg-card profile-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
       <div className="aspect-21/9 bg-muted relative h-fit">
@@ -116,11 +116,6 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
         {/* Save button / save count */}
         {(showSaveButton || (showSaveCount && (saveData?.saveCount ?? 0) > 0)) && (
           <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
-            {saveData?.saveCount ? (
-              <span className="text-xs font-bold bg-background/80 border-2 border-border px-1.5 py-0.5">
-                {saveData.saveCount}
-              </span>
-            ) : null}
             {showSaveButton && (
               <button
                 onClick={(e) => {
@@ -133,7 +128,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
                 title={isSaved ? "Unsave list" : "Save list"}
               >
                 <Bookmark
-                  className={`w-4 h-4 ${isSaved ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`w-4 h-4 ${isSaved ? 'fill-black text-black' : 'text-black'}`}
                 />
               </button>
             )}
