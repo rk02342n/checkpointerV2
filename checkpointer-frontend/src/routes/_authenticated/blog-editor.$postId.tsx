@@ -31,6 +31,17 @@ export const Route = createFileRoute('/_authenticated/blog-editor/$postId')({
   component: BlogEditorPage,
 })
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+
 function BlogEditorPage() {
   const { postId } = Route.useParams()
   const navigate = useNavigate()
@@ -98,7 +109,13 @@ function BlogEditorPage() {
   const postRef = useRef(post)
   useEffect(() => { postRef.current = post }, [post])
 
+  const discardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
+    // Cancel any pending discard (handles StrictMode re-mount)
+    if (discardTimerRef.current) {
+      clearTimeout(discardTimerRef.current)
+      discardTimerRef.current = null
+    }
     return () => {
       const p = postRef.current
       if (!p) return
@@ -109,11 +126,12 @@ function BlogEditorPage() {
         !p.headerImageUrl &&
         !p.content
       if (isEmpty) {
-        // Optimistically remove from cache so profile list updates immediately
-        queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) =>
-          old ? { posts: old.posts.filter((x) => x.id !== p.id) } : old
-        )
-        deleteBlogPost(p.id).catch(() => {})
+        discardTimerRef.current = setTimeout(() => {
+          queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) =>
+            old ? { posts: old.posts.filter((x) => x.id !== p.id) } : old
+          )
+          deleteBlogPost(p.id).catch(() => {})
+        }, 100)
       }
     }
   }, [])
@@ -121,14 +139,12 @@ function BlogEditorPage() {
   // ── Post metadata local state ──
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
-  const [slug, setSlug] = useState('')
   const initializedRef = useRef(false)
 
   useEffect(() => {
     if (post && !initializedRef.current) {
       setTitle(post.title)
       setSubtitle(post.subtitle ?? '')
-      setSlug(post.slug)
       initializedRef.current = true
     }
   }, [post])
@@ -159,11 +175,12 @@ function BlogEditorPage() {
     const updates: Record<string, string | null> = {}
     if (title !== post.title) updates.title = title
     if (subtitle !== (post.subtitle ?? '')) updates.subtitle = subtitle || null
-    if (slug !== post.slug) updates.slug = slug
+    const newSlug = slugify(title)
+    if (newSlug && newSlug !== post.slug) updates.slug = newSlug
     if (Object.keys(updates).length > 0) {
       saveMeta.mutate(updates)
     }
-  }, [post, title, subtitle, slug, saveMeta])
+  }, [post, title, subtitle, saveMeta])
 
   // ── Publish / Unpublish ──
   const publishMutation = useMutation({
@@ -473,7 +490,7 @@ function BlogEditorPage() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Post title..."
+                placeholder="Title..."
                 autoFocus
                 onBlur={handleMetaBlur}
                 className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-sans placeholder:text-muted-foreground/40 focus:outline-none border-b-4 border-transparent focus:border-border pb-2 transition-colors"
@@ -486,17 +503,6 @@ function BlogEditorPage() {
                 onBlur={handleMetaBlur}
                 className="w-full bg-transparent text-lg text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none border-b-2 border-transparent focus:border-border/50 pb-1 transition-colors"
               />
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Slug</span>
-                <input
-                  type="text"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  placeholder="my-post-slug"
-                  onBlur={handleMetaBlur}
-                  className="flex-1 bg-transparent text-sm text-foreground font-mono placeholder:text-muted-foreground/30 focus:outline-none border-b-2 border-transparent focus:border-border/50 pb-0.5 transition-colors"
-                />
-              </div>
             </section>
 
             {/* Tiptap editor content — flows seamlessly after title */}

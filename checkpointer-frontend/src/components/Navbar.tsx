@@ -41,13 +41,13 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
         const emptyDraft = posts.find(
           (p) =>
             p.status === "draft" &&
-            (!p.title || p.title.trim() === "" || p.title === "Untitled") &&
+            (!p.title || p.title.trim() === "" || p.title === "") &&
             !p.subtitle &&
             !p.headerImageUrl &&
             !p.content
         );
         if (emptyDraft) return { post: emptyDraft };
-        return createBlogPost({ title: "Untitled", slug: `draft-${Date.now()}` });
+        return createBlogPost({ title: "", slug: `draft-${Date.now()}` });
       },
       onSuccess: (data) => {
         // Seed cache so the new draft is immediately visible on profile
