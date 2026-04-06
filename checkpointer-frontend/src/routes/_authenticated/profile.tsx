@@ -633,9 +633,9 @@ function Profile() {
   const initials = `${user.given_name?.[0] || ''}${user.family_name?.[0] || ''}`.toUpperCase()
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
+    <div className="min-h-screen bg-background selection:bg-orange-300/30" style={dbUserData?.account?.profileTheme?.backgroundColor ? { backgroundColor: dbUserData.account.profileTheme.backgroundColor } : undefined}>
       <Navbar />
-      <div className="container mx-auto max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
+      <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
         {/* Profile Header */}
         <div
           className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
@@ -825,7 +825,7 @@ function Profile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-100 dark:bg-green-700 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="bg-green-600 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
@@ -867,7 +867,7 @@ function Profile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className=" bg-transparent border-0 border-border">
+        <div className="bg-transparent border-0 border-border">
           {/* Tab Headers */}
           <div className="flex border-4 border-border" style={themed && dbUserData?.account?.profileTheme?.headerFontColor ? { "--foreground": dbUserData.account.profileTheme.headerFontColor } as React.CSSProperties : undefined}>
             <button

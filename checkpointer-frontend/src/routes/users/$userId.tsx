@@ -283,10 +283,9 @@ function PublicProfile() {
       : '?'
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
+    <div className="min-h-screen bg-background selection:bg-orange-300/30" style={profileData?.profileTheme?.backgroundColor ? { backgroundColor: profileData.profileTheme.backgroundColor } : undefined}>
       <Navbar />
-
-      <div className="container mx-auto max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
+      <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
         {/* Profile Header */}
         <div
           className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
@@ -357,7 +356,7 @@ function PublicProfile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-100 dark:bg-green-700 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="bg-green-600 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
@@ -372,16 +371,16 @@ function PublicProfile() {
               )}
             </Link>
             <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Currently Playing</div>
+              <div className="text-xs uppercase tracking-wide font-medium">Currently Playing</div>
               <Link
                 to="/games/$gameId"
                 params={{ gameId: currentlyPlayingData.game.id }}
-                className="font-bold hover:underline truncate block text-foreground"
+                className="font-bold hover:underline truncate block"
               >
                 {currentlyPlayingData.game.name}
               </Link>
               {currentlyPlayingData.session?.startedAt && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs">
                   Started {new Date(currentlyPlayingData.session.startedAt).toLocaleString()}
                 </div>
               )}
@@ -392,13 +391,13 @@ function PublicProfile() {
         {/* Tabbed Content Section */}
         <div className="bg-transparent border-0 border-border">
           {/* Tab Headers */}
-          <div className="flex border-4 border-border">
+          <div className="flex border-4 border-border" style={themed && profileData?.profileTheme?.headerFontColor ? { "--foreground": profileData.profileTheme.headerFontColor } as React.CSSProperties : undefined}>
             <button
               onClick={() => setActiveTab('reviews')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
                 activeTab === 'reviews'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -409,7 +408,7 @@ function PublicProfile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'history'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
               }`}
             >
               <History className="w-4 h-4" />
@@ -420,7 +419,7 @@ function PublicProfile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'wishlist'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
               }`}
             >
               <CalendarHeart className="w-4 h-4" />
@@ -431,7 +430,7 @@ function PublicProfile() {
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                 activeTab === 'lists'
                   ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
               }`}
             >
               <ListPlus className="w-4 h-4" />
@@ -443,7 +442,7 @@ function PublicProfile() {
                 className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
                   activeTab === 'posts'
                     ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                    : `${themed ? 'profile-accent-muted text-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`
+                    : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
                 }`}
               >
                 <FileText className="w-4 h-4" />
