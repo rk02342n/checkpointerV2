@@ -63,6 +63,7 @@ function Profile() {
         from: Route.fullPath,
         search: () => ({ tab: newTab === 'reviews' ? undefined : newTab }),
         replace: true,
+        resetScroll: false,
       })
     },
     [navigate]
