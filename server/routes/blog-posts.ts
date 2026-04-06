@@ -73,6 +73,8 @@ async function resolveEmbeds(gameIds: string[], listIds: string[]) {
         name: gamesTable.name,
         slug: gamesTable.slug,
         coverUrl: gamesTable.coverUrl,
+        releaseDate: gamesTable.releaseDate,
+        igdbRating: gamesTable.igdbRating,
       })
       .from(gamesTable)
       .where(sql`${gamesTable.id} IN ${gameIds}`);
@@ -86,8 +88,12 @@ async function resolveEmbeds(gameIds: string[], listIds: string[]) {
         name: gameListsTable.name,
         description: gameListsTable.description,
         coverUrl: gameListsTable.coverUrl,
+        gameCount: sql<number>`(SELECT COUNT(*) FROM game_list_items WHERE game_list_items.list_id = ${gameListsTable.id})`.as('gameCount'),
+        ownerUsername: usersTable.username,
+        ownerDisplayName: usersTable.displayName,
       })
       .from(gameListsTable)
+      .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
       .where(sql`${gameListsTable.id} IN ${listIds}`);
     lists = Object.fromEntries(rows.map(l => [l.id, l]));
   }

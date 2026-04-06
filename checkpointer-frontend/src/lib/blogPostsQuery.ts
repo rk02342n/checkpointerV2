@@ -31,6 +31,8 @@ export type EmbedGame = {
   name: string;
   slug: string | null;
   coverUrl: string | null;
+  releaseDate: string | null;
+  igdbRating: string | null;
 };
 
 export type EmbedList = {
@@ -38,6 +40,9 @@ export type EmbedList = {
   name: string;
   description: string | null;
   coverUrl: string | null;
+  gameCount: number;
+  ownerUsername: string;
+  ownerDisplayName: string | null;
 };
 
 export type Embeds = {

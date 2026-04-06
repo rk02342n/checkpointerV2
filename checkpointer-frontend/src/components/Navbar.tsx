@@ -1,14 +1,14 @@
 import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Signature, Settings } from "lucide-react";
 import { usePostHog } from 'posthog-js/react'
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { getSearchGamesQueryOptions } from "@/lib/gameQuery";
 import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
 import { dbUserQueryOptions } from "@/lib/api";
+import { SearchDropdown, type SearchDropdownItem } from "./SearchDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,6 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [logGameModalOpen, setLogGameModalOpen] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const posthog = usePostHog();
 
@@ -61,6 +60,13 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
       return Number.isFinite(y) ? y : null;
     }
 
+    const searchItems: SearchDropdownItem[] = games.map(game => ({
+      id: game.id,
+      name: game.name,
+      imageUrl: game.coverUrl,
+      secondary: formatYear(game.releaseDate)?.toString() ?? null,
+    }));
+
     return(
       <nav className={`${sticky ? 'sticky top-0' : ''} z-40 bg-primary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] mb-0 mx-4 mt-0`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
@@ -84,57 +90,20 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
         
 
         {/* Search Component and Logic - Desktop only */}
-        <div className="flex-1 max-w-lg relative hidden md:block text-foreground">
-          <Input
-            type="text"
-            placeholder="Search games..."
-            ref={inputRef}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-input border-4 border-border text-foreground py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-border text-sm rounded-none"
-          />
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-          {/* Search Dropdown */}
-          {debouncedSearchQuery && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden max-h-64 overflow-y-auto z-50">
-              {isLoading ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">Searching...</div>
-              ) : isError ? (
-                <div className="p-4 text-center text-rose-600 text-sm">Error searching games. Please try again.</div>
-              ) : games.length > 0 ? (
-                games.map(game => {
-                  const year = formatYear(game.releaseDate);
-                  return (
-                    <div
-                      key={game.id}
-                      onClick={() => handleGameClick(game.id)}
-                      className="flex items-center justify-start gap-3 p-3 hover:bg-primary/20 border-b-2 border-border/30 last:border-b-0 cursor-pointer transition-colors"
-                    >
-                      {game.coverUrl ? (
-                        <img
-                          className='w-10 h-10 object-cover border-2 border-border'
-                          src={game.coverUrl}
-                          alt={game.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className='w-10 h-10 bg-muted border-2 border-border flex items-center justify-center'>
-                          <Gamepad2 className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex flex-col justify-start line-clamp-1 items-start flex-1 min-w-0">
-                        <div className="text-foreground text-sm font-semibold truncate w-full">{game.name}</div>
-                        {year && <div className="text-muted-foreground text-xs">{year}</div>}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="p-4 text-center text-muted-foreground text-sm">No games found.</div>
-              )}
-            </div>
-          )}
-        </div>
+        <SearchDropdown
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          items={searchItems}
+          isLoading={isLoading}
+          isError={isError}
+          onSelect={(item) => handleGameClick(item.id)}
+          placeholder="Search games..."
+          fallbackIcon={<Gamepad2 className="w-5 h-5 text-muted-foreground" />}
+          emptyMessage="No games found."
+          errorMessage="Error searching games. Please try again."
+          showDropdown={!!debouncedSearchQuery}
+          className="flex-1 max-w-lg hidden md:block text-foreground"
+        />
 
         <div className="flex items-center gap-4 md:gap-6">
           <Button

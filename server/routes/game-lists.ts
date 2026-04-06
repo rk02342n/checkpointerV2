@@ -6,7 +6,7 @@ import { gameListItemsTable } from "../db/schema/game-list-items";
 import { gamesTable } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
 import { savedGameListsTable } from "../db/schema/saved-game-lists";
-import { eq, and, desc, asc, count, sql, or } from "drizzle-orm";
+import { eq, and, desc, asc, count, sql, or, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
@@ -392,6 +392,36 @@ export const gameListsRoute = new Hono()
   );
 
   return c.json({ lists: listsWithCovers, totalCount: totalCountResult });
+})
+
+// GET /search - Search public lists by name
+.get('/search', async (c) => {
+  const q = c.req.query('q');
+  if (!q || !q.trim()) {
+    return c.json({ lists: [] });
+  }
+  const term = q.trim();
+
+  const lists = await db
+    .select({
+      id: gameListsTable.id,
+      name: gameListsTable.name,
+      description: gameListsTable.description,
+      coverUrl: gameListsTable.coverUrl,
+      gameCount: sql<number>`(SELECT COUNT(*) FROM game_list_items WHERE game_list_items.list_id = ${gameListsTable.id})`.as('gameCount'),
+      ownerUsername: usersTable.username,
+      ownerDisplayName: usersTable.displayName,
+    })
+    .from(gameListsTable)
+    .innerJoin(usersTable, eq(gameListsTable.userId, usersTable.id))
+    .where(and(
+      eq(gameListsTable.visibility, 'public'),
+      ilike(gameListsTable.name, `%${term}%`),
+    ))
+    .orderBy(desc(gameListsTable.updatedAt))
+    .limit(20);
+
+  return c.json({ lists });
 })
 
 // GET /:listId - Get single list with games (public lists visible to all, private only to owner)

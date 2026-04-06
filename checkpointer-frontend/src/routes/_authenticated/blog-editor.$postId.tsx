@@ -49,9 +49,6 @@ function BlogEditorPage() {
     mutationFn: (content: JSONContent) => updateBlogPost(postId, { content }),
     onMutate: () => setSaving(true),
     onSettled: () => setSaving(false),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blog-post', postId] })
-    },
     onError: (err) => toast.error(err.message),
   })
 
