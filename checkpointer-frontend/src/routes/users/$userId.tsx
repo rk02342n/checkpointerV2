@@ -356,7 +356,7 @@ function PublicProfile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-100 dark:bg-green-600/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="bg-green-100 dark:bg-green-700 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
@@ -389,9 +389,9 @@ function PublicProfile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className="bg-card border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]">
+        <div className="bg-transparent border-0 border-border">
           {/* Tab Headers */}
-          <div className="flex border-b-4 border-border">
+          <div className="flex border-4 border-border">
             <button
               onClick={() => setActiveTab('reviews')}
               className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
