@@ -1,9 +1,9 @@
-import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Signature, Settings } from "lucide-react";
+import { Gamepad2, Search, User, Plus, Shield, LogIn, LogOut, ChevronDown, Signature, Settings, List, FileText } from "lucide-react";
 import { usePostHog } from 'posthog-js/react'
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSearchGamesQueryOptions } from "@/lib/gameQuery";
 import { useDebounce } from "@/lib/useDebounce";
 import { type Game } from "@/lib/gameQuery";
@@ -17,6 +17,9 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { LogGameModal } from "./LogGameModal";
+import { CreateListModal } from "./CreateListModal";
+import { createBlogPost, myBlogPostsQueryOptions, type BlogPost } from "@/lib/blogPostsQuery";
+import { toast } from "sonner";
 
 interface NavbarProps {
   logModalTrigger?: boolean;
@@ -26,8 +29,40 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [logGameModalOpen, setLogGameModalOpen] = useState(false);
+    const [createListModalOpen, setCreateListModalOpen] = useState(false);
     const navigate = useNavigate();
     const posthog = usePostHog();
+    const queryClient = useQueryClient();
+
+    const createBlogPostMutation = useMutation({
+      mutationFn: async () => {
+        // Reuse an existing empty draft instead of creating a new one
+        const { posts } = await queryClient.fetchQuery(myBlogPostsQueryOptions);
+        const emptyDraft = posts.find(
+          (p) =>
+            p.status === "draft" &&
+            (!p.title || p.title.trim() === "" || p.title === "Untitled") &&
+            !p.subtitle &&
+            !p.headerImageUrl &&
+            !p.content
+        );
+        if (emptyDraft) return { post: emptyDraft };
+        return createBlogPost({ title: "Untitled", slug: `draft-${Date.now()}` });
+      },
+      onSuccess: (data) => {
+        // Seed cache so the new draft is immediately visible on profile
+        queryClient.setQueryData<{ posts: BlogPost[] }>(["my-blog-posts"], (old) => {
+          if (!old) return { posts: [data.post] };
+          // Only add if not already present (reused draft is already cached)
+          if (old.posts.some((p) => p.id === data.post.id)) return old;
+          return { posts: [data.post, ...old.posts] };
+        });
+        navigate({ to: `/blog-editor/$postId`, params: { postId: data.post.id } });
+      },
+      onError: () => {
+        toast.error("Failed to create blog post");
+      },
+    });
 
     // Debounce search query to avoid excessive API calls
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -186,6 +221,37 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
               </a>
             </>
           )}
+          {/* Create dropdown - desktop only, logged in users */}
+          {isLoggedIn && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="hidden md:flex items-center gap-2 text-foreground text-xs font-bold uppercase tracking-wide hover:opacity-80 transition-colors"
+                >
+                  <span>Create</span>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+                <DropdownMenuItem
+                  onClick={() => setCreateListModalOpen(true)}
+                  className="font-medium rounded-none hover:bg-primary/20"
+                >
+                  <List className="w-4 h-4" />
+                  List
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => createBlogPostMutation.mutate()}
+                  disabled={createBlogPostMutation.isPending}
+                  className="font-medium rounded-none hover:bg-primary/20"
+                >
+                  <FileText className="w-4 h-4" />
+                  {createBlogPostMutation.isPending ? "Creating..." : "Blog Post"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           {/* Log Game button - desktop only */}
           <Button
             variant="outline"
@@ -200,6 +266,12 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
 
       {/* Log Game Modal */}
       <LogGameModal open={logGameModalOpen} onOpenChange={setLogGameModalOpen} />
+      {/* Create List Modal */}
+      <CreateListModal
+        open={createListModalOpen}
+        onOpenChange={setCreateListModalOpen}
+        onSuccess={() => navigate({ to: `/profile`, search: { tab: "lists" } })}
+      />
     </nav>
     );
 }

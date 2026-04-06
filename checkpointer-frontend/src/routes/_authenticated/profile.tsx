@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2 } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -17,7 +17,7 @@ import { ListsSection } from '@/components/ListsSection'
 import { GameListCard } from '@/components/GameListCard'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { myGameListsInfiniteOptions, mySavedListsInfiniteOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
-import { createBlogPost, myBlogPostsQueryOptions, type BlogPost } from '@/lib/blogPostsQuery'
+import { createBlogPost, deleteBlogPost, myBlogPostsQueryOptions, type BlogPost } from '@/lib/blogPostsQuery'
 import { compressImage } from '@/lib/compressImage'
 import {
   Avatar,
@@ -126,12 +126,40 @@ function Profile() {
       return createBlogPost({ title: '', slug })
     },
     onSuccess: (data) => {
+      // Seed cache so the new draft is immediately visible when navigating back
+      queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) => {
+        if (!old) return { posts: [data.post] }
+        if (old.posts.some((p) => p.id === data.post.id)) return old
+        return { posts: [data.post, ...old.posts] }
+      })
       navigate({ to: '/blog-editor/$postId', params: { postId: data.post.id } })
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to create post')
     },
   })
+
+  // Delete blog post draft mutation (optimistic)
+  const deleteDraftMutation = useMutation({
+    mutationFn: (postId: string) => deleteBlogPost(postId),
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: ["my-blog-posts"] });
+      const previous = queryClient.getQueryData<{ posts: BlogPost[] }>(["my-blog-posts"]);
+      queryClient.setQueryData<{ posts: BlogPost[] }>(["my-blog-posts"], (old) =>
+        old ? { posts: old.posts.filter((p) => p.id !== postId) } : old
+      );
+      return { previous };
+    },
+    onError: (_err, _postId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["my-blog-posts"], context.previous);
+      }
+      toast.error("Failed to delete draft");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-blog-posts"] });
+    },
+  });
 
   // Avatar upload mutation
   const avatarMutation = useMutation({
@@ -1159,8 +1187,18 @@ function Profile() {
                               })}
                             </p>
                           </div>
-                          <div className="shrink-0 text-muted-foreground">
-                            <Pencil className="w-4 h-4" />
+                          <div className="shrink-0 flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteDraftMutation.mutate(post.id);
+                              }}
+                              className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                              aria-label="Delete draft"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
                           </div>
                         </div>
                       </div>

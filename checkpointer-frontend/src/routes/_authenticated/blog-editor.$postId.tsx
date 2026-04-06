@@ -20,6 +20,8 @@ import {
   unpublishBlogPost,
   uploadHeaderImage,
   removeHeaderImage,
+  type BlogPost,
+  type BlogPostDetail,
 } from '@/lib/blogPostsQuery'
 import { Button } from '@/components/ui/button'
 import Navbar from '@/components/Navbar'
@@ -48,6 +50,12 @@ function BlogEditorPage() {
   const saveContent = useMutation({
     mutationFn: (content: JSONContent) => updateBlogPost(postId, { content }),
     onMutate: () => setSaving(true),
+    onSuccess: (_result, content) => {
+      // Update the query cache so content persists across navigations
+      queryClient.setQueryData<BlogPostDetail>(['blog-post', postId], (old) =>
+        old ? { ...old, post: { ...old.post, content } } : old
+      )
+    },
     onSettled: () => setSaving(false),
     onError: (err) => toast.error(err.message),
   })
@@ -101,6 +109,10 @@ function BlogEditorPage() {
         !p.headerImageUrl &&
         !p.content
       if (isEmpty) {
+        // Optimistically remove from cache so profile list updates immediately
+        queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) =>
+          old ? { posts: old.posts.filter((x) => x.id !== p.id) } : old
+        )
         deleteBlogPost(p.id).catch(() => {})
       }
     }
@@ -125,8 +137,17 @@ function BlogEditorPage() {
   const saveMeta = useMutation({
     mutationFn: (data: { title?: string; subtitle?: string | null; slug?: string }) =>
       updateBlogPost(postId, data),
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['blog-post', postId] })
+      // Sync metadata into the list cache so profile reflects changes immediately
+      queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) => {
+        if (!old) return old
+        return {
+          posts: old.posts.map((p) =>
+            p.id === postId ? { ...p, ...variables } : p
+          ),
+        }
+      })
     },
     onError: (err) => {
       toast.error(err.message)
@@ -167,11 +188,27 @@ function BlogEditorPage() {
   // ── Delete post ──
   const deletePostMutation = useMutation({
     mutationFn: () => deleteBlogPost(postId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['my-blog-posts'] })
+      const previous = queryClient.getQueryData<{ posts: BlogPost[] }>(['my-blog-posts'])
+      queryClient.setQueryData<{ posts: BlogPost[] }>(['my-blog-posts'], (old) =>
+        old ? { posts: old.posts.filter((p) => p.id !== postId) } : old
+      )
+      return { previous }
+    },
     onSuccess: () => {
       toast.success('Post deleted')
       navigate({ to: '/profile', search: { tab: 'posts' } })
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['my-blog-posts'], context.previous)
+      }
+      toast.error(err.message)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-blog-posts'] })
+    },
   })
 
   // ── Header image ──
