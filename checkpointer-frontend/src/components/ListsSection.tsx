@@ -77,7 +77,7 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
           <Button
             onClick={() => setShowCreateModal(true)}
             variant="outline"
-            className="border-4 border-border rounded-none"
+            className="border-4 border-border rounded-none text-black"
           >
             <Plus className="w-4 h-4 mr-2" />
             New List
