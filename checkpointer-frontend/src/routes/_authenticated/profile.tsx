@@ -831,7 +831,7 @@ function Profile() {
               size="sm"
               onClick={() => setShowStopPlayingDialog(true)}
               disabled={stopPlayingMutation.isPending}
-              className="shrink-0"
+              className="shrink-0 text-black"
             >
               Done with this game?
             </Button>
@@ -1181,7 +1181,7 @@ function Profile() {
                     variant="outline"
                     onClick={() => createPostMutation.mutate()}
                     disabled={createPostMutation.isPending}
-                    className="border-4 border-border"
+                    className="border-4 border-border text-black"
                   >
                     {createPostMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
