@@ -115,7 +115,7 @@ function ListsSectionSkeleton() {
           key={i}
           className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden"
         >
-          <Skeleton className="aspect-[16/9] bg-muted-foreground/20" />
+          <Skeleton className="aspect-video bg-muted-foreground/20" />
           <div className="p-3">
             <Skeleton className="h-5 w-3/4 bg-muted-foreground/20 mb-2" />
             <Skeleton className="h-4 w-full bg-muted-foreground/20" />
