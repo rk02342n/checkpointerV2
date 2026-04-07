@@ -1,9 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
 import { db } from "../db";
-import { gamesTable, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
-import { eq, desc, asc, sum, and, ilike, or, avg, gte, lt, sql, exists, inArray, getTableColumns } from "drizzle-orm";
+import { gamesTable, gameParamsSchema } from "../db/schema/games";
+import { eq, desc, asc, and, ilike, or, avg, gte, lt, sql, exists, inArray, getTableColumns } from "drizzle-orm";
 import { appSettingsTable } from "../db/schema/app-settings";
 import { reviewsTable } from "../db/schema/reviews";
 import { genresTable } from "../db/schema/genres";

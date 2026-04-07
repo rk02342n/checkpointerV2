@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from '@tiptap/react'
 import { Link } from '@tanstack/react-router'
-import { Gamepad2, X, Star } from 'lucide-react'
+import { Gamepad2, X } from 'lucide-react'
 import type { EmbedGame } from '@/lib/blogPostsQuery'
 
 function formatYear(value: string | null) {

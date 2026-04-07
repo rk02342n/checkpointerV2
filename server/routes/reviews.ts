@@ -2,13 +2,11 @@ import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
 import { getAuthUser, kindeClient, sessionManager } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
-import { reviewsTable, reviewsInsertSchema, reviewsSelectSchema, createReviewSchema } from "../db/schema/reviews";
+import { reviewsTable, reviewsInsertSchema, createReviewSchema } from "../db/schema/reviews";
 import { reviewLikesTable } from "../db/schema/review-likes";
-import { eq, desc, sum, and, count, sql, avg } from "drizzle-orm";
+import { eq, desc, and, count, sql, avg } from "drizzle-orm";
 import { usersTable } from "../db/schema/users";
 import { gamesTable } from "../db/schema/games";
-
-import { createExpenseSchema } from "../sharedTypes";
 
 async function recalcGameRatingCache(gameId: string) {
   const result = await db

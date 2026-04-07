@@ -31,7 +31,7 @@ type ReviewCardProps = {
   themed?: boolean
 }
 
-export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking, themed }: ReviewCardProps) {
+export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeleting, onLike, isLiking, themed: _themed }: ReviewCardProps) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null
     const date = new Date(dateStr)

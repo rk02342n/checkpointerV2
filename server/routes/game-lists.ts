@@ -6,7 +6,7 @@ import { gameListItemsTable } from "../db/schema/game-list-items";
 import { gamesTable } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
 import { savedGameListsTable } from "../db/schema/saved-game-lists";
-import { eq, and, desc, asc, count, sql, or, ilike } from "drizzle-orm";
+import { eq, and, desc, asc, count, sql, ilike } from "drizzle-orm";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
@@ -427,15 +427,6 @@ export const gameListsRoute = new Hono()
 // GET /:listId - Get single list with games (public lists visible to all, private only to owner)
 .get('/:listId', async (c) => {
   const listId = c.req.param('listId');
-
-  // Try to get authenticated user (optional)
-  let currentUserId: string | null = null;
-  try {
-    const authHeader = c.req.header('Authorization');
-    if (authHeader) {
-      // Use a simpler approach - just query for the list and check visibility after
-    }
-  } catch {}
 
   // Get the list
   const list = await db

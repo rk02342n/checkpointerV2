@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getAuthUser, requireRole } from "../kinde";
 import { db } from "../db";
-import { usersTable, userRoles, type UserRole } from "../db/schema/users";
+import { usersTable, userRoles } from "../db/schema/users";
 import { reviewsTable } from "../db/schema/reviews";
 import { gamesTable } from "../db/schema/games";
 import { auditLogsTable } from "../db/schema/audit-logs";

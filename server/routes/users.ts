@@ -3,11 +3,9 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
-import { expensesTable, expensesInsertSchema } from "../db/schema/expenses";
-import { gamesTable, gamesInsertSchema, gamesSelectSchema, gameParamsSchema } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
 import { reviewsTable } from "../db/schema/reviews";
-import { eq, desc, sum, and, ilike, or } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const updateUsernameSchema = z.object({
     username: z.string()

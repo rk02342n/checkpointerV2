@@ -14,6 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "vite-plugin-node-polyfills/shims/buffer": path.resolve(__dirname, "./node_modules/vite-plugin-node-polyfills/shims/buffer/dist/index.js"),
     },
   },
   server: {

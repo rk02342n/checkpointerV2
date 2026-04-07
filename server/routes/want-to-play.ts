@@ -1,9 +1,8 @@
 import { Hono } from "hono";
-import { getAuthUser, kindeClient, sessionManager } from "../kinde";
+import { getAuthUser } from "../kinde";
 import { db } from "../db";
 import { wantToPlayTable } from "../db/schema/want-to-play";
 import { gamesTable } from "../db/schema/games";
-import { usersTable } from "../db/schema/users";
 import { eq, and, desc, count } from "drizzle-orm";
 
 export const wantToPlayRoute = new Hono()
