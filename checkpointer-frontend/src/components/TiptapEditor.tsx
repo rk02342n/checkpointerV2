@@ -135,10 +135,10 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
         igdbRating: null,
       },
     }
-    editor.chain().focus().insertContent({
-      type: 'gameEmbed',
-      attrs: { gameId },
-    }).run()
+    editor.chain().focus().insertContent([
+      { type: 'gameEmbed', attrs: { gameId } },
+      { type: 'paragraph' },
+    ]).run()
     setGameSearchQuery('')
     setShowGameInput(false)
   }, [editor, gameSearchData])
@@ -160,10 +160,10 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
         ownerDisplayName: null,
       },
     }
-    editor.chain().focus().insertContent({
-      type: 'listEmbed',
-      attrs: { listId },
-    }).run()
+    editor.chain().focus().insertContent([
+      { type: 'listEmbed', attrs: { listId } },
+      { type: 'paragraph' },
+    ]).run()
     setListSearchQuery('')
     setShowListInput(false)
   }, [editor])
