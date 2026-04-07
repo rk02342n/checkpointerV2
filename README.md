@@ -4,14 +4,40 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 
 ## Features
 
+### Core
 - **Game Tracking** - Log play sessions with start/end times and current status (playing, finished, stashed)
 - **Game Reviews** - Rate games 0-5 stars and write detailed reviews
 - **Review Interactions** - Like and comment on other players' reviews
-- **User Profiles** - Customize your profile with avatar, bio, and display name
 - **Wishlist** - Add games to your want-to-play list
 - **Expense Tracking** - Track gaming-related expenses and view total spending
-- **Game Discovery** - Browse and search games from IGDB database
+- **Game Discovery** - Browse and search games from IGDB database (~311k games)
 - **Admin Panel** - Manage users, view audit logs, and moderate content
+
+### Blog Posts
+- **Rich Text Editor** - Full TipTap/ProseMirror-powered editor with toolbar (bold, italic, headings, text alignment)
+- **Autosave** - Drafts are automatically saved as you write
+- **Embed Games & Lists** - Search and embed game cards and game list cards directly into posts
+- **Publish / Draft** - Toggle posts between draft and published state; published badge shown on cards
+- **Blog Post Cards** - Browse posts with cover previews; post owners see an edit button inline
+- **Admin Toggle** - Admins can disable blog posts globally
+
+### Profile Customization
+- **Accent Color** - Choose a custom accent color for your public profile
+- **Multiple Fonts** - Select from a range of heading and body fonts
+- **Background Styles** - Customize profile card backgrounds and inner backgrounds
+- **Bio** - Add and display a bio on your public profile
+- **Profile Picture** - Upload and sync avatar across the entire UI optimistically
+
+### Game Lists
+- **Create & Manage Lists** - Organize games into named lists
+- **Public / Private** - Toggle visibility; private lists hidden from other users
+- **Reorder Games** - Drag to reorder games within a list
+- **Save Count** - List owners can see how many times a list has been saved
+- **Homepage Carousel** - Featured lists shown in a tabbed carousel on the homepage
+
+### Social
+- **Follow System** - Follow and unfollow other users; view followers and following tabs on profiles
+- **Paginated Profile Tabs** - Reviews, lists, and activity tabs with pagination
 
 ## Tech Stack
 
@@ -29,6 +55,8 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 - **Vite** - Build tool
 - **TanStack Router** - File-based routing
 - **TanStack React Query** - Server state management
+- **Hono RPC client** - End-to-end type-safe API calls via `hc`
+- **TipTap / ProseMirror** - Rich text editor for blog posts
 - **Tailwind CSS 4** - Styling
 - **Radix UI** - Accessible components
 - **TypeScript** - Type safety
@@ -124,6 +152,10 @@ checkpointerv2/
 │       ├── game-sessions.ts  # Play session tracking
 │       ├── users.ts          # User profiles
 │       ├── expenses.ts       # Expense tracking
+│       ├── blog-posts.ts     # Blog post CRUD
+│       ├── game-lists.ts     # Game list management
+│       ├── follows.ts        # Follow/unfollow system
+│       ├── settings.ts       # Profile customization settings
 │       └── admin.ts          # Admin operations
 │
 ├── checkpointer-frontend/    # React + Vite frontend
@@ -162,6 +194,21 @@ All API endpoints are prefixed with `/api`:
 | DELETE | `/want-to-play/:gameId` | Remove from wishlist |
 | POST | `/expenses` | Log an expense |
 | GET | `/expenses/:userId` | Get user's expenses |
+| GET | `/blog-posts` | List published blog posts |
+| POST | `/blog-posts` | Create a new blog post |
+| GET | `/blog-posts/:postId` | Get a single blog post |
+| PATCH | `/blog-posts/:postId` | Update a blog post |
+| DELETE | `/blog-posts/:postId` | Delete a blog post |
+| GET | `/game-lists` | Get user's game lists |
+| POST | `/game-lists` | Create a game list |
+| PATCH | `/game-lists/:listId` | Update a list (name, visibility, order) |
+| DELETE | `/game-lists/:listId` | Delete a game list |
+| POST | `/follows/:userId` | Follow a user |
+| DELETE | `/follows/:userId` | Unfollow a user |
+| GET | `/follows/:userId/followers` | Get followers |
+| GET | `/follows/:userId/following` | Get following |
+| GET | `/settings` | Get user settings |
+| PATCH | `/settings` | Update user settings (profile customization) |
 
 ## Database Schema
 
@@ -173,6 +220,11 @@ All API endpoints are prefixed with `/api`:
 - `game_sessions` - Play session logs
 - `want_to_play` - Wishlists
 - `expenses` - Expense records
+- `blog_posts` - User-authored blog posts (draft/published)
+- `game_lists` - Named game lists with public/private visibility
+- `game_list_items` - Games within a list (with order)
+- `follows` - User follow relationships
+- `settings` - Per-user profile customization (accent color, fonts, background)
 - `audit_logs` - Admin action history
 
 ## Deployment
