@@ -12,6 +12,7 @@ import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '
 import { useProfileFont } from '@/lib/useProfileFont'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
+import { ProfileTabSidebar, type ProfileTabItem } from '@/components/profile/ProfileTabSidebar'
 import { ListsSection } from '@/components/ListsSection'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
@@ -282,6 +283,14 @@ function PublicProfile() {
       ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
       : '?'
 
+  const profileTabs: ProfileTabItem[] = [
+    { id: 'reviews', label: 'Reviews', icon: Heart, count: totalReviewCount },
+    { id: 'history', label: 'Play History', icon: History, count: totalHistoryCount },
+    { id: 'wishlist', label: 'Want to Play', icon: CalendarHeart, count: totalWishlistCount },
+    { id: 'lists', label: 'Lists', icon: ListPlus, count: totalListsCount },
+    ...(showBlogPosts ? [{ id: 'posts', label: 'Posts', icon: FileText, count: blogPosts.length } as ProfileTabItem] : []),
+  ]
+
   return (
     <div className="min-h-screen bg-background selection:bg-orange-300/30" style={profileData?.profileTheme?.backgroundColor ? { backgroundColor: profileData.profileTheme.backgroundColor } : undefined}>
       <Navbar />
@@ -389,70 +398,15 @@ function PublicProfile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className="bg-transparent border-0 border-border">
-          {/* Tab Headers */}
-          <div className="flex border-4 border-border" style={themed && profileData?.profileTheme?.headerFontColor ? { "--foreground": profileData.profileTheme.headerFontColor } as React.CSSProperties : undefined}>
-            <button
-              onClick={() => setActiveTab('reviews')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
-                activeTab === 'reviews'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
-              }`}
-            >
-              <Heart className="w-4 h-4" />
-              Reviews ({totalReviewCount})
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'history'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
-              }`}
-            >
-              <History className="w-4 h-4" />
-              Play History ({totalHistoryCount})
-            </button>
-            <button
-              onClick={() => setActiveTab('wishlist')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'wishlist'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
-              }`}
-            >
-              <CalendarHeart className="w-4 h-4" />
-              Want to Play ({totalWishlistCount})
-            </button>
-            <button
-              onClick={() => setActiveTab('lists')}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'lists'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
-              }`}
-            >
-              <ListPlus className="w-4 h-4" />
-              Lists ({totalListsCount})
-            </button>
-            {showBlogPosts && (
-              <button
-                onClick={() => setActiveTab('posts')}
-                className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                  activeTab === 'posts'
-                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                    : `${themed ? 'profile-accent-muted text-foreground hover:opacity-80 hover:cursor-pointer' : 'bg-muted text-muted-foreground hover:opacity-80 hover:cursor-pointer'}`
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                Posts ({blogPosts.length})
-              </button>
-            )}
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
+        <ProfileTabSidebar
+          tabs={profileTabs}
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as ProfileTab)}
+          themed={themed}
+          themeStyle={themed && profileData?.profileTheme?.headerFontColor
+            ? { "--foreground": profileData.profileTheme.headerFontColor } as React.CSSProperties
+            : undefined}
+        >
             {/* Reviews Tab */}
             <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
               {reviewsPending ? (
@@ -609,8 +563,7 @@ function PublicProfile() {
                 </div>
               )}
             </div>}
-          </div>
-        </div>
+        </ProfileTabSidebar>
       </div>
     </div>
   )
