@@ -24,7 +24,8 @@ export function hasCustomColors(theme: ProfileTheme | null | undefined): boolean
 
 // Light-mode values for the core CSS variables that dark mode overrides.
 // Applied to the profile content container to force light mode when a custom theme is active.
-const LIGHT_MODE_VARS: Record<string, string> = {
+// Also used by ResetProfileTheme to let components opt out of custom color overrides.
+export const LIGHT_MODE_VARS: Record<string, string> = {
   "--background": "oklch(.987 .022 95.277)",
   "--foreground": "oklch(0.216 0.006 56)",
   "--card": "oklch(1 0 0)",
@@ -72,6 +73,9 @@ export function getProfileContentStyle(theme: ProfileTheme | null | undefined): 
   }
   if (theme.accentColor) {
     style["--profile-accent"] = theme.accentColor;
+  }
+  if (theme.headerFontColor) {
+    style["--profile-accent-font"] = theme.headerFontColor;
   }
 
   return style as React.CSSProperties;

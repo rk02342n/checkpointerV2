@@ -165,9 +165,13 @@
 }
 
 /* Profile theme: override accent backgrounds (tabs, stat boxes).
-   Falls back to amber-200 when no accent color is explicitly set. */
+   Falls back to amber-200 when no accent color is explicitly set.
+   Font color follows --profile-accent-font (the header font color) when set,
+   so text on accent backgrounds always matches what the user chose for the header. */
 .profile-themed-content .profile-accent {
   background-color: var(--profile-accent, #fde68a);
+  --foreground: var(--profile-accent-font, var(--foreground));
+  --muted-foreground: var(--profile-accent-font, var(--muted-foreground));
 }
 
 .profile-themed-content .profile-accent-muted {
