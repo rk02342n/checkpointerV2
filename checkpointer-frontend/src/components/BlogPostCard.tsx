@@ -43,7 +43,7 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
         {/* Post content */}
         <div className="flex-1 min-w-0 flex flex-col">
         <span className="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border-2
-          border-border bg-green-200 dark:bg-green-900/60 text-green-900 dark:text-green-200 mb-1 max-w-22 text-center">
+          border-border bg-green-200 dark:bg-green-900/60 text-green-900 dark:text-green-200 mb-1 w-fit">
             Published
         </span>
           <div className="min-w-0">

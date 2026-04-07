@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext, useRouterState } from '@tanstack/react-router'
 import { Toaster } from "@/components/ui/sonner"
 
 interface MyRouterContext {
@@ -24,12 +24,15 @@ function Footer() {
 }
 
 function RootComponent() {
+  const { location } = useRouterState()
+  const hideFooter = location.pathname.includes('/blog-editor/')
+
   return (
     <>
       <hr />
       <Outlet />
       <Toaster/>
-      <Footer/>
+      {!hideFooter && <Footer/>}
     </>
   )
 }
