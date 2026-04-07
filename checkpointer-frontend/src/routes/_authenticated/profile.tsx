@@ -80,7 +80,7 @@ function Profile() {
     isCurrent: boolean
   }>({ checking: false, available: null, error: null, isCurrent: false })
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { isPending, data } = useQuery(userQueryOptions)
+  const { isPending, isError, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
   const { settings } = useSettings()
@@ -623,6 +623,19 @@ function Profile() {
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-muted-foreground font-medium">Loading profile...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto max-w-4xl px-6 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-muted-foreground font-medium">Failed to load profile</div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { JSONContent } from "@tiptap/react";
+import { api } from "@/lib/api";
 
 export type BlogPostStatus = "draft" | "published";
 
@@ -68,11 +69,10 @@ export type PublicBlogPostDetail = {
   embeds: Embeds;
 };
 
-// Get own posts list
 async function getMyBlogPosts(): Promise<{ posts: BlogPost[] }> {
-  const res = await fetch("/api/blog-posts");
+  const res = await api["blog-posts"].$get();
   if (!res.ok) throw new Error("Failed to fetch blog posts");
-  return res.json();
+  return res.json() as Promise<{ posts: BlogPost[] }>;
 }
 
 export const myBlogPostsQueryOptions = queryOptions({
@@ -81,11 +81,10 @@ export const myBlogPostsQueryOptions = queryOptions({
   staleTime: 1000 * 60 * 2,
 });
 
-// Get published posts for a user (public)
 async function getUserPublishedPosts(userId: string): Promise<{ posts: BlogPost[] }> {
-  const res = await fetch(`/api/blog-posts/user/${userId}`);
+  const res = await api["blog-posts"].user[":userId"].$get({ param: { userId } });
   if (!res.ok) throw new Error("Failed to fetch user posts");
-  return res.json();
+  return res.json() as Promise<{ posts: BlogPost[] }>;
 }
 
 export const userPublishedPostsQueryOptions = (userId: string) =>
@@ -95,14 +94,13 @@ export const userPublishedPostsQueryOptions = (userId: string) =>
     staleTime: 1000 * 60 * 5,
   });
 
-// Get a single published post (public)
 async function getPublicBlogPost(postId: string): Promise<PublicBlogPostDetail> {
-  const res = await fetch(`/api/blog-posts/public/${postId}`);
+  const res = await api["blog-posts"].public[":postId"].$get({ param: { postId } });
   if (!res.ok) {
     if (res.status === 404) throw new Error("Post not found");
     throw new Error("Failed to fetch blog post");
   }
-  return res.json();
+  return res.json() as Promise<PublicBlogPostDetail>;
 }
 
 export const publicBlogPostQueryOptions = (postId: string) =>
@@ -112,14 +110,13 @@ export const publicBlogPostQueryOptions = (postId: string) =>
     staleTime: 1000 * 60 * 5,
   });
 
-// Get own post by ID
 async function getBlogPost(postId: string): Promise<BlogPostDetail> {
-  const res = await fetch(`/api/blog-posts/${postId}`);
+  const res = await api["blog-posts"][":postId"].$get({ param: { postId } });
   if (!res.ok) {
     if (res.status === 404) throw new Error("Post not found");
     throw new Error("Failed to fetch blog post");
   }
-  return res.json();
+  return res.json() as Promise<BlogPostDetail>;
 }
 
 export const blogPostQueryOptions = (postId: string) =>
@@ -129,26 +126,20 @@ export const blogPostQueryOptions = (postId: string) =>
     staleTime: 1000 * 60 * 2,
   });
 
-// Create a new blog post
 export async function createBlogPost(data: {
   title: string;
   slug: string;
   subtitle?: string;
   customization?: BlogPostCustomization;
 }): Promise<{ post: BlogPost }> {
-  const res = await fetch("/api/blog-posts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  const res = await api["blog-posts"].$post({ json: data });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to create post");
   }
-  return res.json();
+  return res.json() as Promise<{ post: BlogPost }>;
 }
 
-// Update blog post (metadata + content)
 export async function updateBlogPost(
   postId: string,
   data: {
@@ -159,52 +150,42 @@ export async function updateBlogPost(
     customization?: BlogPostCustomization | null;
   }
 ): Promise<{ post: BlogPost }> {
-  const res = await fetch(`/api/blog-posts/${postId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  const res = await api["blog-posts"][":postId"].$patch({ param: { postId }, json: data });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to update post");
   }
-  return res.json();
+  return res.json() as Promise<{ post: BlogPost }>;
 }
 
-// Delete a blog post
 export async function deleteBlogPost(postId: string): Promise<void> {
-  const res = await fetch(`/api/blog-posts/${postId}`, { method: "DELETE" });
+  const res = await api["blog-posts"][":postId"].$delete({ param: { postId } });
   if (!res.ok) throw new Error("Failed to delete post");
 }
 
-// Publish a post
 export async function publishBlogPost(postId: string): Promise<{ post: BlogPost }> {
-  const res = await fetch(`/api/blog-posts/${postId}/publish`, { method: "POST" });
+  const res = await api["blog-posts"][":postId"].publish.$post({ param: { postId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to publish post");
   }
-  return res.json();
+  return res.json() as Promise<{ post: BlogPost }>;
 }
 
-// Unpublish a post
 export async function unpublishBlogPost(postId: string): Promise<{ post: BlogPost }> {
-  const res = await fetch(`/api/blog-posts/${postId}/unpublish`, { method: "POST" });
+  const res = await api["blog-posts"][":postId"].unpublish.$post({ param: { postId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to unpublish post");
   }
-  return res.json();
+  return res.json() as Promise<{ post: BlogPost }>;
 }
 
-// Upload header image
+// FormData uploads — not supported by the Hono RPC client
 export async function uploadHeaderImage(postId: string, file: File): Promise<{ headerImageUrl: string }> {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(`/api/blog-posts/${postId}/header-image`, {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(`/api/blog-posts/${postId}/header-image`, { method: "POST", body: formData });
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.error || "Failed to upload header image");
@@ -212,20 +193,15 @@ export async function uploadHeaderImage(postId: string, file: File): Promise<{ h
   return res.json();
 }
 
-// Remove header image
 export async function removeHeaderImage(postId: string): Promise<void> {
-  const res = await fetch(`/api/blog-posts/${postId}/header-image`, { method: "DELETE" });
+  const res = await api["blog-posts"][":postId"]["header-image"].$delete({ param: { postId } });
   if (!res.ok) throw new Error("Failed to remove header image");
 }
 
-// Upload inline content image
 export async function uploadPostImage(postId: string, file: File): Promise<{ imageUrl: string }> {
   const formData = new FormData();
   formData.append("image", file);
-  const res = await fetch(`/api/blog-posts/${postId}/image`, {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(`/api/blog-posts/${postId}/image`, { method: "POST", body: formData });
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.error || "Failed to upload image");

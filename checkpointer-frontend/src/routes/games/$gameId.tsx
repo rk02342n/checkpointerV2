@@ -379,18 +379,17 @@ const queryClient = useQueryClient();
 
           if (existingUserReviewsData) {
             const newReviewForUserCache = {
-              ...newReview,
-              ...(data?.game && {
-                gameName: data.game.name,
-                gameCoverUrl: data.game.coverUrl ?? null,
-              }),
+              ...enrichedReview,
+              rating: enrichedReview.rating != null ? Number(enrichedReview.rating) : 0,
+              gameName: data?.game?.name ?? null,
+              gameCoverUrl: data?.game?.coverUrl ?? null,
             };
 
             queryClient.setQueryData(
               getReviewsByUserIdQueryOptions(dbUserId).queryKey,
               {
                 ...existingUserReviewsData,
-                reviews: [newReviewForUserCache, ...existingUserReviewsData.reviews],
+                reviews: [newReviewForUserCache as (typeof existingUserReviewsData.reviews)[number], ...existingUserReviewsData.reviews],
                 totalCount: existingUserReviewsData.totalCount + 1,
               }
             );
@@ -634,7 +633,7 @@ const queryClient = useQueryClient();
                                                 {avgRating ? Number(avgRating.total).toFixed(1) : "—"}
                                             </div>
                                             <div className="flex items-center justify-center">
-                                                <StarRating rating={avgRating ? avgRating.total : 0} />
+                                                <StarRating rating={avgRating ? Number(avgRating.total) : 0} />
                                             </div>
                                         </>
                                     )}

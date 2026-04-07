@@ -20,12 +20,6 @@ export const Route = createFileRoute('/_authenticated/expenses')({
   component: Expenses,
 })
 
-type Expense = {
-    id: number,
-    title: string,
-    amount: number,
-    date: string
-}
 
 function Expenses() {
   // Tanstack Query server-state management
@@ -68,7 +62,7 @@ function Expenses() {
             </TableRow>
         ))
       : 
-        data?.expenses.map((expense: Expense) => (
+        data?.expenses.map((expense) => (
           <TableRow key={expense.id}>
             <TableCell className="font-medium">{expense.id}</TableCell>
             <TableCell>{expense.title}</TableCell>
