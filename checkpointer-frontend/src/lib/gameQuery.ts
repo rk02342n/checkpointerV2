@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export interface GamePlatform {
   id: string;
@@ -55,91 +56,68 @@ export interface GameLink {
 }
 
 export async function getAllGames() {
-    // await new Promise((r) => setTimeout(r, 5000)) // fake delay to test skeleton
-    const res = await fetch("api/games")
+  const res = await api.games.$get();
+  if(!res.ok) throw new Error("Server error");
+  return res.json();
+}
 
-    // client will let us use RPC instead - helps make everything typesafe
-    // const res = await api.expenses.$get() // not working because of error caused by hono client
-    if(!res.ok){
-      throw new Error("Ummmm Server error");
-    }
-    const data = await res.json()
-    return data
-  }
-
-  export const getAllGamesQueryOptions = queryOptions({
-    queryKey: ['get-all-games'],
-    queryFn: getAllGames,
-    staleTime: 1000 * 60 * 5
-  })
+export const getAllGamesQueryOptions = queryOptions({
+  queryKey: ['get-all-games'],
+  queryFn: getAllGames,
+  staleTime: 1000 * 60 * 5
+})
 
 export async function searchGames(searchQuery: string): Promise<{ games: Game[] }> {
-    if (!searchQuery || searchQuery.trim().length === 0) {
-      return { games: [] };
-    }
-
-    const res = await fetch(`/api/games/search?q=${encodeURIComponent(searchQuery.trim())}`);
-
-    if (!res.ok) {
-      throw new Error(`Server error while searching games: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return data;
+  if (!searchQuery || searchQuery.trim().length === 0) {
+    return { games: [] };
+  }
+  const res = await api.games.search.$get({ query: { q: searchQuery.trim() } });
+  if (!res.ok) throw new Error(`Server error while searching games: ${res.status}`);
+  return res.json() as Promise<{ games: Game[] }>;
 }
 
 export function getSearchGamesQueryOptions(searchQuery: string) {
-    return queryOptions({
-      queryKey: ['search-games', searchQuery.trim()],
-      queryFn: () => searchGames(searchQuery),
-      enabled: searchQuery.trim().length > 0,
-      staleTime: 1000 * 30, // Cache for 30 seconds
-    });
+  return queryOptions({
+    queryKey: ['search-games', searchQuery.trim()],
+    queryFn: () => searchGames(searchQuery),
+    enabled: searchQuery.trim().length > 0,
+    staleTime: 1000 * 30,
+  });
+}
+
+export async function getGameById(id: string) {
+  const res = await api.games[":id"].$get({ param: { id } });
+  if (!res.ok) {
+    if (res.status === 404) throw new Error("Game not found");
+    throw new Error("Server error");
   }
+  return res.json() as Promise<{
+    game: Game & { summary?: string; slug?: string };
+    genres: Genre[];
+    platforms: Platform[];
+    keywords: Keyword[];
+    images: GameImage[];
+    links: GameLink[];
+  }>;
+}
 
-  export async function getGameById(id: string) {
-    // await new Promise((r) => setTimeout(r, 2000)) // to test skeleton TBD
-    const res = await fetch(`/api/games/${id}`)
-    if (!res.ok) {
-      if (res.status === 404) {
-        throw new Error("Game not found");
-      }
-      throw new Error("Server error");
-    }
-    const data = await res.json()
-    return data as {
-      game: Game & { summary?: string; slug?: string };
-      genres: Genre[];
-      platforms: Platform[];
-      keywords: Keyword[];
-      images: GameImage[];
-      links: GameLink[];
-    }
-  }
+export const getGameByIdQueryOptions = (id: string) => queryOptions({
+  queryKey: ['get-game', id],
+  queryFn: () => getGameById(id),
+  staleTime: 1000 * 60 * 5,
+  enabled: !!id
+})
 
-  export const getGameByIdQueryOptions = (id: string) => queryOptions({
-    queryKey: ['get-game', id],
-    queryFn: () => getGameById(id),
-    staleTime: 1000 * 60 * 5,
-    enabled: !!id // Only run query if id exists
-  })
-
-  export async function getGameRating (id: string) {
-    // await new Promise((r) => setTimeout(r, 3000)) // to test skeleton TBD
-    const res = await fetch(`/api/games/rating/${id}`)
-    if(!res.ok){
-      throw new Error("Server error");
-    }
-    const data = await res.json()
-    return data
+export async function getGameRating(id: string) {
+  const res = await api.games.rating[":id"].$get({ param: { id } });
+  if (!res.ok) throw new Error("Server error");
+  return res.json();
 }
 
 export async function getFeaturedGames(): Promise<{ games: Game[] }> {
-  const res = await fetch("/api/games/featured");
-  if (!res.ok) {
-    throw new Error("Server error fetching featured games");
-  }
-  return res.json();
+  const res = await api.games.featured.$get();
+  if (!res.ok) throw new Error("Server error fetching featured games");
+  return res.json() as Promise<{ games: Game[] }>;
 }
 
 export const getFeaturedGamesQueryOptions = queryOptions({
@@ -149,11 +127,9 @@ export const getFeaturedGamesQueryOptions = queryOptions({
 });
 
 export async function getTopRatedGames(limit = 4): Promise<{ games: Game[] }> {
-  const res = await fetch(`/api/games/top-rated?limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Server error fetching top rated games");
-  }
-  return res.json();
+  const res = await api.games["top-rated"].$get({ query: { limit: String(limit) } });
+  if (!res.ok) throw new Error("Server error fetching top rated games");
+  return res.json() as Promise<{ games: Game[] }>;
 }
 
 export const getTopRatedGamesQueryOptions = queryOptions({
@@ -163,11 +139,9 @@ export const getTopRatedGamesQueryOptions = queryOptions({
 });
 
 export async function getTrendingGames(limit = 4): Promise<{ games: Game[] }> {
-  const res = await fetch(`/api/games/trending?limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Server error fetching trending games");
-  }
-  return res.json();
+  const res = await api.games.trending.$get({ query: { limit: String(limit) } });
+  if (!res.ok) throw new Error("Server error fetching trending games");
+  return res.json() as Promise<{ games: Game[] }>;
 }
 
 export const getTrendingGamesQueryOptions = queryOptions({
@@ -198,38 +172,33 @@ export interface BrowseGamesResponse {
 }
 
 export async function browseGames(params: BrowseGamesParams = {}): Promise<BrowseGamesResponse> {
-  const searchParams = new URLSearchParams()
+  const query: Record<string, string> = {};
+  if (params.q) query.q = params.q;
+  if (params.sortBy) query.sortBy = params.sortBy;
+  if (params.sortOrder) query.sortOrder = params.sortOrder;
+  if (params.year) query.year = params.year;
+  if (params.genre) query.genre = params.genre;
+  if (params.platform) query.platform = params.platform;
+  if (params.limit) query.limit = String(params.limit);
+  if (params.offset) query.offset = String(params.offset);
 
-  if (params.q) searchParams.set('q', params.q)
-  if (params.sortBy) searchParams.set('sortBy', params.sortBy)
-  if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder)
-  if (params.year) searchParams.set('year', params.year)
-  if (params.genre) searchParams.set('genre', params.genre)
-  if (params.platform) searchParams.set('platform', params.platform)
-  if (params.limit) searchParams.set('limit', String(params.limit))
-  if (params.offset) searchParams.set('offset', String(params.offset))
-
-  const res = await fetch(`/api/games/browse?${searchParams.toString()}`)
-
-  if (!res.ok) {
-    throw new Error(`Server error while browsing games: ${res.status}`)
-  }
-
-  return res.json()
+  const res = await api.games.browse.$get({ query });
+  if (!res.ok) throw new Error(`Server error while browsing games: ${res.status}`);
+  return res.json() as Promise<BrowseGamesResponse>;
 }
 
 export function getBrowseGamesQueryOptions(params: BrowseGamesParams = {}) {
   return queryOptions({
     queryKey: ['browse-games', params],
     queryFn: () => browseGames(params),
-    staleTime: 1000 * 60 * 2, // Cache for 2 minutes
+    staleTime: 1000 * 60 * 2,
   })
 }
 
 export async function fetchBrowseFilters(): Promise<{ years: string[]; genres: Genre[]; platforms: Platform[] }> {
-  const res = await fetch('/api/games/browse-filters');
+  const res = await api.games["browse-filters"].$get();
   if (!res.ok) throw new Error(`Server error fetching browse filters: ${res.status}`);
-  return res.json();
+  return res.json() as Promise<{ years: string[]; genres: Genre[]; platforms: Platform[] }>;
 }
 
 export const getBrowseFiltersQueryOptions = queryOptions({

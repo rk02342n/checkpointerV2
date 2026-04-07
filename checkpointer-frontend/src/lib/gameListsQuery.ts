@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export type GameListVisibility = "public" | "private";
 
@@ -78,15 +79,12 @@ export type PaginatedSavedGameListsResponse = {
   totalCount: number;
 };
 
-// Search public lists by name
 export async function searchGameLists(searchQuery: string): Promise<{ lists: GameListSummary[] }> {
   if (!searchQuery || searchQuery.trim().length === 0) {
     return { lists: [] };
   }
   const res = await fetch(`/api/game-lists/search?q=${encodeURIComponent(searchQuery.trim())}`);
-  if (!res.ok) {
-    throw new Error(`Server error while searching lists: ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Server error while searching lists: ${res.status}`);
   return res.json();
 }
 
@@ -99,22 +97,19 @@ export function getSearchGameListsQueryOptions(searchQuery: string) {
   });
 }
 
-// Get own lists
 async function getMyGameLists(offset = 0, limit = 20): Promise<PaginatedGameListsResponse> {
-  const res = await fetch(`/api/game-lists?offset=${offset}&limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch game lists");
-  }
-  return res.json();
+  const res = await api["game-lists"].$get({ query: { offset: String(offset), limit: String(limit) } });
+  if (!res.ok) throw new Error("Failed to fetch game lists");
+  return res.json() as Promise<PaginatedGameListsResponse>;
 }
 
 export const myGameListsQueryOptions = queryOptions({
   queryKey: ['my-game-lists'],
   queryFn: () => getMyGameLists(),
-  staleTime: 1000 * 60 * 5, // 5 minutes
+  staleTime: 1000 * 60 * 5,
 });
 
-export const myGameListsInfiniteOptions = (limit: number = 20) => ({
+export const myGameListsInfiniteOptions = (limit = 20) => ({
   queryKey: ['my-game-lists'],
   queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getMyGameLists(pageParam, limit),
   initialPageParam: 0,
@@ -122,12 +117,9 @@ export const myGameListsInfiniteOptions = (limit: number = 20) => ({
   staleTime: 1000 * 60 * 5,
 });
 
-// Get user's public lists
 async function getUserGameLists(userId: string, offset = 0, limit = 20): Promise<PaginatedGameListsResponse> {
   const res = await fetch(`/api/game-lists/user/${userId}?offset=${offset}&limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch user's game lists");
-  }
+  if (!res.ok) throw new Error("Failed to fetch user's game lists");
   return res.json();
 }
 
@@ -135,10 +127,10 @@ export const userGameListsQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ['user-game-lists', userId],
     queryFn: () => getUserGameLists(userId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-export const userGameListsInfiniteOptions = (userId: string, limit: number = 20) => ({
+export const userGameListsInfiniteOptions = (userId: string, limit = 20) => ({
   queryKey: ['user-game-lists', userId],
   queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getUserGameLists(userId, pageParam, limit),
   initialPageParam: 0,
@@ -146,170 +138,117 @@ export const userGameListsInfiniteOptions = (userId: string, limit: number = 20)
   staleTime: 1000 * 60 * 5,
 });
 
-// Get single list with games (public)
 async function getGameList(listId: string): Promise<{ list: GameListDetail }> {
-  const res = await fetch(`/api/game-lists/${listId}`);
+  const res = await api["game-lists"][":listId"].$get({ param: { listId } });
   if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error("List not found");
-    }
+    if (res.status === 404) throw new Error("List not found");
     throw new Error("Failed to fetch game list");
   }
-  return res.json();
+  return res.json() as Promise<{ list: GameListDetail }>;
 }
 
 export const gameListQueryOptions = (listId: string) =>
   queryOptions({
     queryKey: ['game-list', listId],
     queryFn: () => getGameList(listId),
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   });
 
-// Get single list with games (authenticated, includes private)
 async function getGameListAuth(listId: string): Promise<{ list: GameListDetail }> {
-  const res = await fetch(`/api/game-lists/${listId}/auth`);
+  const res = await api["game-lists"][":listId"].auth.$get({ param: { listId } });
   if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error("List not found");
-    }
+    if (res.status === 404) throw new Error("List not found");
     throw new Error("Failed to fetch game list");
   }
-  return res.json();
+  return res.json() as Promise<{ list: GameListDetail }>;
 }
 
 export const gameListAuthQueryOptions = (listId: string) =>
   queryOptions({
     queryKey: ['game-list-auth', listId],
     queryFn: () => getGameListAuth(listId),
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   });
 
-// Get own lists with game inclusion status (for AddToList modal)
 async function getListsForGame(gameId: string): Promise<{ lists: GameListWithStatus[] }> {
-  const res = await fetch(`/api/game-lists/game/${gameId}/lists`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch lists for game");
-  }
-  return res.json();
+  const res = await api["game-lists"].game[":gameId"].lists.$get({ param: { gameId } });
+  if (!res.ok) throw new Error("Failed to fetch lists for game");
+  return res.json() as Promise<{ lists: GameListWithStatus[] }>;
 }
 
 export const listsForGameQueryOptions = (gameId: string) =>
   queryOptions({
     queryKey: ['lists-for-game', gameId],
     queryFn: () => getListsForGame(gameId),
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   });
 
-// Create a new list
 export async function createList(data: {
   name: string;
   description?: string;
   visibility?: GameListVisibility;
 }): Promise<{ list: GameListSummary }> {
-  const res = await fetch("/api/game-lists", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  const res = await api["game-lists"].$post({ json: data });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to create list");
   }
-  return res.json();
+  return res.json() as unknown as Promise<{ list: GameListSummary }>;
 }
 
-// Update a list
 export async function updateList(
   listId: string,
-  data: {
-    name?: string;
-    description?: string;
-    visibility?: GameListVisibility;
-  }
+  data: { name?: string; description?: string; visibility?: GameListVisibility }
 ): Promise<{ list: GameListSummary }> {
-  const res = await fetch(`/api/game-lists/${listId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  const res = await api["game-lists"][":listId"].$patch({ param: { listId }, json: data });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to update list");
   }
-  return res.json();
+  return res.json() as unknown as Promise<{ list: GameListSummary }>;
 }
 
-// Delete a list
 export async function deleteList(listId: string): Promise<{ deleted: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}`, {
-    method: "DELETE",
-  });
+  const res = await api["game-lists"][":listId"].$delete({ param: { listId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to delete list");
   }
-  return res.json();
+  return res.json() as Promise<{ deleted: boolean }>;
 }
 
-// Add game to list
-export async function addGameToList(
-  listId: string,
-  gameId: string
-): Promise<{ added: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/games/${gameId}`, {
-    method: "POST",
-  });
+export async function addGameToList(listId: string, gameId: string): Promise<{ added: boolean }> {
+  const res = await api["game-lists"][":listId"].games[":gameId"].$post({ param: { listId, gameId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to add game to list");
   }
-  return res.json();
+  return res.json() as Promise<{ added: boolean }>;
 }
 
-// Remove game from list
-export async function removeGameFromList(
-  listId: string,
-  gameId: string
-): Promise<{ removed: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/games/${gameId}`, {
-    method: "DELETE",
-  });
+export async function removeGameFromList(listId: string, gameId: string): Promise<{ removed: boolean }> {
+  const res = await api["game-lists"][":listId"].games[":gameId"].$delete({ param: { listId, gameId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to remove game from list");
   }
-  return res.json();
+  return res.json() as Promise<{ removed: boolean }>;
 }
 
-// Reorder games in list
-export async function reorderListGames(
-  listId: string,
-  gameIds: string[]
-): Promise<{ reordered: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/reorder`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gameIds }),
-  });
+export async function reorderListGames(listId: string, gameIds: string[]): Promise<{ reordered: boolean }> {
+  const res = await api["game-lists"][":listId"].reorder.$patch({ param: { listId }, json: { gameIds } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to reorder games");
   }
-  return res.json();
+  return res.json() as Promise<{ reordered: boolean }>;
 }
 
-// Upload cover image for list
-export async function uploadListCover(
-  listId: string,
-  file: File
-): Promise<{ coverUrl: string; key: string }> {
+// FormData upload — not supported by the Hono RPC client
+export async function uploadListCover(listId: string, file: File): Promise<{ coverUrl: string; key: string }> {
   const formData = new FormData();
   formData.append("cover", file);
-
-  const res = await fetch(`/api/game-lists/${listId}/cover`, {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(`/api/game-lists/${listId}/cover`, { method: "POST", body: formData });
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.error || "Failed to upload cover");
@@ -317,41 +256,32 @@ export async function uploadListCover(
   return res.json();
 }
 
-// Remove cover image from list
-export async function removeListCover(
-  listId: string
-): Promise<{ removed: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/cover`, {
-    method: "DELETE",
-  });
+export async function removeListCover(listId: string): Promise<{ removed: boolean }> {
+  const res = await api["game-lists"][":listId"].cover.$delete({ param: { listId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to remove cover");
   }
-  return res.json();
+  return res.json() as Promise<{ removed: boolean }>;
 }
 
-// Get cover URL for a list
 export function getListCoverUrl(listId: string): string {
   return `/api/game-lists/${listId}/cover`;
 }
 
-// Get saved lists
 async function getMySavedLists(offset = 0, limit = 20): Promise<PaginatedSavedGameListsResponse> {
-  const res = await fetch(`/api/game-lists/saved?offset=${offset}&limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch saved lists");
-  }
-  return res.json();
+  const res = await api["game-lists"].saved.$get({ query: { offset: String(offset), limit: String(limit) } });
+  if (!res.ok) throw new Error("Failed to fetch saved lists");
+  return res.json() as Promise<PaginatedSavedGameListsResponse>;
 }
 
 export const mySavedListsQueryOptions = queryOptions({
   queryKey: ['my-saved-lists'],
   queryFn: () => getMySavedLists(),
-  staleTime: 1000 * 60 * 5, // 5 minutes
+  staleTime: 1000 * 60 * 5,
 });
 
-export const mySavedListsInfiniteOptions = (limit: number = 20) => ({
+export const mySavedListsInfiniteOptions = (limit = 20) => ({
   queryKey: ['my-saved-lists'],
   queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getMySavedLists(pageParam, limit),
   initialPageParam: 0,
@@ -359,27 +289,21 @@ export const mySavedListsInfiniteOptions = (limit: number = 20) => ({
   staleTime: 1000 * 60 * 5,
 });
 
-// Get popular public lists
 async function getPopularLists(limit = 6): Promise<{ lists: PopularGameListSummary[] }> {
-  const res = await fetch(`/api/game-lists/popular?limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch popular lists");
-  }
-  return res.json();
+  const res = await api["game-lists"].popular.$get({ query: { limit: String(limit) } });
+  if (!res.ok) throw new Error("Failed to fetch popular lists");
+  return res.json() as Promise<{ lists: PopularGameListSummary[] }>;
 }
 
 export const popularListsQueryOptions = queryOptions({
   queryKey: ['popular-lists'],
   queryFn: () => getPopularLists(),
-  staleTime: 1000 * 60 * 5, // 5 minutes
+  staleTime: 1000 * 60 * 5,
 });
 
-// Get public lists containing a specific game
 async function getPublicListsForGame(gameId: string, limit = 4): Promise<{ lists: PopularGameListSummary[]; totalCount: number }> {
   const res = await fetch(`/api/game-lists/game/${gameId}/public-lists?limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch public lists for game");
-  }
+  if (!res.ok) throw new Error("Failed to fetch public lists for game");
   return res.json();
 }
 
@@ -387,45 +311,36 @@ export const publicListsForGameQueryOptions = (gameId: string) =>
   queryOptions({
     queryKey: ['public-lists-for-game', gameId],
     queryFn: () => getPublicListsForGame(gameId),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-// Check if a list is saved
 async function getListSaved(listId: string): Promise<{ isSaved: boolean; saveCount: number }> {
-  const res = await fetch(`/api/game-lists/${listId}/save`);
-  if (!res.ok) {
-    throw new Error("Failed to check list saved status");
-  }
-  return res.json();
+  const res = await api["game-lists"][":listId"].save.$get({ param: { listId } });
+  if (!res.ok) throw new Error("Failed to check list saved status");
+  return res.json() as Promise<{ isSaved: boolean; saveCount: number }>;
 }
 
 export const listSavedQueryOptions = (listId: string) =>
   queryOptions({
     queryKey: ['list-saved', listId],
     queryFn: () => getListSaved(listId),
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   });
 
-// Save a list
 export async function saveList(listId: string): Promise<{ saved: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/save`, {
-    method: "POST",
-  });
+  const res = await api["game-lists"][":listId"].save.$post({ param: { listId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to save list");
   }
-  return res.json();
+  return res.json() as Promise<{ saved: boolean }>;
 }
 
-// Unsave a list
 export async function unsaveList(listId: string): Promise<{ unsaved: boolean }> {
-  const res = await fetch(`/api/game-lists/${listId}/save`, {
-    method: "DELETE",
-  });
+  const res = await api["game-lists"][":listId"].save.$delete({ param: { listId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to unsave list");
   }
-  return res.json();
+  return res.json() as Promise<{ unsaved: boolean }>;
 }

@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 export type FollowUser = {
   id: string;
@@ -19,60 +20,48 @@ export type FollowCounts = {
   followingCount: number;
 };
 
-// Toggle follow/unfollow
 export async function toggleFollow(userId: string): Promise<{ following: boolean }> {
-  const res = await fetch(`/api/follows/${userId}`, {
-    method: "POST",
-  });
+  const res = await api.follows[":userId"].$post({ param: { userId } });
   if (!res.ok) {
-    const error = await res.json();
+    const error = await res.json() as { error?: string };
     throw new Error(error.error || "Failed to toggle follow");
   }
-  return res.json();
+  return res.json() as Promise<{ following: boolean }>;
 }
 
-// Check if current user follows target
 async function checkFollowStatus(userId: string): Promise<{ following: boolean }> {
-  const res = await fetch(`/api/follows/check/${userId}`);
-  if (!res.ok) {
-    throw new Error("Failed to check follow status");
-  }
-  return res.json();
+  const res = await api.follows.check[":userId"].$get({ param: { userId } });
+  if (!res.ok) throw new Error("Failed to check follow status");
+  return res.json() as Promise<{ following: boolean }>;
 }
 
 export const followStatusQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ['follow-status', userId],
     queryFn: () => checkFollowStatus(userId),
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   });
 
-// Get follower/following counts
 async function getFollowCounts(userId: string): Promise<FollowCounts> {
-  const res = await fetch(`/api/follows/${userId}/counts`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch follow counts");
-  }
-  return res.json();
+  const res = await api.follows[":userId"].counts.$get({ param: { userId } });
+  if (!res.ok) throw new Error("Failed to fetch follow counts");
+  return res.json() as Promise<FollowCounts>;
 }
 
 export const followCountsQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ['follow-counts', userId],
     queryFn: () => getFollowCounts(userId),
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   });
 
-// Get followers list (paginated)
 async function getFollowers(userId: string, offset = 0, limit = 20): Promise<FollowListResponse> {
   const res = await fetch(`/api/follows/${userId}/followers?offset=${offset}&limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch followers");
-  }
+  if (!res.ok) throw new Error("Failed to fetch followers");
   return res.json();
 }
 
-export const followersInfiniteOptions = (userId: string, limit: number = 20) => ({
+export const followersInfiniteOptions = (userId: string, limit = 20) => ({
   queryKey: ['followers', userId],
   queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getFollowers(userId, pageParam, limit),
   initialPageParam: 0,
@@ -80,16 +69,13 @@ export const followersInfiniteOptions = (userId: string, limit: number = 20) => 
   staleTime: 1000 * 60,
 });
 
-// Get following list (paginated)
 async function getFollowing(userId: string, offset = 0, limit = 20): Promise<FollowListResponse> {
   const res = await fetch(`/api/follows/${userId}/following?offset=${offset}&limit=${limit}`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch following");
-  }
+  if (!res.ok) throw new Error("Failed to fetch following");
   return res.json();
 }
 
-export const followingInfiniteOptions = (userId: string, limit: number = 20) => ({
+export const followingInfiniteOptions = (userId: string, limit = 20) => ({
   queryKey: ['following', userId],
   queryFn: ({ pageParam = 0 }: { pageParam?: number }) => getFollowing(userId, pageParam, limit),
   initialPageParam: 0,

@@ -1,78 +1,83 @@
-// import { hc } from 'hono/client';
-// import { type ApiRoutes } from "../../../server/app"; // should be @server/app but viteconfig and tsconfig code doesnt work properly
-// const client = hc<ApiRoutes>('/');
-// export const api = client.api;
-// Hono client error causing it to error out
+import { hc } from 'hono/client';
+import type { ApiRoutes } from "../../../server/app"; // should be @server/app but viteconfig and tsconfig code doesnt work properly
+const client = hc<ApiRoutes>('/');
+export const api = client.api;
+
 import { queryOptions } from "@tanstack/react-query";
 
 import { type CreateExpense} from "../../../server/sharedTypes";
 import type { ProfileTheme } from "../../../server/lib/profileThemeConstants";
 
+// Explicit account type derived from the users table schema.
+// Hono's middleware response unions collapse the inferred type, so we
+// declare it once here and reuse it in getDbUser's return annotation.
+export type DbAccount = {
+  id: string;
+  kindeId: string;
+  username: string;
+  displayName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  role: "free" | "pro" | "admin";
+  isPublic: boolean;
+  profileTheme: ProfileTheme | null;
+  suspendedAt: string | null;
+  createdAt: string;
+};
+
 async function getCurrentUser() {
-    const res = await fetch("/api/me")
-    // const res = await api.me.$get() // not working because of error caused by hono client
+    const res = await api.me.$get()
     if(!res.ok){
       throw new Error("Server error");
     }
-    const data = await res.json()
-    return data
+    return res.json()
   }
-async function getDbUser() {
-    const res = await fetch("/api/user/account")
+
+async function getDbUser(): Promise<{ account: DbAccount | null }> {
+    const res = await api.user.account.$get()
     if (res.status === 401) {
       return { account: null };
     }
     if(!res.ok){
       throw new Error("Server error");
     }
-    const data = await res.json()
-    return data
+    const data = await res.json() as { account: DbAccount }
+    return { account: data.account };
   }
 
 export const userQueryOptions = queryOptions({
     queryKey: ['get-current-user'],
     queryFn: getCurrentUser,
-    staleTime: Infinity // Tells react when the cache data is stale - specifically the user profile so it doesn't load each time user goes to the profile tab
+    staleTime: Infinity
   })
-  export const dbUserQueryOptions = queryOptions({
+
+export const dbUserQueryOptions = queryOptions({
     queryKey: ['get-db-user'],
     queryFn: getDbUser,
-    staleTime: Infinity // Tells react when the cache data is stale - specifically the user profile so it doesn't load each time user goes to the profile tab
+    staleTime: Infinity
   })
 
 export async function getAllExpenses() {
-  // await new Promise((r) => setTimeout(r, 2000)) // fake delay to test skeleton
-  const res = await fetch("api/expenses")
-
-  // client will let us use RPC instead - helps make everything typesafe
-  // const res = await api.expenses.$get() // not working because of error caused by hono client
+  const res = await api.expenses.$get()
   if(!res.ok){
     throw new Error("Server error");
   }
-  const data = await res.json()
-  return data
+  return res.json()
 }
 
 export const getAllExpensesQueryOptions = queryOptions({
-  queryKey: ['get-all-expenses'], 
+  queryKey: ['get-all-expenses'],
   queryFn: getAllExpenses,
   staleTime: 1000 * 60 * 5
 })
 
-export async function createExpense({value} : {value: CreateExpense}){ 
+export async function createExpense({value} : {value: CreateExpense}){
   await new Promise((r) => setTimeout(r, 3000))
-  const res = await fetch("/api/expenses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(value),
-  })
+  const res = await api.expenses.$post({ json: value })
   if(!res.ok){
     throw new Error("Error while submitting")
   }
-  const newExpense = await res.json();
-  return newExpense;
+  return res.json()
 }
 
 export const loadingCreateExpenseQueryOptions = queryOptions<{
@@ -96,14 +101,14 @@ export type PublicUserProfile = {
 }
 
 async function getPublicUserProfile(userId: string): Promise<PublicUserProfile> {
-  const res = await fetch(`/api/user/profile/${userId}`)
+  const res = await api.user.profile[":userId"].$get({ param: { userId } })
   if (!res.ok) {
     if (res.status === 404) {
       throw new Error("User not found")
     }
     throw new Error("Server error")
   }
-  const data = await res.json()
+  const data = await res.json() as { user: PublicUserProfile }
   return data.user
 }
 
@@ -115,15 +120,11 @@ export const publicUserProfileQueryOptions = (userId: string) =>
   })
 
 export async function deleteExpense({id}: {id: number}) {
-  // await new Promise((r) => setTimeout(r, 3000))
-  const res = await fetch(`/api/expenses/${id}`, {
-    method: "DELETE",
-  });
+  const res = await api.expenses[":id{[0-9]+}"].$delete({ param: { id: String(id) } });
   if (!res.ok) {
     throw new Error("Server error");
   }
-  const data = await res.json();
-  return data;
+  return res.json()
 }
 
 // App Settings
@@ -134,11 +135,11 @@ export type AppSettings = {
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
-  const res = await fetch("/api/settings");
+  const res = await api.settings.$get();
   if (!res.ok) {
     throw new Error("Failed to fetch settings");
   }
-  return res.json();
+  return res.json() as Promise<AppSettings>;
 }
 
 export async function updateUserProfile(data: {
@@ -146,11 +147,9 @@ export async function updateUserProfile(data: {
   bio?: string | null;
   isPublic?: boolean;
   profileTheme?: ProfileTheme | null;
-}): Promise<{ account: { displayName: string | null; bio: string | null; isPublic: boolean; profileTheme: ProfileTheme | null } }> {
-  const res = await fetch("/api/user/profile", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+}) {
+  const res = await api.user.profile.$patch({
+    json: data as Parameters<typeof api.user.profile.$patch>[0]["json"]
   });
   if (!res.ok) {
     throw new Error("Failed to update profile");
@@ -159,13 +158,7 @@ export async function updateUserProfile(data: {
 }
 
 export async function updateAppSetting(key: string, value: unknown): Promise<void> {
-  const res = await fetch("/api/admin/settings", {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ key, value }),
-  });
+  const res = await api.admin.settings.$patch({ json: { key, value } });
   if (!res.ok) {
     throw new Error("Failed to update setting");
   }
