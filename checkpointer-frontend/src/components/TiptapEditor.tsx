@@ -16,7 +16,14 @@ import {
   Undo2,
   Redo2,
   Loader2,
+  ChevronDown,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { GameEmbed } from '@/components/extensions/GameEmbed'
 import { ListEmbed } from '@/components/extensions/ListEmbed'
 import { uploadPostImage, type Embeds } from '@/lib/blogPostsQuery'
@@ -220,20 +227,34 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
           onChange={handleImageUpload}
         />
 
-        <ToolbarButton
-          onClick={() => { setShowGameInput(!showGameInput); setShowListInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
-          active={showGameInput}
-          title="Embed game"
-        >
-          <Gamepad2 className="w-4 h-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => { setShowListInput(!showListInput); setShowGameInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
-          active={showListInput}
-          title="Embed list"
-        >
-          <ListPlus className="w-4 h-4" />
-        </ToolbarButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors text-xs ${
+              showGameInput || showListInput
+                ? 'bg-foreground/10 text-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+            }`}
+          >
+            <span>Embed</span>
+            <ChevronDown className="w-3 h-3" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="rounded border border-border shadow-sm min-w-32 bg-background">
+            <DropdownMenuItem
+              onClick={() => { setShowGameInput(true); setShowListInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
+              className="focus:bg-foreground/10 focus:text-foreground"
+            >
+              <Gamepad2 className="w-4 h-4" />
+              Game
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => { setShowListInput(true); setShowGameInput(false); setGameSearchQuery(''); setListSearchQuery('') }}
+              className="focus:bg-foreground/10 focus:text-foreground"
+            >
+              <ListPlus className="w-4 h-4" />
+              List
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="w-px h-5 bg-border/50 mx-1" />
 
@@ -269,6 +290,7 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
             showDropdown={!!debouncedGameSearch}
             autoFocus
             onEscape={() => { setShowGameInput(false); setGameSearchQuery('') }}
+            onClose={() => { setShowGameInput(false); setGameSearchQuery('') }}
           />
         </div>
       )}
@@ -287,6 +309,7 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
             showDropdown={!!debouncedListSearch}
             autoFocus
             onEscape={() => { setShowListInput(false); setListSearchQuery('') }}
+            onClose={() => { setShowListInput(false); setListSearchQuery('') }}
           />
         </div>
       )}
@@ -347,7 +370,7 @@ function ToolbarButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`p-1.5 rounded transition-colors ${
+      className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors ${
         active
           ? 'bg-foreground/10 text-foreground'
           : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'

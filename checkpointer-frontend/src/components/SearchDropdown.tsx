@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +24,7 @@ interface SearchDropdownProps {
   className?: string
   autoFocus?: boolean
   onEscape?: () => void
+  onClose?: () => void
   showDropdown?: boolean
 }
 
@@ -41,6 +42,7 @@ export function SearchDropdown({
   className,
   autoFocus,
   onEscape,
+  onClose,
   showDropdown: showDropdownProp,
 }: SearchDropdownProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -57,6 +59,7 @@ export function SearchDropdown({
       onBlurCapture={(e) => {
         if (!containerRef.current?.contains(e.relatedTarget as Node)) {
           setHasFocus(false)
+          onEscape?.()
         }
       }}
     >
@@ -74,6 +77,17 @@ export function SearchDropdown({
         className="w-full bg-input border-4 border-border text-foreground py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-border text-sm rounded-none"
       />
       <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+      {onClose && (
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); onClose() }}
+          className="absolute right-3 top-2.5 text-muted-foreground hover:bg-red-400 hover:text-foreground transition-colors"
+          tabIndex={-1}
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
 
       {showDropdown && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden max-h-64 overflow-y-auto z-50">
