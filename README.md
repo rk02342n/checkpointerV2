@@ -298,6 +298,91 @@ A weekly cron job runs every Sunday at 4:00 AM UTC via `.github/workflows/igdb-s
 
 When running against Neon, use the **direct** (non-pooler) connection string. The pooler connection drops long-lived connections. The sync script configures its own DB client with TCP keepalive to prevent disconnects.
 
+## Frontend Patterns
+
+### Profile Theming
+
+Profile pages support full visual customization (font family, font color, accent color, card backgrounds). The theming helpers live in `checkpointer-frontend/src/lib/profileTheme.ts`.
+
+#### Applying theming to a new profile page
+
+Two helpers apply theming to the two distinct zones:
+
+```tsx
+import {
+  getProfileContentStyle,
+  getProfileHeaderStyle,
+} from "@/lib/profileTheme";
+
+// Content container — must also have the `profile-themed-content` class
+<div
+  className="profile-themed-content ..."
+  style={getProfileContentStyle(theme)}
+>
+  {/* Header banner */}
+  <div style={getProfileHeaderStyle(theme, "rgb(96 165 250 / 0.4)")}>
+    ...
+  </div>
+
+  {/* Rest of page content */}
+</div>
+```
+
+| Helper | Sets | Used on |
+|---|---|---|
+| `getProfileContentStyle(theme)` | Background color, font family, font size, `--foreground`, `--muted-foreground`, `--card`, `--popover`, etc. | Outermost content container |
+| `getProfileHeaderStyle(theme, fallbackBg)` | Background color, `--foreground`/`--muted-foreground` scoped to header | Header banner element only |
+
+The `fallbackBg` argument to `getProfileHeaderStyle` is used when the user hasn't set a custom header color.
+
+> **Important:** The `profile-themed-content` class **must** be on the content container for the `profile-accent` and `profile-card` utility classes to work. Those classes are CSS-scoped to `.profile-themed-content .profile-accent` and `.profile-themed-content .profile-card`, so they have no effect outside of it.
+
+#### Opting specific components out of theming — `ResetProfileTheme`
+
+Some components inside the profile page should **not** inherit certain theme properties. For example, chart tooltips should always have readable text even if the user chose a white `contentFontColor`, and code blocks should use a monospace font regardless of the user's chosen font family.
+
+Some components inside the profile page should **not** inherit certain theme properties. For example, chart tooltips should always have readable text even if the user chose a white `contentFontColor`, and code blocks should use a monospace font regardless of the user's chosen font family.
+
+Use `ResetProfileTheme` (`src/components/profile/ResetProfileTheme.tsx`) to selectively opt out of specific properties:
+
+```tsx
+import { ResetProfileTheme } from "@/components/profile/ResetProfileTheme";
+
+// Reset color variables only (default) — tooltip use case
+<ResetProfileTheme>
+  <MyComponent />
+</ResetProfileTheme>
+
+// Reset font family only — keep theme colors, switch back to system font
+<ResetProfileTheme colors={false} font>
+  <code>...</code>
+</ResetProfileTheme>
+
+// Reset both colors and font
+<ResetProfileTheme font>
+  <MyComponent />
+</ResetProfileTheme>
+```
+
+| Prop | Default | Effect |
+|---|---|---|
+| `colors` | `true` | Resets `--foreground`, `--background`, `--muted-foreground`, etc. to light-mode defaults |
+| `font` | `false` | Resets `font-family` to `system-ui, sans-serif` |
+
+Note: `font-family` is applied as an inline style (not a CSS variable), so it continues to cascade unless explicitly overridden with `font`. The `colors` prop has no effect on font family.
+
+For **Recharts tooltips**, use the function form of the `content` prop so recharts data props flow through correctly:
+
+```tsx
+<ChartTooltip
+  content={(props) => (
+    <ResetProfileTheme>
+      <ChartTooltipContent {...props} />
+    </ResetProfileTheme>
+  )}
+/>
+```
+
 ## Performance Optimizations
 
 - Profile tabs optimized for faster rendering

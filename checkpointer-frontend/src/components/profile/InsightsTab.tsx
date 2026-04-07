@@ -30,6 +30,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { ResetProfileTheme } from "@/components/profile/ResetProfileTheme";
 
 type Props = { themed: boolean };
 
@@ -183,16 +184,17 @@ function GamingHabitsSection({
               />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
               <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(value: unknown) => {
-                      const str = String(value);
-                      const [year, month] = str.split("-");
-                      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                      return `${months[parseInt(month, 10) - 1]} ${year}`;
-                    }}
-                  />
-                }
+                content={(props) => (
+                    <ChartTooltipContent
+                      {...props}
+                      labelFormatter={(value: unknown) => {
+                        const str = String(value);
+                        const [year, month] = str.split("-");
+                        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                        return `${months[parseInt(month, 10) - 1]} ${year}`;
+                      }}
+                    />
+                )}
               />
               <Bar
                 dataKey="count"
@@ -258,7 +260,13 @@ function GenreBreakdownSection({
         {/* Pie chart */}
         <ChartContainer config={genreConfig} className="h-[250px] w-full md:w-1/2">
           <PieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+            <ChartTooltip
+              content={(props) => (
+                <ResetProfileTheme>
+                  <ChartTooltipContent {...props} nameKey="name" />
+                </ResetProfileTheme>
+              )}
+            />
             <Pie
               data={pieData}
               dataKey="value"
@@ -393,11 +401,14 @@ function ReviewStatsSection({
               />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
               <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(value: unknown) => `${value} Star${String(value) === "1" ? "" : "s"}`}
-                  />
-                }
+                content={(props) => (
+                  <ResetProfileTheme>
+                    <ChartTooltipContent
+                      {...props}
+                      labelFormatter={(value: unknown) => `${value} Star${String(value) === "1" ? "" : "s"}`}
+                    />
+                  </ResetProfileTheme>
+                )}
               />
               <Bar
                 dataKey="count"
