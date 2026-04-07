@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2 } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3 } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -37,8 +37,9 @@ import {
 import Navbar from '@/components/Navbar'
 import { useSettings } from '@/lib/settingsContext'
 import { BlogPostCard } from '@/components/BlogPostCard'
+import { InsightsTab } from '@/components/profile/InsightsTab'
 
-const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts'] as const
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts', 'insights'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
 
 export const Route = createFileRoute('/_authenticated/profile')({
@@ -951,6 +952,17 @@ function Profile() {
                 Posts ({blogPosts.length})
               </button>
             )}
+            <button
+              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'insights' }); setActiveTab('insights'); }}
+              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
+                activeTab === 'insights'
+                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
+                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Insights
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -1245,6 +1257,11 @@ function Profile() {
               )}
             </div>
             )}
+
+            {/* Insights Tab */}
+            <div className={activeTab !== 'insights' ? 'hidden' : ''}>
+              <InsightsTab themed={themed} />
+            </div>
           </div>
         </div>
       </div>
