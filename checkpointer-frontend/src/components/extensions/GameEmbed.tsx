@@ -80,6 +80,7 @@ export const GameEmbed = Node.create({
   name: 'gameEmbed',
   group: 'block',
   atom: true,
+  draggable: true,
 
   addAttributes() {
     return {

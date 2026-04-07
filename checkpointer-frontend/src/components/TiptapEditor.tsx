@@ -17,6 +17,10 @@ import {
   Redo2,
   Loader2,
   ChevronDown,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -24,6 +28,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import TextAlign from '@tiptap/extension-text-align'
 import { GameEmbed } from '@/components/extensions/GameEmbed'
 import { ListEmbed } from '@/components/extensions/ListEmbed'
 import { uploadPostImage, type Embeds } from '@/lib/blogPostsQuery'
@@ -48,6 +53,7 @@ export function getTiptapExtensions(options?: { placeholder?: string }) {
     Placeholder.configure({
       placeholder: options?.placeholder ?? 'Start writing...',
     }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
     GameEmbed,
     ListEmbed,
   ]
@@ -106,6 +112,10 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
       h3: e.isActive('heading', { level: 3 }),
       canUndo: e.can().undo(),
       canRedo: e.can().redo(),
+      alignLeft: e.isActive({ textAlign: 'left' }),
+      alignCenter: e.isActive({ textAlign: 'center' }),
+      alignRight: e.isActive({ textAlign: 'right' }),
+      alignJustify: e.isActive({ textAlign: 'justify' }),
     }),
   })
 
@@ -208,6 +218,37 @@ export function TiptapToolbar({ editor, postId }: TiptapToolbarProps) {
           title="Heading 3"
         >
           <Heading3 className="w-4 h-4" />
+        </ToolbarButton>
+
+        <div className="w-px h-5 bg-border/50 mx-1" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          active={activeState.alignLeft}
+          title="Align left"
+        >
+          <AlignLeft className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          active={activeState.alignCenter}
+          title="Align center"
+        >
+          <AlignCenter className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          active={activeState.alignRight}
+          title="Align right"
+        >
+          <AlignRight className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          active={activeState.alignJustify}
+          title="Justify"
+        >
+          <AlignJustify className="w-4 h-4" />
         </ToolbarButton>
 
         <div className="w-px h-5 bg-border/50 mx-1" />
@@ -367,6 +408,7 @@ function ToolbarButton({
 }) {
   return (
     <button
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       disabled={disabled}
       title={title}
