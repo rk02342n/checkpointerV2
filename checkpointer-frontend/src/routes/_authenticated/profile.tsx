@@ -13,6 +13,7 @@ import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
 import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
+import { ProfileTabSidebar, type ProfileTabItem } from '@/components/profile/ProfileTabSidebar'
 import { ListsSection } from '@/components/ListsSection'
 import { GameListCard } from '@/components/GameListCard'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
@@ -646,6 +647,16 @@ function Profile() {
   const user = data.user
   const initials = `${user.given_name?.[0] || ''}${user.family_name?.[0] || ''}`.toUpperCase()
 
+  const profileTabs: ProfileTabItem[] = [
+    { id: 'reviews', label: 'Reviews', icon: Heart, count: totalReviewCount },
+    { id: 'history', label: 'Play History', icon: History, count: totalHistoryCount },
+    { id: 'wishlist', label: 'Want to Play', icon: CalendarHeart, count: totalWishlistCount },
+    { id: 'lists', label: 'Lists', icon: ListPlus, count: totalListsCount },
+    { id: 'saved', label: 'Saved', icon: Bookmark, count: totalSavedCount },
+    ...(showBlogPosts ? [{ id: 'posts', label: 'Posts', icon: FileText, count: blogPosts.length } as ProfileTabItem] : []),
+    { id: 'insights', label: 'Insights', icon: BarChart3 },
+  ]
+
   return (
     <div className="min-h-screen bg-background selection:bg-orange-300/30" style={dbUserData?.account?.profileTheme?.backgroundColor ? { backgroundColor: dbUserData.account.profileTheme.backgroundColor } : undefined}>
       <Navbar />
@@ -881,92 +892,19 @@ function Profile() {
         )}
 
         {/* Tabbed Content Section */}
-        <div className="bg-transparent border-0 border-border">
-          {/* Tab Headers */}
-          <div className="flex border-4 border-border" style={themed && dbUserData?.account?.profileTheme?.headerFontColor ? { "--foreground": dbUserData.account.profileTheme.headerFontColor } as React.CSSProperties : undefined}>
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'reviews' }); setActiveTab('reviews'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 ${
-                activeTab === 'reviews'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <Heart className="w-4 h-4" />
-              Reviews ({totalReviewCount})
-            </button>
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'history' }); setActiveTab('history'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'history'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <History className="w-4 h-4" />
-              Play History ({totalHistoryCount})
-            </button>
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'wishlist' }); setActiveTab('wishlist'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'wishlist'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <CalendarHeart className="w-4 h-4" />
-              Want to Play ({totalWishlistCount})
-            </button>
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'lists' }); setActiveTab('lists'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'lists'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <ListPlus className="w-4 h-4" />
-              Lists ({totalListsCount})
-            </button>
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'saved' }); setActiveTab('saved'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'saved'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <Bookmark className="w-4 h-4" />
-              Saved ({totalSavedCount})
-            </button>
-            {showBlogPosts && (
-              <button
-                onClick={() => { posthog.capture('profile_tab_changed', { tab: 'posts' }); setActiveTab('posts'); }}
-                className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                  activeTab === 'posts'
-                    ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                    : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                Posts ({blogPosts.length})
-              </button>
-            )}
-            <button
-              onClick={() => { posthog.capture('profile_tab_changed', { tab: 'insights' }); setActiveTab('insights'); }}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border-l-4 border-border ${
-                activeTab === 'insights'
-                  ? `${themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'} text-foreground`
-                  : `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              Insights
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
+        <ProfileTabSidebar
+          tabs={profileTabs}
+          activeTab={activeTab}
+          layout='bar'
+          onTabChange={(tab) => {
+            posthog.capture('profile_tab_changed', { tab })
+            setActiveTab(tab as ProfileTab)
+          }}
+          themed={themed}
+          themeStyle={themed && dbUserData?.account?.profileTheme?.headerFontColor
+            ? { "--foreground": dbUserData.account.profileTheme.headerFontColor } as React.CSSProperties
+            : undefined}
+        >
             {/* Reviews Tab */}
             <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
               {/* Reviews Skeleton */}
@@ -1262,8 +1200,7 @@ function Profile() {
             <div className={activeTab !== 'insights' ? 'hidden' : ''}>
               <InsightsTab themed={themed} />
             </div>
-          </div>
-        </div>
+        </ProfileTabSidebar>
       </div>
 
       {/* Delete Account Confirmation Dialog */}
