@@ -297,9 +297,16 @@ function PublicProfile() {
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
         {/* Profile Header */}
         <div
-          className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
+          className="relative border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
           style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
+          {user?.profileGifUrl && (
+            <img
+              src={`/api/user/profile-gif/${user.id}?v=${encodeURIComponent(user.profileGifUrl)}`}
+              alt="Profile GIF"
+              className="absolute top-2 right-2 w-[96px] h-[96px] object-cover border-2 border-border rounded-sm hidden md:block"
+            />
+          )}
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <Avatar className="w-24 h-24 border-4 border-border">

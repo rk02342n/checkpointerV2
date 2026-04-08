@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "profile_gif_url" text;

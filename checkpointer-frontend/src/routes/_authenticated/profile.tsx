@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut, ImagePlus } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -91,6 +91,7 @@ function Profile() {
     isCurrent: boolean
   }>({ checking: false, available: null, error: null, isCurrent: false })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const gifInputRef = useRef<HTMLInputElement>(null)
   const { isPending, isError, data } = useQuery(userQueryOptions)
   const { isPending: isUserPending, data: dbUserData } = useQuery(dbUserQueryOptions)
 
@@ -195,6 +196,45 @@ function Profile() {
     onError: (error) => {
       toast.error(error.message || 'Failed to upload avatar')
     },
+  })
+
+  // Profile GIF upload mutation
+  const gifMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append('profileGif', file)
+      const res = await fetch('/api/user/profile-gif', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to upload GIF')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      posthog.capture('profile_gif_uploaded')
+      toast.success('Profile GIF updated!')
+      queryClient.invalidateQueries({ queryKey: ['get-db-user'] })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to upload GIF')
+    },
+  })
+
+  // Remove profile GIF mutation
+  const removeGifMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/user/profile-gif', { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to remove GIF')
+      return res.json()
+    },
+    onSuccess: () => {
+      toast.success('Profile GIF removed')
+      queryClient.invalidateQueries({ queryKey: ['get-db-user'] })
+    },
+    onError: () => toast.error('Failed to remove GIF'),
   })
 
   // Username update mutation
@@ -353,6 +393,24 @@ function Profile() {
     }
 
     e.target.value = '' // Reset input
+  }
+
+  const handleGifChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== 'image/gif') {
+      toast.error('Only GIF files are allowed.')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('GIF too large. Max size is 2MB.')
+      return
+    }
+
+    gifMutation.mutate(file)
+    e.target.value = ''
   }
 
   // Get user's reviews - using the database user ID (not Kinde ID)
@@ -672,9 +730,16 @@ function Profile() {
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
         {/* Profile Header */}
         <div
-          className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
+          className="relative border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
           style={getProfileHeaderStyle(dbUserData?.account?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
+          {dbUserData?.account?.profileGifUrl && (
+            <img
+              src={`/api/user/profile-gif/${dbUserData.account.id}?v=${encodeURIComponent(dbUserData.account.profileGifUrl)}`}
+              alt="Profile GIF"
+              className="absolute top-8 right-8 w-[96px] h-[96px] object-cover border-2 border-border rounded-sm hidden md:block"
+            />
+          )}
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
             <input
@@ -682,6 +747,13 @@ function Profile() {
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={handleFileChange}
+              className="hidden"
+            />
+            <input
+              ref={gifInputRef}
+              type="file"
+              accept="image/gif"
+              onChange={handleGifChange}
               className="hidden"
             />
             <button
@@ -859,6 +931,26 @@ function Profile() {
                         <FileText className="w-4 h-4" />
                       )}
                       New Post
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem
+                    onClick={() => gifInputRef.current?.click()}
+                    disabled={gifMutation.isPending}
+                  >
+                    {gifMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="w-4 h-4" />
+                    )}
+                    {dbUserData?.account?.profileGifUrl ? 'Change profile GIF' : 'Add GIF to profile'}
+                  </DropdownMenuItem>
+                  {dbUserData?.account?.profileGifUrl && (
+                    <DropdownMenuItem
+                      onClick={() => removeGifMutation.mutate()}
+                      disabled={removeGifMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove profile GIF
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />

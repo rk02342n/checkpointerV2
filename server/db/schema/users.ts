@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   displayName: text("display_name"),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
+  profileGifUrl: text("profile_gif_url"),
   role: userRoleEnum("role").default("free").notNull(),
   isPublic: boolean("is_public").default(true).notNull(),
   suspendedAt: timestamp("suspended_at"),
