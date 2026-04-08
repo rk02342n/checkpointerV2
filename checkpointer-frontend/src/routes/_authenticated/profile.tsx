@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3 } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { ReviewCard, SessionCard, WishlistCard, type Review } from '@/components/profile/ProfileCards'
 import { ProfileTabSidebar, type ProfileTabItem } from '@/components/profile/ProfileTabSidebar'
 import { ListsSection } from '@/components/ListsSection'
+import { CreateListModal } from '@/components/CreateListModal'
 import { GameListCard } from '@/components/GameListCard'
 import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { myGameListsInfiniteOptions, mySavedListsInfiniteOptions, type SavedGameListSummary } from '@/lib/gameListsQuery'
@@ -26,6 +27,13 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   Dialog,
@@ -72,6 +80,7 @@ function Profile() {
   )
   const [isEditingUsername, setIsEditingUsername] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showCreateListModal, setShowCreateListModal] = useState(false)
   const [showStopPlayingDialog, setShowStopPlayingDialog] = useState(false)
   const [showFollowDialog, setShowFollowDialog] = useState<'followers' | 'following' | null>(null)
   const [newUsername, setNewUsername] = useState('')
@@ -814,36 +823,53 @@ function Profile() {
             </div>
 
             {/* Account Actions */}
-            <div className="shrink-0 flex flex-col gap-2">
-              {showBlogPosts && (
-                <Button
-                  variant="outline"
-                  className="px-6 text-accent-foreground"
-                  onClick={() => createPostMutation.mutate()}
-                  disabled={createPostMutation.isPending}
+            <div className="shrink-0 self-end mt-auto">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 text-foreground hover:text-muted-foreground transition-colors cursor-pointer">
+                    <EllipsisVertical className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  style={{
+                    ...(dbUserData?.account?.profileTheme?.headerColor
+                      ? { backgroundColor: dbUserData.account.profileTheme.headerColor }
+                      : {}),
+                    ...(dbUserData?.account?.profileTheme?.headerFontColor
+                      ? { color: dbUserData.account.profileTheme.headerFontColor }
+                      : {}),
+                    ...(dbUserData?.account?.profileTheme?.fontFamily
+                      ? { fontFamily: `"${dbUserData.account.profileTheme.fontFamily}", system-ui, sans-serif` }
+                      : {}),
+                  } as React.CSSProperties}
                 >
-                  {createPostMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <FileText className="w-4 h-4" />
+                  <DropdownMenuItem onClick={() => setShowCreateListModal(true)}>
+                    <ListPlus className="w-4 h-4" />
+                    Create List
+                  </DropdownMenuItem>
+                  {showBlogPosts && (
+                    <DropdownMenuItem
+                      onClick={() => createPostMutation.mutate()}
+                      disabled={createPostMutation.isPending}
+                    >
+                      {createPostMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <FileText className="w-4 h-4" />
+                      )}
+                      New Post
+                    </DropdownMenuItem>
                   )}
-                  New Post
-                </Button>
-              )}
-              <Button
-                asChild
-                variant="destructive"
-                className="px-6"
-              >
-                <a href='/api/logout'>Logout</a>
-              </Button>
-              <Button
-                variant="outline"
-                className="px-6 text-rose-600 border-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:border-rose-400 dark:hover:bg-rose-950 dark:hover:text-rose-300"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                Delete Account
-              </Button>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href="/api/logout">
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -1203,6 +1229,12 @@ function Profile() {
             </div>
         </ProfileTabSidebar>
       </div>
+
+      {/* Create List Modal */}
+      <CreateListModal
+        open={showCreateListModal}
+        onOpenChange={setShowCreateListModal}
+      />
 
       {/* Delete Account Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
