@@ -895,7 +895,7 @@ function Profile() {
         <ProfileTabSidebar
           tabs={profileTabs}
           activeTab={activeTab}
-          layout='bar'
+          layout='sidebar'
           onTabChange={(tab) => {
             posthog.capture('profile_tab_changed', { tab })
             setActiveTab(tab as ProfileTab)

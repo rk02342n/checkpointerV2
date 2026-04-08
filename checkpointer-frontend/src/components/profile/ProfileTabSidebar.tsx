@@ -31,8 +31,8 @@ export function ProfileTabSidebar({
 
   if (layout === 'bar') {
     return (
-      <div className="border-4 border-border flex flex-col" style={themeStyle}>
-        <div className="flex divide-x-4 divide-border">
+      <div className="flex flex-col" style={themeStyle}>
+        <div className="flex divide-x-4">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -51,7 +51,7 @@ export function ProfileTabSidebar({
             )
           })}
         </div>
-        <div className="flex-1 min-w-0 p-6 border-t-4 border-border">
+        <div className="flex-1 min-w-0 p-6 border-0">
           {children}
         </div>
       </div>
@@ -59,8 +59,8 @@ export function ProfileTabSidebar({
   }
 
   return (
-    <div className="border-4 border-border flex" style={themeStyle}>
-      <div className="flex flex-col shrink-0 w-12 md:w-44 border-r-4 border-border divide-y-4 divide-border">
+    <div className="flex" style={themeStyle}>
+      <div className="flex flex-col shrink-0 w-12 md:w-44 self-start border-4 border-border divide-y-4 divide-border">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
