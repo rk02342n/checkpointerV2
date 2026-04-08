@@ -25,7 +25,7 @@ function Footer() {
 
 function RootComponent() {
   const { location } = useRouterState()
-  const hideFooter = location.pathname.includes('/blog-editor/') || location.pathname.includes('/blog/')
+  const hideFooter = location.pathname.includes('/blog-editor/') || location.pathname.includes('/blog/') || location.pathname === '/profile' || location.pathname.startsWith('/users/')
 
   return (
     <>
