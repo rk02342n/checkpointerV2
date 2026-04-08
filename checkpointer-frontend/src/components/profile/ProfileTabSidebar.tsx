@@ -20,6 +20,7 @@ interface ProfileTabSidebarProps {
   onTabChange: (tab: string) => void
   themed: boolean
   themeStyle?: React.CSSProperties
+  contentStyle?: React.CSSProperties
   layout?: 'sidebar' | 'bar'
   children: React.ReactNode
 }
@@ -30,6 +31,7 @@ export function ProfileTabSidebar({
   onTabChange,
   themed,
   themeStyle,
+  contentStyle,
   layout = 'sidebar',
   children,
 }: ProfileTabSidebarProps) {
@@ -71,7 +73,7 @@ export function ProfileTabSidebar({
   return (
     <div className="relative min-h-160" style={themeStyle}>
       {/* Mobile dropdown */}
-      <div className="md:hidden mb-4">
+      <div className="xl:hidden mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger className={`flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide border-4 border-border w-full ${activeClass} text-foreground`}>
             {ActiveIcon && <ActiveIcon className="w-4 h-4 shrink-0" />}
@@ -80,7 +82,7 @@ export function ProfileTabSidebar({
             </span>
             <ChevronDown className="w-4 h-4 ml-auto" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)]">
+          <DropdownMenuContent align="start" className={`w-[var(--radix-dropdown-menu-trigger-width)] ${themed ? 'profile-themed-content' : ''}`} style={contentStyle}>
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
@@ -101,7 +103,7 @@ export function ProfileTabSidebar({
       </div>
 
       {/* Desktop sidebar — positioned outside the content flow */}
-      <div className="hidden md:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-4 border-border divide-y-4 divide-border">
+      <div className="hidden xl:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-4 border-border divide-y-4 divide-border">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (

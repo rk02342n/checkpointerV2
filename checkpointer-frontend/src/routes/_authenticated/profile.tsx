@@ -904,6 +904,7 @@ function Profile() {
           themeStyle={themed && dbUserData?.account?.profileTheme?.headerFontColor
             ? { "--foreground": dbUserData.account.profileTheme.headerFontColor } as React.CSSProperties
             : undefined}
+          contentStyle={themed ? getProfileContentStyle(dbUserData?.account?.profileTheme) : undefined}
         >
             {/* Reviews Tab */}
             <div className={activeTab !== 'reviews' ? 'hidden' : ''}>

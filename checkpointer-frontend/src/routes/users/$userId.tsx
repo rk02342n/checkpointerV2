@@ -406,6 +406,7 @@ function PublicProfile() {
           themeStyle={themed && profileData?.profileTheme?.headerFontColor
             ? { "--foreground": profileData.profileTheme.headerFontColor } as React.CSSProperties
             : undefined}
+          contentStyle={themed ? getProfileContentStyle(profileData?.profileTheme) : undefined}
         >
             {/* Reviews Tab */}
             <div className={activeTab !== 'reviews' ? 'hidden' : ''}>
