@@ -304,7 +304,7 @@ function PublicProfile() {
             <img
               src={`/api/user/profile-gif/${user.id}?v=${encodeURIComponent(user.profileGifUrl)}`}
               alt="Profile GIF"
-              className="absolute top-2 right-2 w-[96px] h-[96px] object-cover border-2 border-border rounded-sm hidden md:block"
+              className="absolute top-8 right-8 w-[96px] h-[96px] object-cover rounded-sm hidden md:block"
             />
           )}
           <div className="flex flex-col md:flex-row items-center gap-6">

@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut, ImagePlus } from 'lucide-react'
+import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Plus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut, ImagePlus } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -737,7 +737,7 @@ function Profile() {
             <img
               src={`/api/user/profile-gif/${dbUserData.account.id}?v=${encodeURIComponent(dbUserData.account.profileGifUrl)}`}
               alt="Profile GIF"
-              className="absolute top-8 right-8 w-[96px] h-[96px] object-cover border-2 border-border rounded-sm hidden md:block"
+              className="absolute top-8 right-8 w-[96px] h-[96px] object-cover rounded-sm hidden md:block"
             />
           )}
           <div className="flex flex-col md:flex-row items-center gap-6">
@@ -917,8 +917,8 @@ function Profile() {
                   } as React.CSSProperties}
                 >
                   <DropdownMenuItem onClick={() => setShowCreateListModal(true)}>
-                    <ListPlus className="w-4 h-4" />
-                    Create List
+                    <Plus className="w-4 h-4" />
+                    New List
                   </DropdownMenuItem>
                   {showBlogPosts && (
                     <DropdownMenuItem
@@ -928,7 +928,7 @@ function Profile() {
                       {createPostMutation.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <FileText className="w-4 h-4" />
+                        <Plus className="w-4 h-4" />
                       )}
                       New Post
                     </DropdownMenuItem>
