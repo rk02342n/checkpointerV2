@@ -18,6 +18,7 @@ export type DbAccount = {
   displayName: string | null;
   bio: string | null;
   avatarUrl: string | null;
+  profileGifUrl: string | null;
   role: "free" | "pro" | "admin";
   isPublic: boolean;
   profileTheme: ProfileTheme | null;
@@ -96,6 +97,7 @@ export type PublicUserProfile = {
   displayName: string | null
   bio: string | null
   avatarUrl: string | null
+  profileGifUrl: string | null
   profileTheme: ProfileTheme | null
   createdAt: string
 }

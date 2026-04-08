@@ -34,7 +34,7 @@ const updateProfileSchema = z.object({
     profileTheme: profileThemeSchema,
 });
 import { ALLOWED_FONTS, FONT_SIZES } from "../lib/profileThemeConstants";
-import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
+import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "../s3";
 
 export const usersRoute = new Hono()
 
@@ -194,6 +194,62 @@ export const usersRoute = new Hono()
     return c.json({ avatarUrl, key });
 })
 
+.post("/profile-gif", getAuthUser, async c => {
+    const dbUser = c.var.dbUser;
+
+    const formData = await c.req.formData();
+    const fileEntry = formData.get("profileGif");
+
+    if (!fileEntry || typeof fileEntry === "string") {
+        return c.json({ error: "No file provided" }, 400);
+    }
+
+    const file = fileEntry as File;
+
+    if (file.type !== "image/gif") {
+        return c.json({ error: "Only GIF files are allowed" }, 400);
+    }
+
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+        return c.json({ error: "File too large. Max size: 2MB" }, 400);
+    }
+
+    const key = `profile-gifs/${dbUser.id}/${Date.now()}.gif`;
+
+    await s3Client.send(new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key,
+        Body: Buffer.from(await file.arrayBuffer()),
+        ContentType: "image/gif",
+    }));
+
+    await db
+        .update(usersTable)
+        .set({ profileGifUrl: key })
+        .where(eq(usersTable.id, dbUser.id));
+
+    return c.json({ profileGifUrl: `/api/user/profile-gif/${dbUser.id}`, key });
+})
+
+.delete("/profile-gif", getAuthUser, async c => {
+    const dbUser = c.var.dbUser;
+
+    if (dbUser.profileGifUrl) {
+        await s3Client.send(new DeleteObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: dbUser.profileGifUrl,
+        }));
+    }
+
+    await db
+        .update(usersTable)
+        .set({ profileGifUrl: null })
+        .where(eq(usersTable.id, dbUser.id));
+
+    return c.json({ success: true });
+})
+
 // Get public user profile by ID (no auth required)
 .get("/profile/:userId", async c => {
     const userId = c.req.param("userId");
@@ -205,6 +261,7 @@ export const usersRoute = new Hono()
             displayName: usersTable.displayName,
             bio: usersTable.bio,
             avatarUrl: usersTable.avatarUrl,
+            profileGifUrl: usersTable.profileGifUrl,
             profileTheme: usersTable.profileTheme,
             createdAt: usersTable.createdAt,
         })
@@ -252,6 +309,42 @@ export const usersRoute = new Hono()
         headers.set("ETag", `"${user.avatarUrl}"`);
 
         // Convert stream to web ReadableStream
+        const stream = response.Body.transformToWebStream();
+        return new Response(stream, { headers });
+    } catch (error) {
+        return c.notFound();
+    }
+})
+
+.get("/profile-gif/:userId", async c => {
+    const userId = c.req.param("userId");
+
+    const user = await db
+        .select({ profileGifUrl: usersTable.profileGifUrl })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1)
+        .then(res => res[0]);
+
+    if (!user?.profileGifUrl) {
+        return c.notFound();
+    }
+
+    try {
+        const response = await s3Client.send(new GetObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: user.profileGifUrl,
+        }));
+
+        if (!response.Body) {
+            return c.notFound();
+        }
+
+        const headers = new Headers();
+        headers.set("Content-Type", "image/gif");
+        headers.set("Cache-Control", "no-cache");
+        headers.set("ETag", `"${user.profileGifUrl}"`);
+
         const stream = response.Body.transformToWebStream();
         return new Response(stream, { headers });
     } catch (error) {
