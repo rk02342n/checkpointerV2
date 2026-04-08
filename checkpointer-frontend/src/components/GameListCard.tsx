@@ -124,7 +124,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
                   handleToggleSave();
                 }}
                 disabled={saveMutation.isPending || unsaveMutation.isPending}
-                className="p-1.5 bg-background/80 hover:bg-background border-2 border-border transition-all disabled:opacity-50"
+                className="p-1.5 bg-amber-50/80 hover:bg-amber-50 border-2 border-border transition-all disabled:opacity-50"
                 title={isSaved ? "Unsave list" : "Save list"}
               >
                 <Bookmark
