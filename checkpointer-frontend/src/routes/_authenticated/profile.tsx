@@ -782,7 +782,7 @@ function Profile() {
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl font-bold text-foreground">
-                {user.given_name} {user.family_name}
+                {dbUserData?.account?.displayName || dbUserData?.account?.username || 'Anonymous User'}
               </h1>
               {isEditingUsername ? (
                 <div className="mt-1">
