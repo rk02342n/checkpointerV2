@@ -140,8 +140,9 @@ export const loadingCreateReviewQueryOptions = queryOptions<{
 export async function deleteReview(id: string) {
   const res = await api.reviews[":id"].$delete({ param: { id } });
   if (!res.ok) {
+    // Deleting another user's review now returns 404 (not 403) — the server
+    // never reveals that the review exists.
     if (res.status === 404) throw new Error("Review not found");
-    if (res.status === 403) throw new Error("You can only delete your own reviews");
     throw new Error("Failed to delete review");
   }
   return res.json();

@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { csrf } from 'hono/csrf'
+import { errorHandler } from './lib/errors'
 import { expensesRoute } from './routes/expenses'
 import { serveStatic } from 'hono/bun'
 import { authRoute } from './routes/auth'
@@ -51,6 +52,11 @@ const apiRoutes = app
   .route("/follows", followsRoute)
   .route("/blog-posts", blogPostsRoute)
   .route("/insights", insightsRoute);
+
+// The error-handler seam: one place where a thrown error becomes a response.
+// Throwers like notFound()/forbidden() (server/lib/errors.ts) render here into
+// the app's `{ error }` shape; anything else is a logged 500.
+app.onError(errorHandler)
 
 app.use('*', serveStatic({ root: './checkpointer-frontend/dist' }))  // change path accordingly to point to dist folder in frontend
 app.get('*', serveStatic({ path: './checkpointer-frontend/dist/index.html' })) // change path accordingly

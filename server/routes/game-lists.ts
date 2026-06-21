@@ -7,6 +7,7 @@ import { gamesTable } from "../db/schema/games";
 import { usersTable } from "../db/schema/users";
 import { savedGameListsTable } from "../db/schema/saved-game-lists";
 import { eq, and, desc, asc, count, sql, ilike } from "drizzle-orm";
+import { assertOwned, ownerScope } from "../lib/ownership";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
@@ -585,20 +586,7 @@ export const gameListsRoute = new Hono()
   const user = c.var.dbUser;
   const data = c.req.valid('json');
 
-  // Check ownership
-  const list = await db
-    .select()
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  await assertOwned(gameListsTable, listId, user.id);
 
   // Update the list
   const updated = await db
@@ -620,10 +608,7 @@ export const gameListsRoute = new Hono()
 
   const deleted = await db
     .delete(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
+    .where(ownerScope(gameListsTable, listId, user.id))
     .returning();
 
   if (deleted.length === 0) {
@@ -639,20 +624,7 @@ export const gameListsRoute = new Hono()
   const gameId = c.req.param('gameId');
   const user = c.var.dbUser;
 
-  // Check ownership
-  const list = await db
-    .select()
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  await assertOwned(gameListsTable, listId, user.id);
 
   // Check if game exists
   const game = await db
@@ -709,20 +681,7 @@ export const gameListsRoute = new Hono()
   const gameId = c.req.param('gameId');
   const user = c.var.dbUser;
 
-  // Check ownership
-  const list = await db
-    .select()
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  await assertOwned(gameListsTable, listId, user.id);
 
   const deleted = await db
     .delete(gameListItemsTable)
@@ -751,20 +710,7 @@ export const gameListsRoute = new Hono()
   const user = c.var.dbUser;
   const { gameIds } = c.req.valid('json');
 
-  // Check ownership
-  const list = await db
-    .select()
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  await assertOwned(gameListsTable, listId, user.id);
 
   // Update positions
   await Promise.all(
@@ -828,20 +774,7 @@ export const gameListsRoute = new Hono()
   const listId = c.req.param('listId');
   const user = c.var.dbUser;
 
-  // Check ownership
-  const list = await db
-    .select()
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  await assertOwned(gameListsTable, listId, user.id);
 
   const formData = await c.req.formData();
   const fileEntry = formData.get("cover");
@@ -890,20 +823,7 @@ export const gameListsRoute = new Hono()
   const listId = c.req.param('listId');
   const user = c.var.dbUser;
 
-  // Check ownership
-  const list = await db
-    .select({ coverUrl: gameListsTable.coverUrl })
-    .from(gameListsTable)
-    .where(and(
-      eq(gameListsTable.id, listId),
-      eq(gameListsTable.userId, user.id)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-
-  if (!list) {
-    return c.json({ error: "List not found" }, 404);
-  }
+  const list = await assertOwned(gameListsTable, listId, user.id);
 
   if (!list.coverUrl) {
     return c.json({ error: "No cover to remove" }, 400);

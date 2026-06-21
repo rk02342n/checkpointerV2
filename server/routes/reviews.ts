@@ -5,6 +5,7 @@ import { db } from "../db";
 import { reviewsTable, reviewsInsertSchema, createReviewSchema } from "../db/schema/reviews";
 import { reviewLikesTable } from "../db/schema/review-likes";
 import { eq, desc, and, count, sql, avg } from "drizzle-orm";
+import { assertOwned } from "../lib/ownership";
 import { usersTable } from "../db/schema/users";
 import { gamesTable } from "../db/schema/games";
 
@@ -267,20 +268,9 @@ export const reviewsRoute = new Hono()
     const id = c.req.param('id');
     const user = c.var.dbUser;
 
-    // First check if the review exists and belongs to the user
-    const existingReview = await db
-        .select()
-        .from(reviewsTable)
-        .where(eq(reviewsTable.id, id))
-        .then(res => res[0]);
-
-    if (!existingReview) {
-        return c.json({ error: "Review not found" }, 404);
-    }
-
-    if (existingReview.userId !== user.id) {
-        return c.json({ error: "You can only delete your own reviews" }, 403);
-    }
+    // 404 whether the review is missing or not the caller's — the seam never
+    // reveals another user's review (previously a 403).
+    const existingReview = await assertOwned(reviewsTable, id, user.id);
 
     const deletedReview = await db
         .delete(reviewsTable)
