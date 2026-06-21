@@ -6,6 +6,7 @@ import { gamesTable } from "../db/schema/games";
 import { gameListsTable } from "../db/schema/game-lists";
 import { usersTable } from "../db/schema/users";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { assertOwned, ownerScope } from "../lib/ownership";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
@@ -24,18 +25,6 @@ const updatePostSchema = z.object({
     accentColor: z.string().optional(),
   }).optional().nullable(),
 });
-
-async function getOwnedPost(postId: string, userId: string) {
-  return db
-    .select()
-    .from(blogPostsTable)
-    .where(and(
-      eq(blogPostsTable.id, postId),
-      eq(blogPostsTable.userId, userId)
-    ))
-    .limit(1)
-    .then(res => res[0]);
-}
 
 // Extract game/list embed IDs from Tiptap JSON content
 function extractEmbedIds(content: Record<string, unknown> | null): { gameIds: string[]; listIds: string[] } {
@@ -203,10 +192,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   // Resolve embeds for editor preview
   const { gameIds, listIds } = extractEmbedIds(post.content);
@@ -221,10 +207,7 @@ export const blogPostsRoute = new Hono()
   const user = c.var.dbUser;
   const data = c.req.valid('json');
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   try {
     const updated = await db
@@ -253,10 +236,7 @@ export const blogPostsRoute = new Hono()
 
   const deleted = await db
     .delete(blogPostsTable)
-    .where(and(
-      eq(blogPostsTable.id, postId),
-      eq(blogPostsTable.userId, user.id)
-    ))
+    .where(ownerScope(blogPostsTable, postId, user.id))
     .returning();
 
   if (deleted.length === 0) {
@@ -271,10 +251,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   if (post.status === "published") {
     return c.json({ error: "Post is already published" }, 400);
@@ -302,10 +279,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   if (post.status === "draft") {
     return c.json({ error: "Post is already a draft" }, 400);
@@ -328,10 +302,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   const formData = await c.req.formData();
   const fileEntry = formData.get("image");
@@ -375,10 +346,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   if (!post.headerImageUrl) {
     return c.json({ error: "No header image to remove" }, 400);
@@ -437,10 +405,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await getOwnedPost(postId, user.id);
-  if (!post) {
-    return c.json({ error: "Post not found" }, 404);
-  }
+  const post = await assertOwned(blogPostsTable, postId, user.id);
 
   const formData = await c.req.formData();
   const fileEntry = formData.get("image");
