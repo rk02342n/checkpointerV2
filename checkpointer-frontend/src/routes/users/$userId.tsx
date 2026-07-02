@@ -610,7 +610,7 @@ function ProfileSkeleton() {
     <>
       <div className="bg-pop-100 surface dark:bg-pop-900/40 shadow-hard-6 p-8 mb-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full bg-pop-300 dark:bg-pop-800 border-2 border-border" />
+          <Skeleton className="w-24 h-24 rounded-full bg-pop-300 dark:bg-pop-800" />
           <div className="flex-1 text-center md:text-left">
             <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />
             <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />

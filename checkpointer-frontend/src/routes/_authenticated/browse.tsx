@@ -345,13 +345,13 @@ export default function BrowseGames() {
 
 function GameCardSkeleton() {
   return (
-    <div className="surface">
-      <Skeleton className="w-full h-48 sm:h-56 rounded-none bg-muted" />
-      <div className="p-4 border-t-4 border-border">
-        <Skeleton className="h-5 w-3/4 bg-muted rounded-none" />
+    <div className="surface overflow-hidden">
+      <Skeleton className="w-full h-48 sm:h-56 rounded-t-[0.65rem] bg-muted" />
+      <div className="p-4">
+        <Skeleton className="h-5 w-3/4 bg-muted" />
         <div className="mt-2 flex items-center gap-2">
-          <Skeleton className="h-2 flex-1 bg-muted rounded-none" />
-          <Skeleton className="h-4 w-8 bg-muted rounded-none" />
+          <Skeleton className="h-2 flex-1 bg-muted" />
+          <Skeleton className="h-4 w-8 bg-muted" />
         </div>
       </div>
     </div>

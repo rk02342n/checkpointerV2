@@ -750,9 +750,9 @@ function GameDetailSkeleton() {
         <div className="mb-6">
           <Skeleton className="h-8 sm:h-10 w-3/4 mb-4 bg-muted" />
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 bg-muted border-2 border-border" />
-            <Skeleton className="h-7 sm:h-8 w-20 sm:w-24 bg-muted border-2 border-border" />
-            <Skeleton className="h-7 sm:h-8 w-24 sm:w-28 bg-muted border-2 border-border" />
+            <Skeleton className="h-7 sm:h-8 w-16 sm:w-20 bg-muted" />
+            <Skeleton className="h-7 sm:h-8 w-20 sm:w-24 bg-muted" />
+            <Skeleton className="h-7 sm:h-8 w-24 sm:w-28 bg-muted" />
           </div>
         </div>
 
