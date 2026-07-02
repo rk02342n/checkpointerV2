@@ -284,7 +284,7 @@ function PublicProfile() {
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="surface p-8 text-center">
-            <Avatar className="w-24 h-24 border-4 border-border mx-auto mb-4">
+            <Avatar className="w-24 h-24 border-2 border-border mx-auto mb-4">
               <AvatarImage
                 src={profileData.avatarUrl ? `/api/user/avatar/${profileData.id}?v=${encodeURIComponent(profileData.avatarUrl)}` : undefined}
                 alt={profileData.username || 'User'}
@@ -325,7 +325,7 @@ function PublicProfile() {
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
         {/* Profile Header */}
         <div
-          className="relative border-4 border-border shadow-hard-6 p-8 mb-8"
+          className="relative surface shadow-hard-6 p-8 mb-8"
           style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
           {user?.profileGifUrl && (
@@ -337,7 +337,7 @@ function PublicProfile() {
           )}
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Avatar */}
-            <Avatar className="w-24 h-24 border-4 border-border">
+            <Avatar className="w-24 h-24 border-2 border-border">
               <AvatarImage
                 src={user?.avatarUrl ? `/api/user/avatar/${user.id}?v=${encodeURIComponent(user.avatarUrl)}` : undefined}
                 alt={user?.displayName || user?.username || 'User'}
@@ -361,15 +361,15 @@ function PublicProfile() {
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
                 </div>
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
                 </div>
@@ -380,7 +380,7 @@ function PublicProfile() {
                   <button
                     onClick={handleFollow}
                     disabled={followMutation.isPending}
-                    className={`flex items-center gap-2 px-6 py-2 border-4 border-border shadow-hard-3 font-bold uppercase tracking-wide text-sm transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 ${
+                    className={`flex items-center gap-2 px-6 py-2 shadow-hard-3 font-bold uppercase tracking-wide text-sm transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 ${
                       followStatusData?.following
                         ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 hover:bg-rose-300 dark:hover:bg-rose-900/80'
                         : 'bg-green-200 dark:bg-green-900/60 text-green-800 dark:text-green-200 hover:bg-green-300 dark:hover:bg-green-900/80'
@@ -448,7 +448,7 @@ function PublicProfile() {
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -494,7 +494,7 @@ function PublicProfile() {
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -533,7 +533,7 @@ function PublicProfile() {
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -576,7 +576,7 @@ function PublicProfile() {
               {blogPostsPending ? (
                 <div className="space-y-6">
                   {[1, 2].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-6 animate-pulse">
+                    <div key={i} className="surface bg-muted p-6 animate-pulse">
                       <div className="h-6 w-48 bg-muted-foreground/20 mb-3" />
                       <div className="h-4 w-full bg-muted-foreground/20 mb-2" />
                       <div className="h-4 w-2/3 bg-muted-foreground/20" />
@@ -610,13 +610,13 @@ function ProfileSkeleton() {
     <>
       <div className="bg-pop-100 surface dark:bg-pop-900/40 shadow-hard-6 p-8 mb-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full bg-pop-300 dark:bg-pop-800 border-4 border-border" />
+          <Skeleton className="w-24 h-24 rounded-full bg-pop-300 dark:bg-pop-800 border-2 border-border" />
           <div className="flex-1 text-center md:text-left">
             <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />
             <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-              <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
-              <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
+              <Skeleton className="h-16 w-24 bg-pop-300 dark:bg-pop-800 shadow-hard-3" />
+              <Skeleton className="h-16 w-24 bg-pop-300 dark:bg-pop-800 shadow-hard-3" />
             </div>
           </div>
         </div>
@@ -625,7 +625,7 @@ function ProfileSkeleton() {
         <Skeleton className="h-5 w-24 mb-4 bg-muted-foreground/20" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+            <div key={i} className="surface bg-muted p-4 animate-pulse">
               <div className="flex gap-4">
                 <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                 <div className="flex-1 space-y-2">

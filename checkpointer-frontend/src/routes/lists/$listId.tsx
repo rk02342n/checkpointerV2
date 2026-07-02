@@ -419,7 +419,7 @@ function ListDetailView() {
               <button
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploadCoverMutation.isPending}
-                className="w-full aspect-21/9 border-4 border-dashed border-border hover:border-muted-foreground bg-muted flex flex-col items-center justify-center gap-2 transition-colors"
+                className="w-full aspect-21/9 border-2 border-dashed border-border hover:border-muted-foreground bg-muted flex flex-col items-center justify-center gap-2 transition-colors"
               >
                 {uploadCoverMutation.isPending ? (
                   <>

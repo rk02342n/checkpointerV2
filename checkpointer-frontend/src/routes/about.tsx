@@ -78,7 +78,7 @@ function AboutPage() {
             </h2>
 
             {status === 'success' && (
-              <div className="mb-6 bg-green-100 dark:bg-green-900 border-4 border-border p-4 shadow-hard-4">
+              <div className="mb-6 surface bg-green-100 dark:bg-green-900 p-4 shadow-hard-4">
                 <p className="font-semibold text-foreground">
                   Thanks for your message! We'll get back to you soon.
                 </p>
@@ -86,7 +86,7 @@ function AboutPage() {
             )}
 
             {status === 'error' && (
-              <div className="mb-6 bg-rose-100 dark:bg-rose-900 border-4 border-border p-4 shadow-hard-4">
+              <div className="mb-6 surface bg-rose-100 dark:bg-rose-900 p-4 shadow-hard-4">
                 <p className="font-semibold text-foreground">
                   {errorMessage || 'Something went wrong. Please try again.'}
                 </p>

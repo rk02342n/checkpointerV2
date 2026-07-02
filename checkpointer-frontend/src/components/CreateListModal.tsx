@@ -250,14 +250,14 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               variant="outline"
               onClick={resetAndClose}
               disabled={createMutation.isPending}
-              className="border-4 border-border rounded-none"
+              className="border-2 border-border rounded-none"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!name.trim() || description.length > 500 || createMutation.isPending}
-              className="bg-foreground hover:opacity-90 text-background border-4 border-border rounded-none"
+              className="bg-foreground hover:opacity-90 text-background"
             >
               {createMutation.isPending ? (
                 <>

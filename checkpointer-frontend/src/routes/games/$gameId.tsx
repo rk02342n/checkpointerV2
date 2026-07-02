@@ -427,8 +427,8 @@ const queryClient = useQueryClient();
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Left Column: Poster & Actions */}
                     <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-                        <div className="border-4 border-border shadow-hard-6">
-                          <Poster game={data.game} size="xl" className="" />
+                        <div className="surface shadow-hard-6">
+                          <Poster game={data.game} size="xl" />
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
@@ -561,7 +561,7 @@ const queryClient = useQueryClient();
                                                     href={link.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1.5 bg-background hover:bg-muted  px-3 py-1.5 text-xs font-medium border-2 border-border transition-colors"
+                                                    className="inline-flex items-center gap-1.5 bg-background hover:bg-muted px-3 py-1.5 text-xs font-medium border-2 border-border transition-colors"
                                                 >
                                                     <ExternalLink className="w-3 h-3" />
                                                     <span className="capitalize">
@@ -739,9 +739,9 @@ function GameDetailSkeleton() {
           <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-muted" />
         </div>
         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
-          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
-          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
-          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted" />
         </div>
       </div>
 
@@ -766,8 +766,8 @@ function GameDetailSkeleton() {
             </div>
           </div>
           <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-24 w-full bg-brand-200 dark:bg-brand-900 border-4 border-border" />
-            <Skeleton className="h-64 w-full bg-pop-200 dark:bg-pop-900 border-4 border-border" />
+            <Skeleton className="h-24 w-full surface bg-brand-200 dark:bg-brand-900" />
+            <Skeleton className="h-64 w-full surface bg-pop-200 dark:bg-pop-900" />
           </div>
         </div>
       </div>
@@ -1025,7 +1025,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange((e.target.value))}
                     placeholder="What did you think?"
-                    className={`bg-white dark:bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-black transition-all duration-300 ${
+                    className={`bg-white dark:bg-muted border-2 border-border text-foreground rounded-none focus:ring-2 focus:ring-black transition-all duration-300 ${
                       isMaximized ? 'min-h-48 sm:min-h-64' : 'min-h-28 sm:min-h-32 lg:min-h-40'
                     }`}
                   />

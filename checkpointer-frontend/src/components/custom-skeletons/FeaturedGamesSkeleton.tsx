@@ -14,7 +14,7 @@ export function FeaturedGamesSkeleton({
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">
             {title}
           </h2>
-          <div className="mt-3 sm:mt-0 bg-pop-50 dark:bg-pop-950 px-4 sm:px-6 py-2 border-2 sm:border-4 border-border shadow-hard-3 sm:shadow-hard-4">
+          <div className="mt-3 sm:mt-0 surface bg-pop-50 dark:bg-pop-950 px-4 sm:px-6 py-2 shadow-hard-3 sm:shadow-hard-4">
             <Skeleton className="h-4 sm:h-5 w-16 sm:w-20 bg-pop-300 dark:bg-pop-800 rounded-none" />
           </div>
         </div>

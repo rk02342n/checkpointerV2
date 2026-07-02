@@ -131,7 +131,7 @@ function SettingsPage() {
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your display name"
                     maxLength={50}
-                    className="bg-input border-4 border-border rounded-none"
+                    className="bg-input rounded-none"
                   />
                   <span className="text-xs text-muted-foreground">{displayName.length}/50</span>
                 </div>
@@ -144,7 +144,7 @@ function SettingsPage() {
                     placeholder="Tell others a bit about yourself..."
                     maxLength={300}
                     rows={3}
-                    className="bg-input border-4 border-border rounded-none resize-none text-foreground"
+                    className="bg-input rounded-none resize-none text-foreground"
                   />
                   <span className="text-xs text-muted-foreground">{bio.length}/300</span>
                 </div>
@@ -161,7 +161,7 @@ function SettingsPage() {
                     variant="outline"
                     onClick={() => profileMutation.mutate()}
                     disabled={profileMutation.isPending}
-                    className="border-4 border-border rounded-none bg-card hover:bg-muted font-semibold"
+                    className="bg-card hover:bg-muted font-semibold"
                   >
                     {profileMutation.isPending ? (
                       <>
@@ -249,7 +249,7 @@ function SettingsPage() {
                   <Button
                     variant="destructive"
                     onClick={() => setShowDeleteDialog(true)}
-                    className="border-4 border-border rounded-none font-semibold"
+                    className="font-semibold"
                   >
                     Delete Account
                   </Button>
@@ -278,7 +278,6 @@ function SettingsPage() {
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
               disabled={deleteAccountMutation.isPending}
-              className="rounded-none border-4 border-border"
             >
               Cancel
             </Button>
@@ -286,7 +285,6 @@ function SettingsPage() {
               variant="destructive"
               onClick={() => deleteAccountMutation.mutate()}
               disabled={deleteAccountMutation.isPending}
-              className="rounded-none border-4 border-border"
             >
               {deleteAccountMutation.isPending ? (
                 <>

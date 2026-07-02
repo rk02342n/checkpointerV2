@@ -11,9 +11,9 @@ const Login = () => {
             <div className="container mx-auto max-w-2xl mt-12">
                 {/* Hero Card */}
                 <div 
-                className="bg-cyan-200 dark:bg-blue-900/60 border-4 border-black dark:border-white rounded-none p-8 md:p-12 text-center shadow-lg">
+                className="surface bg-cyan-200 dark:bg-blue-900/60 p-8 md:p-12 text-center">
                     {/* Logo/Icon */}
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-lime-200 border-4 border-black rounded-full mb-6">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-lime-200 rounded-full mb-6">
                         <Gamepad2 className="w-10 h-10 text-black" />
                     </div>
 

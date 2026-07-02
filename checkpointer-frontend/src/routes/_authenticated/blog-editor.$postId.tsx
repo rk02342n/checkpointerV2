@@ -309,7 +309,6 @@ function BlogEditorPage() {
                 variant={showPreview ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
-                className="border-4 border-border"
               >
                 {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span className="hidden sm:inline">{showPreview ? 'Edit' : 'Preview'}</span>
@@ -330,7 +329,6 @@ function BlogEditorPage() {
                   size="sm"
                   onClick={() => unpublishMutation.mutate()}
                   disabled={unpublishMutation.isPending}
-                  className="border-4 border-border"
                 >
                   {unpublishMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -344,7 +342,7 @@ function BlogEditorPage() {
                   size="sm"
                   onClick={() => publishMutation.mutate()}
                   disabled={publishMutation.isPending}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white border-4 border-border"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
                 >
                   {publishMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -365,7 +363,6 @@ function BlogEditorPage() {
                   }
                 }}
                 disabled={deletePostMutation.isPending}
-                className="border-4 border-border"
               >
                 {deletePostMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -414,7 +411,7 @@ function BlogEditorPage() {
             {/* Status badge */}
             <div className="mb-6">
               <span
-                className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest border-4 border-border ${
+                className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest ${
                   isPublished
                     ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'
                     : 'bg-brand-200 dark:bg-brand-900/60 text-brand-900 dark:text-brand-200'
@@ -446,7 +443,7 @@ function BlogEditorPage() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity border-4 border-white/30"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => removeHeaderMutation.mutate()}
                       disabled={removeHeaderMutation.isPending}
                     >
@@ -463,7 +460,7 @@ function BlogEditorPage() {
                 <button
                   onClick={() => headerImageRef.current?.click()}
                   disabled={uploadHeaderMutation.isPending}
-                  className="w-full h-36 border-4 border-dashed border-border/50 hover:border-border bg-muted/30 hover:bg-muted/60 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="w-full h-36 border-2 border-dashed border-border/50 hover:border-border bg-muted/30 hover:bg-muted/60 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   {uploadHeaderMutation.isPending ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
