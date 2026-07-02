@@ -34,7 +34,7 @@ interface StandardGameCardProps {
 
 const cardClasses: Record<Variant, string> = {
   featured:
-    "group text-left bg-white dark:bg-stone-900 hover:bg-pop-100 dark:hover:bg-pop-950 border-2 sm:border-4 border-stone-900 shadow-hard-3 active:shadow-hard-2 sm:active:shadow-hard-3 active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
+    "group text-left bg-white dark:bg-stone-900 hover:bg-pop-100 dark:hover:bg-pop-950 border-stone-900 shadow-hard-3 active:shadow-hard-2 sm:active:shadow-hard-3 active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
   browse:
     "group text-left surface hover:bg-pop-100 dark:hover:bg-pop-950 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
 }
@@ -181,7 +181,7 @@ export const StandardGameCard = ({
       tabIndex={0}
       onClick={() => onGameClick?.(game)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onGameClick?.(game) }}
-      className={`${cardClasses[variant]} cursor-pointer`}
+      className={`${cardClasses[variant]} cursor-pointer surface`}
     >
       <div className="relative overflow-hidden">
         {game.coverUrl ? (
@@ -190,8 +190,8 @@ export const StandardGameCard = ({
             alt={game.name}
             className={
               variant === "featured"
-                ? "w-full aspect-3/4 object-cover"
-                : "w-full h-48 sm:h-56 object-cover duration-300"
+                ? "w-full aspect-3/4 object-cover rounded-t-[0.65rem]"
+                : "w-full h-48 sm:h-56 object-cover duration-300 rounded-t-[0.65rem]"
             }
             loading="lazy"
           />

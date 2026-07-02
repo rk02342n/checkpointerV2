@@ -434,7 +434,7 @@ const queryClient = useQueryClient();
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
                                 onClick={() => { posthog.capture('log_game_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowLogGameModal(true); }}
-                                className="flex flex-col items-center justify-center gap-1 dark:hover:bg-blue-800 hover:bg-blue-100 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2"
+                                className="bg-muted flex flex-col items-center justify-center gap-1 dark:hover:bg-blue-800 hover:bg-blue-100 text-foreground border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2"
                             >
                                 <Pencil className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
@@ -442,10 +442,10 @@ const queryClient = useQueryClient();
                             <button
                                 onClick={handleWantClick}
                                 disabled={wantToPlayMutation.isPending}
-                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
                                     isInWishlist
                                         ? 'bg-brand-400 hover:bg-brand-300 dark:bg-brand-500 hover:dark:bg-brand-700'
-                                        : 'bg-background hover:bg-brand-100 hover:dark:bg-brand-800'
+                                        : 'bg-muted hover:bg-brand-100 hover:dark:bg-brand-800'
                                 } ${wantToPlayMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <CalendarHeart className={`w-5 h-5 ${isInWishlist ? 'stroke-[3.5]' : ''}`} />
@@ -455,10 +455,10 @@ const queryClient = useQueryClient();
                             <button
                                 onClick={handlePlayClick}
                                 disabled={setPlayingMutation.isPending || stopPlayingMutation.isPending}
-                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
                                     isCurrentlyPlayingThisGame
                                         ? 'bg-green-400 hover:bg-green-300 dark:bg-green-700 hover:dark:bg-green-500'
-                                        : 'bg-background hover:bg-green-100 hover:dark:bg-green-800'
+                                        : 'bg-muted hover:bg-green-100 hover:dark:bg-green-800'
                                 } ${(setPlayingMutation.isPending || stopPlayingMutation.isPending) ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <ConciergeBell className="w-5 h-5" />
@@ -472,7 +472,7 @@ const queryClient = useQueryClient();
                         {dbUserData?.account && (
                             <button
                                 onClick={() => { posthog.capture('add_to_list_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowAddToListModal(true); }}
-                                className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-purple-800 transition-all p-2"
+                                className="bg-muted w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-purple-800 transition-all p-2"
                             >
                                 <ListPlus className="w-5 h-5" />
                                 <span className="text-xs uppercase font-bold tracking-wider">Add to List</span>
@@ -500,14 +500,14 @@ const queryClient = useQueryClient();
                         <div className="mb-6">
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
-                                <span className="bg-brand-200 dark:bg-brand-950 px-2 sm:px-3 py-1 font-semibold border-2 border-border text-foreground text-xs sm:text-sm shrink-0">
+                                <span className="bg-brand-200 dark:bg-brand-950 px-2 sm:px-3 py-1 font-semibold border-border text-foreground text-xs sm:text-sm shrink-0">
                                     {data.game.releaseDate ? new Date(data.game.releaseDate).getFullYear() : "N/A"}
                                 </span>
-                                <span className="bg-green-200 dark:bg-green-950 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-border text-foreground font-medium shrink-0">IGDB: {data.game.igdbRating}</span>
+                                <span className="bg-green-200 dark:bg-green-950 px-2 sm:px-3 py-1 text-xs uppercase border-border text-foreground font-medium shrink-0">IGDB: {data.game.igdbRating}</span>
                                 {/* Genre Badges */}
                                 {data.genres && data.genres.length > 0 && 
                                 data.genres.map((genre) => (
-                                        <span key={genre.id} className="bg-violet-200 dark:bg-yellow-800 px-2 py-0.5 text-xs border-2 border-border text-foreground font-medium">
+                                        <span key={genre.id} className="bg-violet-200 dark:bg-yellow-800 px-2 py-0.5 text-xs border-border text-foreground font-medium">
                                             {genre.name}
                                         </span>
                                     ))}
@@ -517,7 +517,7 @@ const queryClient = useQueryClient();
                             {data.platforms && data.platforms.length > 0 && (
                                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 mt-2">
                                     {data.platforms.map((platform) => (
-                                        <span key={platform.id} className="bg-muted border-border text-foreground px-2 py-0.5 text-xs border-2 font-medium">
+                                        <span key={platform.id} className="bg-amber-400 border-border text-foreground px-2 py-0.5 text-xs font-medium">
                                             {platform.abbreviation || platform.name}
                                         </span>
                                     ))}
@@ -528,7 +528,7 @@ const queryClient = useQueryClient();
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
                             {/* Left: Synopsis & Reviews */}
                             <div className="lg:col-span-3 space-y-4 sm:space-y-6">
-                                <div className="bg-accent border-4 border-stone-900 shadow-hard-4 p-4 sm:p-6">
+                                <div className="bg-accent surface border-stone-900 shadow-hard-4 p-4 sm:p-6">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4 text-foreground">Synopsis</h3>
                                     <p className="text-foreground leading-relaxed">
                                       {data.game?.summary && data.game.summary.length > 600 && !isSynopsisExpanded
@@ -678,7 +678,7 @@ const queryClient = useQueryClient();
 
             {/* Switch Game Dialog */}
             <Dialog open={showSwitchGameDialog} onOpenChange={setShowSwitchGameDialog}>
-              <DialogContent className="surface bg-background shadow-hard-6">
+              <DialogContent className="surface bg-muted shadow-hard-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-foreground">
                     Switch Game
@@ -735,13 +735,13 @@ function GameDetailSkeleton() {
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Left Column */}
       <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-        <div className="border-4 border-border shadow-hard-6">
+        <div className="surface border-border shadow-hard-6">
           <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-muted" />
         </div>
         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
-          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
-          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
-          <Skeleton className="h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
+          <Skeleton className="surface h-14 sm:h-16 bg-muted border-4 border-border" />
         </div>
       </div>
 
@@ -758,7 +758,7 @@ function GameDetailSkeleton() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
           <div className="lg:col-span-3 space-y-4">
-            <div className="surface bg-background p-4 sm:p-6">
+            <div className="surface p-4 sm:p-6">
               <Skeleton className="h-4 w-24 mb-4 bg-muted" />
               <Skeleton className="h-4 w-full mb-2 bg-muted" />
               <Skeleton className="h-4 w-full mb-2 bg-muted" />
@@ -781,7 +781,7 @@ function ImageGallery({ images }: { images: GameImage[] }) {
   const current = images[currentIdx];
 
   return (
-    <div className="bg-stone-900 border-4 border-stone-900 shadow-hard-4 overflow-hidden">
+    <div className="surface bg-stone-900 overflow-hidden">
       {/* Main image */}
       {current && (
         <div className="relative group">
@@ -901,7 +901,7 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
 
       {/* Form container */}
       <div
-        className={`bg-pop-300 dark:bg-cyan-950 border-4 border-border text-foreground transition-all duration-300 ease-out ${
+        className={`bg-pop-300 surface dark:bg-cyan-950 border-border text-foreground transition-all duration-300 ease-out ${
           isMaximized
             ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-hard-8 p-6 sm:p-8'
             : 'relative group shadow-hard-4 p-4 sm:p-6'

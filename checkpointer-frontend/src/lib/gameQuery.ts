@@ -86,6 +86,7 @@ export function getSearchGamesQueryOptions(searchQuery: string) {
 }
 
 export async function getGameById(id: string) {
+  // await new Promise((r) => setTimeout(r, 10000));
   const res = await api.games[":id"].$get({ param: { id } });
   if (!res.ok) {
     if (res.status === 404) throw new Error("Game not found");

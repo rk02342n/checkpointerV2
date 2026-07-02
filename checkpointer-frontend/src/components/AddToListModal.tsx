@@ -167,7 +167,7 @@ export function AddToListModal({
             </div>
 
             {/* Lists */}
-            <div className="flex-1 min-h-0 overflow-y-auto border-4 border-border bg-muted">
+            <div className="flex-1 min-h-0 overflow-y-auto border-border bg-muted">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full min-h-[150px]">
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -178,7 +178,7 @@ export function AddToListModal({
                   <span className="text-sm text-center mb-3">You don't have any lists yet</span>
                   <Button
                     onClick={() => setShowCreateModal(true)}
-                    className="bg-stone-900 hover:bg-stone-800 text-foreground border-4 border-border rounded-none"
+                    className="bg-stone-900 hover:bg-stone-800 text-foreground border-border rounded-none"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First List
@@ -237,7 +237,7 @@ export function AddToListModal({
               <Button
                 onClick={() => setShowCreateModal(true)}
                 variant="outline"
-                className="w-full border-4 border-stone-900 rounded-none"
+                className="w-full border-stone-900 rounded-none"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New List

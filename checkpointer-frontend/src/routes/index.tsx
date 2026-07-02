@@ -39,7 +39,7 @@ export default function Checkpointer() {
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-secondary brightness-100 border-4 border-border shadow-hard-4 sm:shadow-hard-8 p-5 sm:p-8 md:p-12 lg:p-16">
+          <div className="bg-secondary surface brightness-100 border-border shadow-hard-4 sm:shadow-hard-8 p-5 sm:p-8 md:p-12 lg:p-16">
             <div className="grid lg:grid-cols-2 gap-8 items-center">
               <div className="space-y-6 text-center sm:text-left">
                 {/* Checks logo - mobile only */}
@@ -106,7 +106,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Featured Games Section */}
-        <section className="bg-card border-4 shadow-hard-4 sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
+        <section className="surface sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : featuredData ? (
@@ -121,17 +121,19 @@ export default function Checkpointer() {
         {!areListsPending && popularListsData
          && <ListCarousel gameList={popularListsData?.lists}/>}
         {/* Trending This Week */}
-        <section className="surface sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
-          {isTrendingPending ? (
-            <FeaturedGamesSkeleton count={4} />
-          ) : trendingData && trendingData.games.length > 0 ? (
-            <FeaturedGames
-              title="Trending this week"
-              games={trendingData.games}
-              onGameClick={handleGameClick}
-            />
-          ) : null}
-        </section>
+        {(isTrendingPending || (trendingData && trendingData.games.length > 0)) && (
+          <section className="surface sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
+            {isTrendingPending ? (
+              <FeaturedGamesSkeleton count={4} />
+            ) : (
+              <FeaturedGames
+                title="Trending this week"
+                games={trendingData!.games}
+                onGameClick={handleGameClick}
+              />
+            )}
+          </section>
+        )}
 
         <br/>
         <br/>
@@ -168,7 +170,7 @@ export default function Checkpointer() {
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
-          <div className="bg-blue-400/80 text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-hard-4 sm:shadow-hard-8">
+          <div className="bg-secondary text-foreground border-border p-5 sm:p-8 md:p-12 shadow-hard-4 sm:shadow-hard-8 surface">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">

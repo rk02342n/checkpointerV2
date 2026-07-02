@@ -1244,8 +1244,8 @@ function Profile() {
                             params: { postId: post.id },
                           })
                         }
-                        className={`block bg-card profile-card profile-card-hover
-                          border-4 border-border shadow-hard-4 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
+                        className={`block bg-card profile-card profile-card-hover surface
+                           border-border shadow-hard-4 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 cursor-pointer`}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
@@ -1380,7 +1380,7 @@ function Profile() {
                 : `Following ${followCountsData?.followingCount ?? 0} users`}
             </DialogDescription>
             {/* Tab switcher */}
-            <div className="flex border-b-4 border-border mt-2">
+            <div className="flex border-b-2 border-border mt-2">
               <button
                 onClick={() => setShowFollowDialog('followers')}
                 className={`flex-1 px-4 py-2 text-sm font-bold uppercase tracking-widest ${

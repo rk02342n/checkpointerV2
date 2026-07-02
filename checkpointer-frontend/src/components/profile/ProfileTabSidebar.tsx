@@ -35,8 +35,8 @@ export function ProfileTabSidebar({
   layout = 'sidebar',
   children,
 }: ProfileTabSidebarProps) {
-  const activeClass = themed ? 'profile-accent' : 'bg-brand-200 dark:bg-brand-900'
-  const inactiveClass = `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
+  const activeClass = themed ? 'rounded-none profile-accent surface' : 'rounded-none surface bg-brand-200 dark:bg-brand-900'
+  const inactiveClass = `surface rounded-none cursor-pointer ${themed ? 'surface profile-accent-muted text-foreground hover:opacity-80' : 'rounded-none bg-muted text-foreground hover:bg-brand-100 dark:hover:bg-brand-950'}`
 
   if (layout === 'bar') {
     return (
@@ -75,7 +75,7 @@ export function ProfileTabSidebar({
       {/* Mobile dropdown */}
       <div className="xl:hidden mb-4">
         <DropdownMenu>
-          <DropdownMenuTrigger className={`flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide border-4 border-border w-full ${activeClass} text-foreground`}>
+          <DropdownMenuTrigger className={`flex items-center gap-2 px-4 py-3 text-sm font-bold uppercase tracking-wide border-border w-full ${activeClass} text-foreground`}>
             {ActiveIcon && <ActiveIcon className="w-4 h-4 shrink-0" />}
             <span>
               {activeTabItem?.label}{activeTabItem?.count !== undefined ? ` (${activeTabItem.count})` : ''}
@@ -103,7 +103,7 @@ export function ProfileTabSidebar({
       </div>
 
       {/* Desktop sidebar — positioned outside the content flow */}
-      <div className="hidden xl:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-4 border-border divide-y-4 divide-border">
+      <div className="hidden xl:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-border divide-y-4 divide-border">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (

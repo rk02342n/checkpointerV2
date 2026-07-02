@@ -74,7 +74,7 @@ export function SearchDropdown({
           }
         }}
         autoFocus={autoFocus}
-        className="w-full bg-input border-4 border-border text-foreground py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-border text-sm rounded-none"
+        className="w-full bg-input border-2 border-border text-foreground py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-border text-sm rounded-none"
       />
       <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
       {onClose && (

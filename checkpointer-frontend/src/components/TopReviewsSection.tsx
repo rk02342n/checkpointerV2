@@ -107,7 +107,7 @@ export function TopReviewsSection({
                             const isLong = r.reviewText != null && r.reviewText.length > REVIEW_CHAR_LIMIT;
                             const isExpanded = expandedReviews.has(r.id);
                             return (
-                                <div key={r.id} className="bg-background border-4 border-border p-3 sm:p-4">
+                                <div key={r.id} className="bg-muted border-2 border-border p-3 sm:p-4">
                                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                                         <Link
                                             to={r.userId === dbUserData?.account?.id ? "/profile" : "/users/$userId"}

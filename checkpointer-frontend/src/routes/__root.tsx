@@ -13,7 +13,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function Footer() {
   return(
-    <footer className="border-4 border-border dark:bg-black bg-white py-8 sm:py-12 mt-12 mx-4 shadow-hard-4 sm:shadow-hard-8 mb-10">
+    <footer className="surface border-border py-8 sm:py-12 mt-12 mx-4 shadow-hard-4 sm:shadow-hard-8 mb-10">
         <div className="mx-auto px-6 sm:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="font-bold text-foreground font-alt">Checkpointer © 2026</span>
