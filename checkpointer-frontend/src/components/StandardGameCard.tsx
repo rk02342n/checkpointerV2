@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { type Game } from "@/lib/gameQuery"
+import { PLACEHOLDER_COVER } from "@/lib/placeholderCover"
 import { dbUserQueryOptions } from "@/lib/api"
 import { addToWishlist, removeFromWishlist, gameInWishlistQueryOptions, type WishlistResponse } from "@/lib/wantToPlayQuery"
 import { LogGameModal } from "@/components/LogGameModal"
@@ -197,16 +198,15 @@ export const StandardGameCard = ({
           />
         ) : variant === "featured" ? (
           <img
-            src="/bitmap.svg"
+            src={PLACEHOLDER_COVER}
             alt={game.name}
             className="w-full aspect-3/4 object-cover rounded-t-[0.65rem]"
           />
         ) : (
           <img
-            src="/bitmap.svg"
+            src={PLACEHOLDER_COVER}
             alt={game.name}
             className="w-full h-48 sm:h-56 object-cover duration-300 rounded-t-[0.65rem]"
-            loading="lazy"
           />
         )}
         {(variant === "browse" || year !== null) && (
