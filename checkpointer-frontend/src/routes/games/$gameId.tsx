@@ -693,7 +693,7 @@ const queryClient = useQueryClient();
                   <Button
                     onClick={() => handleSwitchGame('finished')}
                     disabled={switchGameMutation.isPending}
-                    className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-4 border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                    className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-border shadow-hard-4 transition-all h-auto py-3 justify-start"
                   >
                     <Check className="w-5 h-5 mr-2" />
                     <div className="text-left">
@@ -704,7 +704,7 @@ const queryClient = useQueryClient();
                   <Button
                     onClick={() => handleSwitchGame('stashed')}
                     disabled={switchGameMutation.isPending}
-                    className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                    className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-border shadow-hard-4 transition-all h-auto py-3 justify-start"
                   >
                     <Clock className="w-5 h-5 mr-2" />
                     <div className="text-left">
