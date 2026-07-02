@@ -726,7 +726,7 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-background selection:bg-pop-300/30" style={dbUserData?.account?.profileTheme?.backgroundColor ? { backgroundColor: dbUserData.account.profileTheme.backgroundColor } : undefined}>
-      <Navbar />
+      <Navbar accentColor={themed ? dbUserData?.account?.profileTheme?.accentColor : undefined} />
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
         {/* Profile Header */}
         <div

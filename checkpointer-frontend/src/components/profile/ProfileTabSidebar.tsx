@@ -35,7 +35,7 @@ export function ProfileTabSidebar({
   layout = 'sidebar',
   children,
 }: ProfileTabSidebarProps) {
-  const activeClass = themed ? 'rounded-none profile-accent' : 'rounded-none surface bg-brand-200 dark:bg-brand-900'
+  const activeClass = themed ? 'rounded-none profile-accent' : 'rounded-none bg-brand-200 dark:bg-brand-900'
   const inactiveClass = `rounded-none cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:brightness-120' : 'rounded-none bg-muted text-foreground hover:bg-brand-100 dark:hover:bg-brand-950'}`
 
   if (layout === 'bar') {
@@ -103,7 +103,7 @@ export function ProfileTabSidebar({
       </div>
 
       {/* Desktop sidebar — positioned outside the content flow */}
-      <div className="hidden xl:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-border divide-y-4 divide-border">
+      <div className="hidden xl:flex flex-col shrink-0 w-44 absolute right-full top-6 mr-4 border-2 border-border divide-y-2 divide-border">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
