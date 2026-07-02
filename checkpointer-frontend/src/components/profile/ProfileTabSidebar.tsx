@@ -35,8 +35,8 @@ export function ProfileTabSidebar({
   layout = 'sidebar',
   children,
 }: ProfileTabSidebarProps) {
-  const activeClass = themed ? 'rounded-none profile-accent surface' : 'rounded-none surface bg-brand-200 dark:bg-brand-900'
-  const inactiveClass = `surface rounded-none cursor-pointer ${themed ? 'surface profile-accent-muted text-foreground hover:opacity-80' : 'rounded-none bg-muted text-foreground hover:bg-brand-100 dark:hover:bg-brand-950'}`
+  const activeClass = themed ? 'rounded-none profile-accent' : 'rounded-none surface bg-brand-200 dark:bg-brand-900'
+  const inactiveClass = `rounded-none cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:brightness-120' : 'rounded-none bg-muted text-foreground hover:bg-brand-100 dark:hover:bg-brand-950'}`
 
   if (layout === 'bar') {
     return (

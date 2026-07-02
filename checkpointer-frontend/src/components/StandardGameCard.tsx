@@ -34,9 +34,9 @@ interface StandardGameCardProps {
 
 const cardClasses: Record<Variant, string> = {
   featured:
-    "group text-left bg-white dark:bg-stone-900 hover:bg-pop-100 dark:hover:bg-pop-950 border-stone-900 shadow-hard-3 active:shadow-hard-2 sm:active:shadow-hard-3 active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
+    "group text-left bg-pop-50 dark:bg-stone-900 hover:bg-pop-100 dark:hover:bg-pop-950 border-stone-900 shadow-hard-3 active:shadow-hard-2 sm:active:shadow-hard-3 active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
   browse:
-    "group text-left surface hover:bg-pop-100 dark:hover:bg-pop-950 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
+    "group text-left surface bg-pop-50 hover:bg-pop-100 dark:hover:bg-pop-950 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
 }
 
 export const StandardGameCard = ({
@@ -196,11 +196,18 @@ export const StandardGameCard = ({
             loading="lazy"
           />
         ) : variant === "featured" ? (
-          <div className="w-full aspect-3/4 bg-stone-200" />
+          <img
+            src="/bitmap.svg"
+            alt={game.name}
+            className="w-full aspect-3/4 object-cover rounded-t-[0.65rem]"
+          />
         ) : (
-          <div className="w-full h-48 sm:h-56 bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground text-sm">No Image</span>
-          </div>
+          <img
+            src="/bitmap.svg"
+            alt={game.name}
+            className="w-full h-48 sm:h-56 object-cover duration-300 rounded-t-[0.65rem]"
+            loading="lazy"
+          />
         )}
         {(variant === "browse" || year !== null) && (
           <Badge
@@ -275,7 +282,7 @@ export const StandardGameCard = ({
           >
             <EllipsisVertical className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" side="top" className="[&_[role=menuitem]]:hover:bg-pop-200! [&_[role=menuitem]]:focus:bg-pop-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-pop-900! dark:[&_[role=menuitem]]:focus:bg-pop-900!">
+          <DropdownMenuContent align="end" side="top" className="bg-card [&_[role=menuitem]]:hover:bg-pop-200! [&_[role=menuitem]]:focus:bg-pop-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-pop-900! dark:[&_[role=menuitem]]:focus:bg-pop-900!">
             <DropdownMenuItem onClick={handleReview}>
               <PenLine className="size-4" />
               Review

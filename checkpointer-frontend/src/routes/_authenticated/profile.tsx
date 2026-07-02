@@ -730,7 +730,7 @@ function Profile() {
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(dbUserData?.account?.profileTheme)}>
         {/* Profile Header */}
         <div
-          className="relative border-4 border-border shadow-hard-6 p-8 mb-8"
+          className="surface relative border-border p-8 mb-8"
           style={getProfileHeaderStyle(dbUserData?.account?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
           {dbUserData?.account?.profileGifUrl && (

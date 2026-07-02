@@ -103,7 +103,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     }));
 
     return(
-      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4 mt-4`}>
+      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
         <Button
@@ -161,31 +161,28 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="surface bg-muted">
+              <DropdownMenuContent align="end" className="surface bg-muted [&_[role=menuitem]]:hover:bg-pop-200! [&_[role=menuitem]]:focus:bg-pop-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-pop-900! dark:[&_[role=menuitem]]:focus:bg-pop-900!">
                 <DropdownMenuItem
                   onClick={() => navigate({to: `/profile`})}
-                  className="font-medium rounded-none hover:bg-primary/20"
+                  className="font-medium rounded-none"
                 >
                   <User className="w-4 h-4" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => navigate({to: `/settings`})}
-                  className="font-medium rounded-none hover:bg-primary/20"
+                  className="font-medium rounded-none"
                 >
                   <Settings className="w-4 h-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border/50" />
                 {isAdmin && <DropdownMenuItem
                   onClick={() => navigate({to: `/admin`})}
-                  className="font-medium rounded-none hover:bg-primary/20"
+                  className="font-medium rounded-none"
                 >
                   <Shield className="w-4 h-4" />
                   Admin
                 </DropdownMenuItem>}
-                {isAdmin && <DropdownMenuSeparator className="bg-border/50" />}
-                <DropdownMenuSeparator className="bg-border/50" />
                 <DropdownMenuItem asChild variant="destructive" className="font-medium rounded-none">
                   <a href="/api/logout">
                     <LogOut className="w-4 h-4" />
@@ -233,10 +230,10 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="surface bg-muted">
+              <DropdownMenuContent align="end" className="surface bg-card [&_[role=menuitem]]:hover:bg-pop-200! [&_[role=menuitem]]:focus:bg-pop-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-pop-900! dark:[&_[role=menuitem]]:focus:bg-pop-900!">
                 <DropdownMenuItem
                   onClick={() => setCreateListModalOpen(true)}
-                  className="font-medium rounded-none hover:bg-primary/20"
+                  className="bg-card font-medium rounded-none"
                 >
                   <List className="w-4 h-4" />
                   List
@@ -244,7 +241,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                 <DropdownMenuItem
                   onClick={() => createBlogPostMutation.mutate()}
                   disabled={createBlogPostMutation.isPending}
-                  className="font-medium rounded-none hover:bg-primary/20"
+                  className="bg-card font-medium rounded-none"
                 >
                   <FileText className="w-4 h-4" />
                   {createBlogPostMutation.isPending ? "Creating..." : "Blog Post"}

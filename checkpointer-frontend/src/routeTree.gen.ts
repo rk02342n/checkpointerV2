@@ -19,7 +19,6 @@ import { Route as BlogPostIdRouteImport } from './routes/blog/$postId'
 import { Route as AuthenticatedTotalspentRouteImport } from './routes/_authenticated/totalspent'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedMockupRouteImport } from './routes/_authenticated/mockup'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedCreateExpenseRouteImport } from './routes/_authenticated/create-expense'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
@@ -75,11 +74,6 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedMockupRoute = AuthenticatedMockupRouteImport.update({
-  id: '/mockup',
-  path: '/mockup',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
@@ -115,7 +109,6 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
-  '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
@@ -132,7 +125,6 @@ export interface FileRoutesByTo {
   '/browse': typeof AuthenticatedBrowseRoute
   '/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/expenses': typeof AuthenticatedExpensesRoute
-  '/mockup': typeof AuthenticatedMockupRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/totalspent': typeof AuthenticatedTotalspentRoute
@@ -151,7 +143,6 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/create-expense': typeof AuthenticatedCreateExpenseRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
-  '/_authenticated/mockup': typeof AuthenticatedMockupRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/totalspent': typeof AuthenticatedTotalspentRoute
@@ -170,7 +161,6 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-expense'
     | '/expenses'
-    | '/mockup'
     | '/profile'
     | '/settings'
     | '/totalspent'
@@ -187,7 +177,6 @@ export interface FileRouteTypes {
     | '/browse'
     | '/create-expense'
     | '/expenses'
-    | '/mockup'
     | '/profile'
     | '/settings'
     | '/totalspent'
@@ -205,7 +194,6 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/create-expense'
     | '/_authenticated/expenses'
-    | '/_authenticated/mockup'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
     | '/_authenticated/totalspent'
@@ -298,13 +286,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/mockup': {
-      id: '/_authenticated/mockup'
-      path: '/mockup'
-      fullPath: '/mockup'
-      preLoaderRoute: typeof AuthenticatedMockupRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/expenses': {
       id: '/_authenticated/expenses'
       path: '/expenses'
@@ -348,7 +329,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCreateExpenseRoute: typeof AuthenticatedCreateExpenseRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
-  AuthenticatedMockupRoute: typeof AuthenticatedMockupRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTotalspentRoute: typeof AuthenticatedTotalspentRoute
@@ -360,7 +340,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCreateExpenseRoute: AuthenticatedCreateExpenseRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
-  AuthenticatedMockupRoute: AuthenticatedMockupRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTotalspentRoute: AuthenticatedTotalspentRoute,
