@@ -24,7 +24,7 @@ function ReviewsSkeleton() {
     return (
         <div className="space-y-4">
             {[1, 2].map((i) => (
-                <div key={i} className="bg-background border-4 border-border text-foreground p-3 sm:p-4">
+                <div key={i} className="surface bg-background text-foreground p-3 sm:p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 min-w-0">
                             <Skeleton className="w-6 h-6 rounded-full bg-muted shrink-0" />
@@ -64,7 +64,7 @@ export function TopReviewsSection({
             </h3>
             {loadingCreateReview?.review && (
                 <div className="space-y-4 mb-4">
-                    <div className="bg-pop-50 border-4 border-border p-3 sm:p-4">
+                    <div className="surface bg-pop-50 p-3 sm:p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0">
                                 <Avatar className="w-6 h-6 border-2 border-stone-900 shrink-0">

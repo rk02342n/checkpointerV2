@@ -215,7 +215,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
           <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
             <Button
               variant="outline"
-              className="w-full sm:flex-1 bg-blue-100 hover:bg-blue-200 dark:hover:bg-blue-600 dark:bg-blue-800 text-foreground border-4 border-stone-900 font-semibold rounded-none"
+              className="w-full sm:flex-1 bg-blue-100 hover:bg-blue-200 dark:hover:bg-blue-600 dark:bg-blue-800 text-foreground font-semibold"
               onClick={() => handleConfirmReplace("stashed")}
               disabled={isPending}
             >
@@ -224,7 +224,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
             </Button>
             <Button
               variant="outline"
-              className="w-full sm:flex-1 bg-green-100 hover:bg-green-200 dark:hover:bg-green-600 dark:bg-green-800 text-foreground border-4 border-stone-900 font-semibold rounded-none"
+              className="w-full sm:flex-1 bg-green-100 hover:bg-green-200 dark:hover:bg-green-600 dark:bg-green-800 text-foreground font-semibold"
               onClick={() => handleConfirmReplace("finished")}
               disabled={isPending}
             >
@@ -261,10 +261,10 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
             <Button
               type="button"
               onClick={() => setLogType("currently-playing")}
-              className={`flex flex-col items-center justify-center h-full gap-2 p-2 sm:p-3 border-4 font-semibold text-[10px] sm:text-xs transition-colors ${
+              className={`flex flex-col items-center justify-center h-full gap-2 p-2 sm:p-3 font-semibold text-[10px] sm:text-xs transition-colors ${
                 logType === "currently-playing"
-                  ? "bg-green-200 border-border dark:bg-green-800"
-                  : "bg-muted border-border"
+                  ? "bg-green-200 dark:bg-green-800"
+                  : "bg-muted"
               }`}
             >
               <ConciergeBell className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -273,10 +273,10 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
             <Button
               type="button"
               onClick={() => setLogType("played-before")}
-              className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 border-4 font-semibold text-[10px] sm:text-xs transition-colors ${
+              className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 font-semibold text-[10px] sm:text-xs transition-colors ${
                 logType === "played-before"
-                  ? "bg-pop-200 border-border dark:bg-fuchsia-800"
-                  : "bg-muted border-border"
+                  ? "bg-pop-200 dark:bg-fuchsia-800"
+                  : "bg-muted"
               }`}
             >
               <History className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -285,10 +285,10 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
             <Button
               type="button"
               onClick={() => setLogType("want-to-play")}
-              className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 border-4 font-semibold text-[10px] sm:text-xs transition-colors ${
+              className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 font-semibold text-[10px] sm:text-xs transition-colors ${
                 logType === "want-to-play"
-                  ? "bg-brand-200 border-border dark:bg-brand-700"
-                  : "bg-muted border-border"
+                  ? "bg-brand-200 dark:bg-brand-700"
+                  : "bg-muted"
               }`}
             >
               <CalendarHeart className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -303,7 +303,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
               placeholder="Search for a game..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-muted border-4 border-border text-foreground py-2 pl-10 pr-4 focus:ring-2 text-sm rounded-none"
+              className="w-full bg-muted text-foreground py-2 pl-10 pr-4 focus:ring-2 text-sm rounded-none"
               autoFocus
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-600" />
@@ -311,7 +311,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
 
           {/* Search Results */}
           {debouncedSearchQuery && (
-          <div className="flex-1 min-h-0 overflow-y-auto border-4 border-border bg-background">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-background">
             {isLoading ? (
               <div className="flex items-center justify-center h-full min-h-[150px] sm:min-h-[200px]">
                 <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground animate-spin" />
@@ -370,7 +370,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
 
           {/* Selected Game Strip */}
           {selectedGame && (
-            <div className="flex items-center gap-3 p-3 bg-pop-100 dark:bg-pop-900 border-4 border-stone-900">
+            <div className="flex items-center gap-3 p-3 bg-pop-100 dark:bg-pop-900">
               {selectedGame.coverUrl ? (
                 <img
                   className="w-10 h-10 object-cover border-2 border-border shrink-0"
@@ -378,7 +378,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
                   alt={selectedGame.name}
                 />
               ) : (
-                <div className="w-10 h-10 bg-background border-2 border-stone-900 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-background border-2 border-border flex items-center justify-center shrink-0">
                   <Gamepad2 className="w-5 h-5 text-muted-foreground" />
                 </div>
               )}
@@ -407,13 +407,13 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
           {!isLoggedIn ? (
             <a
               href="/api/login"
-              className="w-full flex items-center justify-center font-semibold py-3 text-sm border-4 border-border bg-background hover:bg-muted transition-colors"
+              className="w-full flex items-center justify-center font-semibold py-3 text-sm bg-background hover:bg-muted shadow-hard-4 transition-colors"
             >
               Log in to log games
             </a>
           ) : (
           <Button
-            className="w-full  font-semibold rounded-none py-3 text-sm"
+            className="w-full font-semibold rounded-none py-3 text-sm"
             variant='outline'
             onClick={handleSubmit}
             disabled={!selectedGame || isPending}

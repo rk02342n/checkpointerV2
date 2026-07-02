@@ -564,20 +564,20 @@ function InsightsSkeleton() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-muted border-4 border-border p-4 animate-pulse"
+              className="surface bg-muted p-4 animate-pulse"
             >
               <div className="h-8 w-16 bg-muted-foreground/20 mb-2" />
               <div className="h-3 w-20 bg-muted-foreground/20" />
             </div>
           ))}
         </div>
-        <div className="h-[200px] bg-muted border-4 border-border animate-pulse" />
+        <div className="h-[200px] surface bg-muted animate-pulse" />
       </div>
 
       {/* Genre breakdown skeleton */}
       <div>
         <div className="h-5 w-28 bg-muted-foreground/20 mb-4" />
-        <div className="h-[250px] bg-muted border-4 border-border animate-pulse" />
+        <div className="h-[250px] surface bg-muted animate-pulse" />
       </div>
 
       {/* Review stats skeleton */}
@@ -587,7 +587,7 @@ function InsightsSkeleton() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-muted border-4 border-border p-4 animate-pulse"
+              className="surface bg-muted p-4 animate-pulse"
             >
               <div className="h-8 w-16 bg-muted-foreground/20 mb-2" />
               <div className="h-3 w-20 bg-muted-foreground/20" />
@@ -603,7 +603,7 @@ function InsightsSkeleton() {
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="bg-muted border-4 border-border p-4 animate-pulse"
+              className="surface bg-muted p-4 animate-pulse"
             >
               <div className="h-8 w-16 bg-muted-foreground/20 mb-2" />
               <div className="h-3 w-20 bg-muted-foreground/20" />

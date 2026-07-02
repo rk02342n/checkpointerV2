@@ -79,7 +79,6 @@ function BlogPostPage() {
             variant="outline"
             size="sm"
             onClick={() => navigate({ to: '/blog-editor/$postId', params: { postId } })}
-            className="border-4 border-border"
           >
             <Pencil className="w-4 h-4" />
             Edit post

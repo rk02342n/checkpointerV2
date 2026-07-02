@@ -5,7 +5,7 @@ export default function ToggleSwitch({ checked, onChange }: { checked: boolean; 
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative w-14 h-8 border-4 border-border hover:opacity-90 transition-colors focus:outline-none ${
+        className={`relative w-14 h-8 border-2 border-border hover:opacity-90 transition-colors focus:outline-none ${
           checked ? 'bg-primary' : 'bg-muted'
         }`}
       >

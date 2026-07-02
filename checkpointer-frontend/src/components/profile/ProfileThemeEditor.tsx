@@ -31,7 +31,7 @@ function ColorPicker({ label, value, onChange, placeholder, hint }: {
           type="color"
           value={value || '#ffffff'}
           onChange={(e) => onChange(e.target.value)}
-          className="w-10 h-10 border-4 border-border cursor-pointer bg-transparent p-0"
+          className="w-10 h-10 border-2 border-border cursor-pointer bg-transparent p-0"
         />
         <Input
           value={value}
@@ -41,7 +41,7 @@ function ColorPicker({ label, value, onChange, placeholder, hint }: {
           }}
           placeholder={placeholder}
           maxLength={7}
-          className="bg-input border-4 border-border rounded-none font-mono text-sm flex-1"
+          className="font-mono text-sm flex-1"
         />
       </div>
       {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
@@ -192,7 +192,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
           <select
             value={fontFamily}
             onChange={(e) => setFontFamily(e.target.value)}
-            className="bg-input border-4 border-border rounded-none px-3 py-2 text-sm text-foreground h-10"
+            className="bg-input border-2 border-border rounded-none px-3 py-2 text-sm text-foreground h-10"
           >
             <option value="">Default (System Font)</option>
             {Object.entries(FONT_CATEGORIES).map(([category, fonts]) => (
@@ -230,7 +230,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
           <Palette className="w-3.5 h-3.5" />
           Preview
         </Label>
-        <div className="border-4 border-border rounded-sm overflow-hidden">
+        <div className="surface overflow-hidden">
           <div
             className="p-2 profile-themed-content"
             style={getProfileContentStyle(previewTheme)}
@@ -282,7 +282,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
           variant="outline"
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="border-4 border-border rounded-none bg-card hover:bg-muted font-semibold"
+          className="bg-card hover:bg-muted font-semibold"
         >
           {saveMutation.isPending ? (
             <>

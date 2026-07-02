@@ -52,7 +52,7 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
           {isOwnProfile && (
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-foreground hover:bg-foreground/90 text-background border-4 border-border rounded-none"
+              className="bg-foreground hover:bg-foreground/90 text-background"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First List
@@ -77,7 +77,6 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
           <Button
             onClick={() => setShowCreateModal(true)}
             variant="outline"
-            className="border-4 border-border rounded-none"
           >
             <Plus className="w-4 h-4 mr-2" />
             New List

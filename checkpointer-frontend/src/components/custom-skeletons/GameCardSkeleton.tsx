@@ -2,7 +2,7 @@ import { Skeleton } from "../ui/skeleton";
 
 export default function GameCardSkeleton() {
     return (
-      <div className="bg-card border-2 sm:border-4 border-border shadow-hard-3 sm:shadow-hard-6">
+      <div className="bg-card shadow-hard-3 sm:shadow-hard-6">
         <Skeleton className="w-full aspect-3/4 rounded-none bg-stone-100 dark:bg-stone-800" />
         <div className="p-2 sm:p-4 border-t-2 sm:border-t-4 border-border">
           <Skeleton className="h-4 sm:h-6 w-3/4 bg-stone-100 dark:bg-stone-800 rounded-none" />

@@ -761,7 +761,7 @@ function Profile() {
               disabled={avatarMutation.isPending}
               className="relative group cursor-pointer"
             >
-              <Avatar className="w-24 h-24 border-4 border-border group-hover:opacity-80 transition-opacity">
+              <Avatar className="w-24 h-24 border-2 border-border group-hover:opacity-80 transition-opacity">
                 <AvatarImage
                   src={dbUserData?.account?.avatarUrl ? `/api/user/avatar/${dbUserData.account.id}?v=${encodeURIComponent(dbUserData.account.avatarUrl)}` : undefined}
                   alt={user.given_name}
@@ -873,20 +873,20 @@ function Profile() {
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
                 <button
                   onClick={() => setShowFollowDialog('followers')}
-                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all`}
+                  className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
                 </button>
                 <button
                   onClick={() => setShowFollowDialog('following')}
-                  className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all`}
+                  className={`${themed ? 'profile-accent' : 'bg-background'} shadow-hard-3 px-4 py-2 hover:opacity-80 cursor-pointer active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all`}
                 >
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
@@ -1030,7 +1030,7 @@ function Profile() {
               {reviewsPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -1082,7 +1082,7 @@ function Profile() {
               {playHistoryPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -1126,7 +1126,7 @@ function Profile() {
               {wishlistPending ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-4 animate-pulse">
+                    <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
                         <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
                         <div className="flex-1 space-y-2">
@@ -1224,7 +1224,7 @@ function Profile() {
               {blogPostsPending ? (
                 <div className="space-y-6">
                   {[1, 2].map((i) => (
-                    <div key={i} className="bg-muted border-4 border-border p-6 animate-pulse">
+                    <div key={i} className="surface bg-muted p-6 animate-pulse">
                       <div className="h-6 w-48 bg-muted-foreground/20 mb-3" />
                       <div className="h-4 w-full bg-muted-foreground/20 mb-2" />
                       <div className="h-4 w-2/3 bg-muted-foreground/20" />
@@ -1301,7 +1301,6 @@ function Profile() {
                     variant="outline"
                     onClick={() => createPostMutation.mutate()}
                     disabled={createPostMutation.isPending}
-                    className="border-4 border-border"
                   >
                     {createPostMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1431,7 +1430,7 @@ function Profile() {
                       to="/users/$userId"
                       params={{ userId: user.id }}
                       onClick={() => setShowFollowDialog(null)}
-                      className="flex items-center gap-3 p-3 border-4 border-border hover:bg-accent transition-colors"
+                      className="flex items-center gap-3 p-3 hover:bg-accent transition-colors"
                     >
                       <Avatar className="w-10 h-10 border-2 border-border">
                         <AvatarImage
@@ -1477,7 +1476,7 @@ function Profile() {
             <Button
               onClick={() => handleStopPlaying('finished')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-4 border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+              className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground shadow-hard-4 transition-all h-auto py-3 justify-start"
             >
               <Check className="w-5 h-5 mr-2" />
               <div className="text-left">
@@ -1488,7 +1487,7 @@ function Profile() {
             <Button
               onClick={() => handleStopPlaying('stashed')}
               disabled={stopPlayingMutation.isPending}
-              className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-4 border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+              className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground shadow-hard-4 transition-all h-auto py-3 justify-start"
             >
               <Clock className="w-5 h-5 mr-2" />
               <div className="text-left">

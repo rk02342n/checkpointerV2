@@ -44,7 +44,7 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                                         <img
                                             src={getListCoverUrl(list.id)}
                                             alt={list.name}
-                                            className="object-cover aspect-square sm:aspect-30/9 w-full border-border border-4"
+                                            className="object-cover aspect-square sm:aspect-30/9 w-full"
                                             loading="lazy"
                                         />
                                         
@@ -54,7 +54,7 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                         );
                     })}
                     {/* Info card pinned to the right */}
-                    <div className={`absolute bottom-2 max-h-4/5 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 bg-background/70 backdrop-blur-sm border-2 sm:border-4 border-border p-2 sm:p-4 shadow-hard-4 overflow-hidden`}>
+                    <div className={`absolute bottom-2 max-h-4/5 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 surface bg-background/70 backdrop-blur-sm p-2 sm:p-4 shadow-hard-4 overflow-hidden`}>
                         <h3 className="hidden sm:block text-xs text-muted-foreground truncate text-end mb-6">
                             Lists in feature
                         </h3>
