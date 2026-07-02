@@ -101,7 +101,7 @@ export default function BrowseGames() {
       updateSearch({ q: debouncedSearch || undefined, page: undefined }, { replace: true })
     }
     if (debouncedSearch) {
-      // posthog.capture('browse_searched', { query: debouncedSearch, sort_by: sortBy, filters: { year: yearFilter, genre: genreFilter, platform: platformFilter } })
+      posthog.capture('browse_searched', { query: debouncedSearch, sort_by: sortBy, filters: { year: yearFilter, genre: genreFilter, platform: platformFilter } })
     }
   }, [debouncedSearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -163,7 +163,7 @@ export default function BrowseGames() {
   }, [data, currentPage, totalPages, isPlaceholderData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGameClick = (game: Game) => {
-    // posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })
+    posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })
     window.scrollTo(0, 0)
     navigate({ to: `/games/${game.id}` })
   }
@@ -175,22 +175,22 @@ export default function BrowseGames() {
 
   const handleSortChange = (value: string) => {
     const [newSortBy, newSortOrder] = value.split("-") as [SortBy, SortOrder]
-    // posthog.capture('browse_filter_changed', { filter_type: 'sort', value })
+    posthog.capture('browse_filter_changed', { filter_type: 'sort', value })
     updateSearch({ sortBy: newSortBy, sortOrder: newSortOrder, page: undefined }, { replace: true })
   }
 
   const handleYearChange = (value: string) => {
-    // posthog.capture('browse_filter_changed', { filter_type: 'year', value })
+    posthog.capture('browse_filter_changed', { filter_type: 'year', value })
     updateSearch({ year: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handleGenreChange = (value: string) => {
-    // posthog.capture('browse_filter_changed', { filter_type: 'genre', value })
+    posthog.capture('browse_filter_changed', { filter_type: 'genre', value })
     updateSearch({ genre: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handlePlatformChange = (value: string) => {
-    // posthog.capture('browse_filter_changed', { filter_type: 'platform', value })
+    posthog.capture('browse_filter_changed', { filter_type: 'platform', value })
     updateSearch({ platform: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
