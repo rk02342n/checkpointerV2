@@ -197,7 +197,7 @@ export default function BrowseGames() {
               placeholder="Search games..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-input border-4 border-border py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+              className="w-full bg-input border-border py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-border rounded-none"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function BrowseGames() {
               <select
                 value={`${sortBy}-${sortOrder}`}
                 onChange={(e) => handleSortChange(e.target.value)}
-                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+                className="bg-input border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="rating-desc">Rating (High to Low)</option>
                 <option value="rating-asc">Rating (Low to High)</option>
@@ -230,7 +230,7 @@ export default function BrowseGames() {
               <select
                 value={yearFilter}
                 onChange={(e) => handleYearChange(e.target.value)}
-                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+                className="bg-input border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Years</option>
                 {years.map(year => (
@@ -247,7 +247,7 @@ export default function BrowseGames() {
               <select
                 value={genreFilter}
                 onChange={(e) => handleGenreChange(e.target.value)}
-                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+                className="bg-input border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Genres</option>
                 {genres.map(genre => (
@@ -264,7 +264,7 @@ export default function BrowseGames() {
               <select
                 value={platformFilter}
                 onChange={(e) => handlePlatformChange(e.target.value)}
-                className="bg-input border-4 border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
+                className="bg-input border-border px-3 py-2 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-border rounded-none"
               >
                 <option value="all">All Platforms</option>
                 {platforms.map(platform => (

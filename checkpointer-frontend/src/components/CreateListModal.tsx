@@ -136,7 +136,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               placeholder="e.g., Favorite RPGs"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-border"
+              className="bg-muted border-border text-foreground rounded-none focus:ring-2 focus:ring-border"
               maxLength={100}
               autoFocus
             />
@@ -151,7 +151,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               placeholder="What's this list about?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-border min-h-20"
+              className="bg-muted border-border text-foreground rounded-none focus:ring-2 focus:ring-border min-h-20"
               maxLength={500}
             />
             <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-brand-600' : 'text-muted-foreground'}`}>
@@ -176,7 +176,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
                 <img
                   src={coverPreview}
                   alt="Cover preview"
-                  className="w-full aspect-[16/9] object-cover border-4 border-border"
+                  className="w-full aspect-[16/9] object-cover border-border"
                 />
                 <button
                   type="button"
@@ -190,7 +190,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-[16/9] border-4 border-dashed border-border hover:border-muted-foreground bg-muted flex flex-col items-center justify-center gap-2 transition-colors"
+                className="w-full aspect-[16/9] border-2 border-dashed border-border hover:bg-muted-foreground/20 bg-muted flex flex-col items-center justify-center gap-2 transition-colors"
               >
                 <ImagePlus className="w-8 h-8 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Click to upload cover image</span>
@@ -209,7 +209,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               <button
                 type="button"
                 onClick={() => setVisibility("public")}
-                className={`flex items-center justify-center gap-2 p-3 border-4 font-semibold text-sm transition-colors ${
+                className={`flex items-center justify-center gap-2 p-3 font-semibold text-sm transition-colors ${
                   visibility === "public"
                     ? "bg-green-200 border-border text-foreground dark:bg-green-800"
                     : "bg-muted border-border text-muted-foreground hover:border-muted-foreground"
@@ -221,7 +221,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               <button
                 type="button"
                 onClick={() => setVisibility("private")}
-                className={`flex items-center justify-center gap-2 p-3 border-4 font-semibold text-sm transition-colors ${
+                className={`flex items-center justify-center gap-2 p-3 font-semibold text-sm transition-colors ${
                   visibility === "private"
                     ? "bg-brand-200 border-border text-foreground dark:bg-brand-700"
                     : "bg-muted border-border text-muted-foreground hover:border-muted-foreground"

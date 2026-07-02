@@ -289,7 +289,7 @@ function BlogEditorPage() {
       <Navbar sticky={false} />
 
       {/* ── Top bar: nav + toolbar + actions ── */}
-      <div className="sticky top-0 z-30 bg-card border-b-4 border-border mx-4">
+      <div className="sticky top-0 z-30 bg-card border-b-2 border-border mx-4">
         <div className="container mx-auto max-w-3xl px-4 py-3">
           {/* Row 1: Back | actions */}
           <div className="flex items-center justify-between gap-3">
@@ -493,7 +493,7 @@ function BlogEditorPage() {
                 placeholder="Title..."
                 autoFocus
                 onBlur={handleMetaBlur}
-                className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-sans placeholder:text-muted-foreground/40 focus:outline-none border-b-4 border-transparent focus:border-border pb-2 transition-colors"
+                className="w-full bg-transparent text-3xl sm:text-4xl font-bold text-foreground font-sans placeholder:text-muted-foreground/40 focus:outline-none border-b-2 border-transparent focus:border-border pb-2 transition-colors"
               />
               <input
                 type="text"

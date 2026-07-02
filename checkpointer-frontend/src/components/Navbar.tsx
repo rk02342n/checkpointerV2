@@ -103,13 +103,13 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     }));
 
     return(
-      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4 mt-0`}>
+      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4 mt-4`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
         <Button
           variant="ghost"
           size="icon-lg"
-          className="md:hidden bg-card border-4 border-border hover:bg-muted transition-colors"
+          className="md:hidden bg-card border-border hover:bg-muted transition-colors"
           onClick={() => navigate({to: `/browse`})}
           aria-label="Search games"
         >
@@ -152,7 +152,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none cursor-pointer">
                 {/* Mobile: icon only */}
-                <div className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-4 border-border hover:bg-muted transition-colors">
+                <div className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-border hover:bg-muted transition-colors">
                   <ChevronDown className="w-5 h-5 text-foreground" />
                 </div>
                 {/* Desktop: full button with text */}
@@ -161,7 +161,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="surface">
+              <DropdownMenuContent align="end" className="surface bg-muted">
                 <DropdownMenuItem
                   onClick={() => navigate({to: `/profile`})}
                   className="font-medium rounded-none hover:bg-primary/20"
@@ -199,7 +199,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
               {/* Mobile: icon only */}
               <a
                 href="/api/login"
-                className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-4 border-border hover:bg-muted transition-colors"
+                className="md:hidden flex items-center justify-center w-10 h-10 bg-card border-border hover:bg-muted transition-colors"
                 aria-label="Login or Sign Up"
               >
                 <LogIn className="w-5 h-5 text-foreground" />
@@ -233,7 +233,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="surface">
+              <DropdownMenuContent align="end" className="surface bg-muted">
                 <DropdownMenuItem
                   onClick={() => setCreateListModalOpen(true)}
                   className="font-medium rounded-none hover:bg-primary/20"
@@ -255,7 +255,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
           {/* Log Game button - desktop only */}
           <Button
             variant="outline"
-            className="hidden md:flex items-center gap-2 bg-card hover:bg-muted text-foreground border-4 border-border px-4 py-2 font-semibold transition-all text-sm"
+            className="hidden md:flex items-center gap-2 bg-card hover:bg-muted text-foreground border-border px-4 py-2 font-semibold transition-all text-sm"
             onClick={() => { posthog.capture('log_game_modal_opened', { source: 'navbar' }); setLogGameModalOpen(true); }}
           >
             <Plus className="w-4 h-4" />

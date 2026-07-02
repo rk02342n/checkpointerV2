@@ -9,7 +9,7 @@
        two lines (plus .dark below) to restyle every shadow in the app. */
     --shadow-color: rgba(41, 37, 36, 1);        /* stone-800 */
     --shadow-color-soft: rgba(120, 113, 108, 0.5); /* stone-500/50 — quieter variant */
-    --background: oklch(.987 .022 95.277); /* brand-50 (amber) */
+    --background: oklch(0.95 0.0543 74.32);
     --foreground: oklch(0.216 0.006 56);  /* stone-900 */
     --card: oklch(1 0 0);                 /* white */
     --card-foreground: oklch(0.216 0.006 56);
@@ -44,7 +44,7 @@
   }
 
   .dark {
-    --shadow-color: rgba(120, 113, 108, 0.5);
+    --shadow-color: rgb(0, 0, 0);
     --background: oklch(0.216 0.006 56);  /* stone-900 */
     --foreground: oklch(0.97 0.001 56);   /* stone-100 */
     --card: oklch(0.268 0.007 56);        /* stone-800 */
@@ -187,8 +187,8 @@
 @layer components {
   .surface {
     background-color: var(--card);
-    border: 4px solid var(--border);
-    border-radius: 0;
+    /* border: 4px solid var(--border); */
+    border-radius: 0.65rem;
     box-shadow: 4px 4px 0px 0px var(--shadow-color);
   }
 }

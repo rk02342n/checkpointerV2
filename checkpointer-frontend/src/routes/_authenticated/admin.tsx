@@ -288,7 +288,7 @@ function UsersPanel({
     <div className="bg-white border-4 border-stone-900 shadow-hard-6 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-stone-100 border-b-4 border-stone-900">
+          <thead className="bg-stone-100 border-b-2 border-stone-900">
             <tr>
               <th className="text-left p-4 font-bold text-stone-900">User</th>
               <th className="text-left p-4 font-bold text-stone-900">Role</th>
@@ -416,7 +416,7 @@ function ReviewsPanel({
     <div className="bg-white border-4 border-stone-900 shadow-hard-6 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-stone-100 border-b-4 border-stone-900">
+          <thead className="bg-stone-100 border-b-2 border-stone-900">
             <tr>
               <th className="text-left p-4 font-bold text-stone-900">Game</th>
               <th className="text-left p-4 font-bold text-stone-900">User</th>

@@ -163,7 +163,7 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="flex items-center gap-3 p-3 bg-muted border-4 border-border hover:bg-pop-100 dark:hover:bg-muted/80 transition-colors"
+      className="flex items-center gap-3 p-3 bg-muted border-border hover:bg-pop-100 dark:hover:bg-muted/80 transition-colors"
     >
       {/* Cover thumbnail */}
       <div className="w-16 h-16 bg-muted border-2 border-border shrink-0 overflow-hidden">

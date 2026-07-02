@@ -384,7 +384,7 @@ function ListDetailView() {
                 <img
                   src={getListCoverUrl(listId)}
                   alt={`${list.name} cover`}
-                  className="w-full aspect-21/9 object-cover border-4 border-border shadow-hard-6"
+                  className="w-full aspect-21/9 object-cover surface border-border shadow-hard-6"
                 />
                 {isOwner && (
                   <div className="absolute top-3 right-3 flex gap-2">
@@ -568,8 +568,8 @@ function ListDetailView() {
         </div>
 
         {/* Games List */}
-        <div className="surface bg-background shadow-hard-6">
-          <div className="border-b-4 border-border p-4">
+        <div className="surface bg-muted shadow-hard-6">
+          <div className="border-b-2 border-border p-4 ">
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
               Games
             </h2>
@@ -597,7 +597,7 @@ function ListDetailView() {
                 items={list.games.map((g) => g.gameId)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="divide-y-4 divide-border">
+                <div className="divide-y-2 divide-border">
                   {list.games.map((game, index) => (
                     <SortableGameRow
                       key={game.gameId}
@@ -616,7 +616,7 @@ function ListDetailView() {
               </DragOverlay>
             </DndContext>
           ) : (
-            <div className="divide-y-4 divide-border">
+            <div className="divide-y-2 divide-border">
               {list.games.map((game, index) => (
                 <GameRow key={game.gameId} game={game} index={index} />
               ))}
@@ -711,11 +711,11 @@ function ListDetailSkeleton() {
           <Skeleton className="h-4 w-24 bg-sky-300 dark:bg-sky-800" />
         </div>
       </div>
-      <div className="surface bg-background shadow-hard-6">
-        <div className="border-b-4 border-border p-4">
+      <div className="surface bg-muted shadow-hard-6">
+        <div className="border-b-2 border-border p-4">
           <Skeleton className="h-4 w-32 bg-muted" />
         </div>
-        <div className="divide-y-4 divide-border">
+        <div className="divide-y-2 divide-border">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-4 p-4">
               <Skeleton className="w-8 h-8 bg-muted" />
@@ -761,7 +761,7 @@ function SortableGameRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-4 p-4 hover:bg-accent transition-colors bg-background ${
+      className={`flex items-center gap-4 p-4 hover:bg-accent transition-colors bg-card ${
         isDragging ? "opacity-50" : ""
       }`}
     >
@@ -842,7 +842,7 @@ function SortableGameRow({
 
 function GameRow({ game, index }: { game: GameListGame; index: number }) {
   return (
-    <div className="flex items-center gap-4 p-4 hover:bg-accent transition-colors">
+    <div className="flex items-center gap-4 p-4 bg-card hover:bg-accent transition-colors">
       {/* Position Number */}
       <div className="w-8 h-8 flex items-center justify-center bg-stone-900 dark:bg-stone-700 text-white font-bold text-sm shrink-0">
         {index + 1}

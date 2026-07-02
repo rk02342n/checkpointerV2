@@ -58,7 +58,7 @@ export function BrowsePagination({
           variant="outline"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || isFetching}
-          className="border-4 border-border shadow-hard-3 disabled:opacity-50 rounded-none"
+          className="border-border disabled:opacity-50"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Previous
@@ -66,7 +66,7 @@ export function BrowsePagination({
 
         {pages.map((page, idx) =>
           page === "ellipsis" ? (
-            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground font-bold select-none">
+            <span key={`ellipsis-${idx}`} className="px-2 text-foreground font-bold select-none">
               ...
             </span>
           ) : (
@@ -75,11 +75,7 @@ export function BrowsePagination({
               variant={page === currentPage ? "default" : "outline"}
               onClick={() => onPageChange(page)}
               disabled={isFetching}
-              className={`min-w-[40px] border-4 border-border rounded-none ${
-                page === currentPage
-                  ? "shadow-hard-1 translate-x-[2px] translate-y-[2px]"
-                  : "shadow-hard-3"
-              }`}
+              className={`min-w-[40px] border-border`}
             >
               {page}
             </Button>
@@ -90,7 +86,7 @@ export function BrowsePagination({
           variant="outline"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || isFetching}
-          className="border-4 border-border shadow-hard-3 disabled:opacity-50 rounded-none"
+          className="border-border disabled:opacity-50"
         >
           Next
           <ChevronRight className="w-4 h-4 ml-1" />
