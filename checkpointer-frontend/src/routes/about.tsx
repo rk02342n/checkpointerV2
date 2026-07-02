@@ -52,7 +52,7 @@ function AboutPage() {
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-4xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-amber-400/40 dark:bg-black border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8 md:p-12">
+          <div className="bg-brand-400/40 surface dark:bg-black text-foreground sm:shadow-hard-8 p-5 sm:p-8 md:p-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6 font-alt">
              Checkpointer
             </h1>
@@ -72,13 +72,13 @@ function AboutPage() {
 
         {/* Contact Form Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-amber-100 dark:bg-red-950 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8 md:p-10">
+          <div className="bg-brand-100 surface dark:bg-red-950 sm:shadow-hard-8 p-5 sm:p-8 md:p-10">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
               Send us a message
             </h2>
 
             {status === 'success' && (
-              <div className="mb-6 bg-green-100 dark:bg-green-900 border-4 border-border p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
+              <div className="mb-6 bg-green-100 dark:bg-green-900 border-4 border-border p-4 shadow-hard-4">
                 <p className="font-semibold text-foreground">
                   Thanks for your message! We'll get back to you soon.
                 </p>
@@ -86,7 +86,7 @@ function AboutPage() {
             )}
 
             {status === 'error' && (
-              <div className="mb-6 bg-rose-100 dark:bg-rose-900 border-4 border-border p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]">
+              <div className="mb-6 bg-rose-100 dark:bg-rose-900 border-4 border-border p-4 shadow-hard-4">
                 <p className="font-semibold text-foreground">
                   {errorMessage || 'Something went wrong. Please try again.'}
                 </p>
@@ -149,7 +149,7 @@ function AboutPage() {
 
         {/* Email Section */}
         <section>
-          <div className="bg-red-300 dark:bg-red-700/20 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-5 sm:p-8">
+          <div className="bg-red-300 surface dark:bg-red-700/20 sm:shadow-hard-8 p-5 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
               Or email us directly
             </h2>

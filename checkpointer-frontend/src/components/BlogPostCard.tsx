@@ -37,7 +37,7 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
     <Link
       to="/blog/$postId"
       params={{ postId: post.id }}
-      className={`block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
+      className={`block surface profile-card profile-card-hover active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
     >
       <div className="flex gap-4">
         {/* Post content */}

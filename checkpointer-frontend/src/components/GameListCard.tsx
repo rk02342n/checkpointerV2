@@ -65,7 +65,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all overflow-hidden"
+      className="block surface profile-card profile-card-hover active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all overflow-hidden"
     >
       {/* Cover Image */}
       <div className="aspect-21/9 bg-muted relative h-fit">
@@ -124,7 +124,7 @@ export function GameListCard({ list, linkPrefix = "/lists", showSaveButton = fal
                   handleToggleSave();
                 }}
                 disabled={saveMutation.isPending || unsaveMutation.isPending}
-                className="p-1.5 bg-amber-50/80 hover:bg-amber-50 border-2 border-border transition-all disabled:opacity-50"
+                className="p-1.5 bg-brand-50/80 hover:bg-brand-50 border-2 border-border transition-all disabled:opacity-50"
                 title={isSaved ? "Unsave list" : "Save list"}
               >
                 <Bookmark
@@ -163,7 +163,7 @@ export function GameListCardCompact({ list, linkPrefix = "/lists" }: GameListCar
   return (
     <Link
       to={`${linkPrefix}/${list.id}` as string}
-      className="flex items-center gap-3 p-3 bg-muted border-4 border-border hover:bg-orange-100 dark:hover:bg-muted/80 transition-colors"
+      className="flex items-center gap-3 p-3 bg-muted border-4 border-border hover:bg-pop-100 dark:hover:bg-muted/80 transition-colors"
     >
       {/* Cover thumbnail */}
       <div className="w-16 h-16 bg-muted border-2 border-border shrink-0 overflow-hidden">

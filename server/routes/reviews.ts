@@ -1,11 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
-import { getAuthUser, kindeClient, sessionManager } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
+import { getAuthUser, getOptionalViewer } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { reviewsTable, reviewsInsertSchema, createReviewSchema } from "../db/schema/reviews";
 import { reviewLikesTable } from "../db/schema/review-likes";
 import { eq, desc, and, count, sql, avg } from "drizzle-orm";
 import { assertOwned } from "../lib/ownership";
+import { assertViewableProfile, visibleUsersScope } from "../lib/visibility";
 import { usersTable } from "../db/schema/users";
 import { gamesTable } from "../db/schema/games";
 
@@ -31,30 +32,11 @@ async function recalcGameRatingCache(gameId: string) {
 export const reviewsRoute = new Hono()
 // GET /reviews - Get all reviews (with optional filtering)
 // Public endpoint for game reviews
-// Public: all reviews for a game (with optional auth for userLiked)
-.get('/game/:gameId', async (c) => {
+// Public: all reviews for a game (optional auth for userLiked; private
+// authors' reviews are hidden from everyone but themselves)
+.get('/game/:gameId', getOptionalViewer, async (c) => {
   const gameId = c.req.param('gameId');
-
-  // Try to get authenticated user (optional)
-  let currentUserId: string | null = null;
-  try {
-    const manager = sessionManager(c);
-    const isAuthenticated = await kindeClient.isAuthenticated(manager);
-    if (isAuthenticated) {
-      const kindeUser = await kindeClient.getUserProfile(manager);
-      const dbUser = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.kindeId, kindeUser.id))
-        .limit(1)
-        .then(rows => rows[0]);
-      if (dbUser) {
-        currentUserId = dbUser.id;
-      }
-    }
-  } catch {
-    // User not authenticated, continue without user ID
-  }
+  const currentUserId = c.var.viewer?.id ?? null;
 
   // Subquery to count likes per review
   const likesSubquery = db
@@ -104,7 +86,7 @@ export const reviewsRoute = new Hono()
   }
 
   const reviews = await query
-    .where(eq(reviewsTable.gameId, gameId))
+    .where(and(eq(reviewsTable.gameId, gameId), visibleUsersScope(currentUserId)))
     .orderBy(
       desc(sql`COALESCE(${likesSubquery.likeCount}, 0)`),
       sql`${reviewsTable.rating} ASC NULLS LAST`
@@ -160,11 +142,12 @@ export const reviewsRoute = new Hono()
   }
 })
 
-// Protected: specific user's review for a game
+// Protected: specific user's review for a game (private → owner only)
 .get('/game/:gameId/user/:userId', getAuthUser, async (c) => {
   const gameId = c.req.param('gameId');
   const userId = c.req.param('userId');
-  
+  await assertViewableProfile(userId, c.var.dbUser);
+
   const reviews = await db
     .select()
     .from(reviewsTable)
@@ -181,6 +164,7 @@ export const reviewsRoute = new Hono()
 .get('/user/:userId', getAuthUser, async (c) => {
   const userId = c.req.param('userId');
   const currentUser = c.var.dbUser;
+  await assertViewableProfile(userId, currentUser);
   const limit = Math.min(Number(c.req.query('limit')) || 10, 50);
   const offset = Number(c.req.query('offset')) || 0;
 

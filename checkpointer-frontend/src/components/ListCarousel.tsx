@@ -54,7 +54,7 @@ export function ListCarousel({ gameList }: { gameList: PopularGameListSummary[] 
                         );
                     })}
                     {/* Info card pinned to the right */}
-                    <div className={`absolute bottom-2 max-h-4/5 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 bg-background/70 backdrop-blur-sm border-2 sm:border-4 border-border p-2 sm:p-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden`}>
+                    <div className={`absolute bottom-2 max-h-4/5 right-2 w-40 sm:bottom-4 sm:right-4 sm:w-72 bg-background/70 backdrop-blur-sm border-2 sm:border-4 border-border p-2 sm:p-4 shadow-hard-4 overflow-hidden`}>
                         <h3 className="hidden sm:block text-xs text-muted-foreground truncate text-end mb-6">
                             Lists in feature
                         </h3>

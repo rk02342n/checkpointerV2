@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getAuthUser } from "../kinde";
+import { getAuthUser, getOptionalViewer } from "../kinde";
 import { db } from "../db";
 import { blogPostsTable, createBlogPostSchema, type BlogPostCustomization } from "../db/schema/blog-posts";
 import { gamesTable } from "../db/schema/games";
@@ -9,7 +9,8 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { assertOwned, ownerScope } from "../lib/ownership";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
+import { s3Client, R2_BUCKET, PutObjectCommand } from "../s3";
+import { streamR2Image } from "../lib/images";
 
 const updatePostSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -207,7 +208,7 @@ export const blogPostsRoute = new Hono()
   const user = c.var.dbUser;
   const data = c.req.valid('json');
 
-  const post = await assertOwned(blogPostsTable, postId, user.id);
+  await assertOwned(blogPostsTable, postId, user.id);
 
   try {
     const updated = await db
@@ -302,7 +303,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await assertOwned(blogPostsTable, postId, user.id);
+  await assertOwned(blogPostsTable, postId, user.id);
 
   const formData = await c.req.formData();
   const fileEntry = formData.get("image");
@@ -360,12 +361,16 @@ export const blogPostsRoute = new Hono()
   return c.json({ removed: true });
 })
 
-// GET /:postId/header-image - Serve header image (public)
-.get('/:postId/header-image', async (c) => {
+// GET /:postId/header-image - Serve header image (published → public, draft → owner only)
+.get('/:postId/header-image', getOptionalViewer, async (c) => {
   const postId = c.req.param('postId');
 
   const post = await db
-    .select({ headerImageUrl: blogPostsTable.headerImageUrl })
+    .select({
+      headerImageUrl: blogPostsTable.headerImageUrl,
+      status: blogPostsTable.status,
+      userId: blogPostsTable.userId,
+    })
     .from(blogPostsTable)
     .where(eq(blogPostsTable.id, postId))
     .limit(1)
@@ -375,29 +380,14 @@ export const blogPostsRoute = new Hono()
     return c.notFound();
   }
 
-  try {
-    const response = await s3Client.send(new GetObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: post.headerImageUrl,
-    }));
-
-    if (!response.Body) return c.notFound();
-
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-
-    return new Response(buffer, {
-      headers: {
-        "Content-Type": response.ContentType || "image/jpeg",
-        "Cache-Control": "public, max-age=31536000",
-      },
-    });
-  } catch {
+  const published = post.status === 'published';
+  if (!published && c.var.viewer?.id !== post.userId) {
     return c.notFound();
   }
+
+  return streamR2Image(post.headerImageUrl, {
+    cacheControl: published ? undefined : 'no-store',
+  });
 })
 
 // POST /:postId/image - Upload inline image for post content (authenticated, owner only)
@@ -405,7 +395,7 @@ export const blogPostsRoute = new Hono()
   const postId = c.req.param('postId');
   const user = c.var.dbUser;
 
-  const post = await assertOwned(blogPostsTable, postId, user.id);
+  await assertOwned(blogPostsTable, postId, user.id);
 
   const formData = await c.req.formData();
   const fileEntry = formData.get("image");
@@ -444,35 +434,34 @@ export const blogPostsRoute = new Hono()
   return c.json({ imageUrl: `/api/blog-posts/${postId}/image/${encodeURIComponent(key)}` });
 })
 
-// GET /:postId/image/:imageKey - Serve inline content image (public)
-.get('/:postId/image/*', async (c) => {
-  const imageKey = decodeURIComponent(c.req.path.split('/image/')[1]);
+// GET /:postId/image/* - Serve inline content image (published → public, draft → owner only).
+// The key arrives in the URL, so it is scoped to the post's own prefix — this
+// route must never act as a general bucket proxy.
+.get('/:postId/image/*', getOptionalViewer, async (c) => {
+  const postId = c.req.param('postId');
+  const imageKey = decodeURIComponent(c.req.path.split('/image/')[1] ?? '');
 
-  if (!imageKey) {
+  if (!imageKey.startsWith(`blog-images/${postId}/`)) {
     return c.notFound();
   }
 
-  try {
-    const response = await s3Client.send(new GetObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: imageKey,
-    }));
+  const post = await db
+    .select({ status: blogPostsTable.status, userId: blogPostsTable.userId })
+    .from(blogPostsTable)
+    .where(eq(blogPostsTable.id, postId))
+    .limit(1)
+    .then(res => res[0]);
 
-    if (!response.Body) return c.notFound();
-
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-
-    return new Response(buffer, {
-      headers: {
-        "Content-Type": response.ContentType || "image/jpeg",
-        "Cache-Control": "public, max-age=31536000",
-      },
-    });
-  } catch {
+  if (!post) {
     return c.notFound();
   }
+
+  const published = post.status === 'published';
+  if (!published && c.var.viewer?.id !== post.userId) {
+    return c.notFound();
+  }
+
+  return streamR2Image(imageKey, {
+    cacheControl: published ? undefined : 'no-store',
+  });
 });

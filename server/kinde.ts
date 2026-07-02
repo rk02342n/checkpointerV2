@@ -168,6 +168,39 @@ export const getAuthUser = createMiddleware<Env>(async (c, next) => {
   }
 });
 
+type ViewerEnv = {
+  Variables: {
+    viewer: z.infer<typeof usersSelectSchema> | null;
+  };
+};
+
+// Resolve the Viewer for public reads: the caller's dbUser when a valid session
+// is present, otherwise null. Never 401s and never creates a user (read-only,
+// unlike getAuthUser) — suspended or not-yet-provisioned sessions read as
+// anonymous. Consumers: draft-image serving, profile visibility.
+export const getOptionalViewer = createMiddleware<ViewerEnv>(async (c, next) => {
+  let viewer: z.infer<typeof usersSelectSchema> | null = null;
+  try {
+    const manager = sessionManager(c);
+    if (await kindeClient.isAuthenticated(manager)) {
+      const user = await kindeClient.getUserProfile(manager);
+      const dbUser = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.kindeId, user.id))
+        .limit(1)
+        .then(rows => rows[0]);
+      if (dbUser && dbUser.suspendedAt === null) {
+        viewer = dbUser;
+      }
+    }
+  } catch {
+    // Invalid/expired session reads as anonymous.
+  }
+  c.set("viewer", viewer);
+  await next();
+});
+
 // Middleware to require specific roles (must be used after getAuthUser)
 export const requireRole = (...allowedRoles: UserRole[]) => {
   return createMiddleware<Env>(async (c, next) => {

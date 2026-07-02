@@ -91,15 +91,18 @@ export const loadingCreateExpenseQueryOptions = queryOptions<{
   staleTime: Infinity
 });
 
+// Private profiles return only identity (username/avatar) plus isPrivate: true;
+// the activity endpoints 404 for everyone but the owner.
 export type PublicUserProfile = {
   id: string
   username: string | null
-  displayName: string | null
-  bio: string | null
   avatarUrl: string | null
-  profileGifUrl: string | null
-  profileTheme: ProfileTheme | null
-  createdAt: string
+  isPrivate: boolean
+  displayName?: string | null
+  bio?: string | null
+  profileGifUrl?: string | null
+  profileTheme?: ProfileTheme | null
+  createdAt?: string
 }
 
 async function getPublicUserProfile(userId: string): Promise<PublicUserProfile> {

@@ -94,3 +94,14 @@ export function actingUser(): DbUser {
   if (!acting) throw new Error("no acting user set");
   return acting;
 }
+
+// Viewer holder for the mocked getOptionalViewer middleware: null means
+// anonymous. Distinct from the acting user so a test can exercise public
+// routes without pretending to be logged in.
+let viewing: DbUser | null = null;
+export function setActingViewer(u: DbUser | null) {
+  viewing = u;
+}
+export function actingViewer(): DbUser | null {
+  return viewing;
+}

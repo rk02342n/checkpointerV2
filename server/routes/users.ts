@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { getAuthUser } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
+import { getAuthUser, getOptionalViewer } from "../kinde"; // pass in getUser as middleware function to make the route authenticated
 import { db } from "../db";
 import { usersTable } from "../db/schema/users";
 import { reviewsTable } from "../db/schema/reviews";
@@ -34,7 +34,9 @@ const updateProfileSchema = z.object({
     profileTheme: profileThemeSchema,
 });
 import { ALLOWED_FONTS, FONT_SIZES } from "../lib/profileThemeConstants";
-import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "../s3";
+import { s3Client, R2_BUCKET, PutObjectCommand, DeleteObjectCommand } from "../s3";
+import { streamR2Image } from "../lib/images";
+import { canViewProfile } from "../lib/visibility";
 
 export const usersRoute = new Hono()
 
@@ -250,8 +252,10 @@ export const usersRoute = new Hono()
     return c.json({ success: true });
 })
 
-// Get public user profile by ID (no auth required)
-.get("/profile/:userId", async c => {
+// Get public user profile by ID (no auth required). Private profiles keep
+// identity resolvable (username, avatar) but hide everything else — see the
+// profile-visibility seam in server/lib/visibility.ts.
+.get("/profile/:userId", getOptionalViewer, async c => {
     const userId = c.req.param("userId");
 
     const user = await db
@@ -264,6 +268,7 @@ export const usersRoute = new Hono()
             profileGifUrl: usersTable.profileGifUrl,
             profileTheme: usersTable.profileTheme,
             createdAt: usersTable.createdAt,
+            isPublic: usersTable.isPublic,
         })
         .from(usersTable)
         .where(eq(usersTable.id, userId))
@@ -274,7 +279,19 @@ export const usersRoute = new Hono()
         return c.notFound();
     }
 
-    return c.json({ user });
+    if (!canViewProfile(user, c.var.viewer)) {
+        return c.json({
+            user: {
+                id: user.id,
+                username: user.username,
+                avatarUrl: user.avatarUrl,
+                isPrivate: true as const,
+            },
+        });
+    }
+
+    const { isPublic, ...publicUser } = user;
+    return c.json({ user: { ...publicUser, isPrivate: false as const } });
 })
 
 .get("/avatar/:userId", async c => {
@@ -292,28 +309,7 @@ export const usersRoute = new Hono()
         return c.notFound();
     }
 
-    // Fetch from R2 via S3 API
-    try {
-        const response = await s3Client.send(new GetObjectCommand({
-            Bucket: R2_BUCKET,
-            Key: user.avatarUrl,
-        }));
-
-        if (!response.Body) {
-            return c.notFound();
-        }
-
-        const headers = new Headers();
-        headers.set("Content-Type", response.ContentType || "image/jpeg");
-        headers.set("Cache-Control", "no-cache");
-        headers.set("ETag", `"${user.avatarUrl}"`);
-
-        // Convert stream to web ReadableStream
-        const stream = response.Body.transformToWebStream();
-        return new Response(stream, { headers });
-    } catch (error) {
-        return c.notFound();
-    }
+    return streamR2Image(user.avatarUrl, { cacheControl: "no-cache" });
 })
 
 .get("/profile-gif/:userId", async c => {
@@ -330,26 +326,10 @@ export const usersRoute = new Hono()
         return c.notFound();
     }
 
-    try {
-        const response = await s3Client.send(new GetObjectCommand({
-            Bucket: R2_BUCKET,
-            Key: user.profileGifUrl,
-        }));
-
-        if (!response.Body) {
-            return c.notFound();
-        }
-
-        const headers = new Headers();
-        headers.set("Content-Type", "image/gif");
-        headers.set("Cache-Control", "no-cache");
-        headers.set("ETag", `"${user.profileGifUrl}"`);
-
-        const stream = response.Body.transformToWebStream();
-        return new Response(stream, { headers });
-    } catch (error) {
-        return c.notFound();
-    }
+    return streamR2Image(user.profileGifUrl, {
+        cacheControl: "no-cache",
+        contentType: "image/gif",
+    });
 })
 
 // .post("/", zValidator("json", createExpenseSchema), getUser, async c => { // zValidator middleware validation function

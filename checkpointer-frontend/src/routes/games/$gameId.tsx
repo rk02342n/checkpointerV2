@@ -415,7 +415,7 @@ const queryClient = useQueryClient();
   })
 
     return (
-        <div className="min-h-screen bg-background text-foreground selection:bg-orange-300/30">
+        <div className="min-h-screen bg-background text-foreground selection:bg-pop-300/30">
             <Navbar />
 
             {isPending ? (
@@ -427,14 +427,14 @@ const queryClient = useQueryClient();
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
                     {/* Left Column: Poster & Actions */}
                     <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-                        <div className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+                        <div className="border-4 border-border shadow-hard-6">
                           <Poster game={data.game} size="xl" className="" />
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
                             <button
                                 onClick={() => { posthog.capture('log_game_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowLogGameModal(true); }}
-                                className="flex flex-col items-center justify-center gap-1 dark:hover:bg-blue-800 hover:bg-blue-100 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2"
+                                className="flex flex-col items-center justify-center gap-1 dark:hover:bg-blue-800 hover:bg-blue-100 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2"
                             >
                                 <Pencil className="w-5 h-5" />
                                 <span className="text-[10px] uppercase font-bold tracking-wider">Log</span>
@@ -442,10 +442,10 @@ const queryClient = useQueryClient();
                             <button
                                 onClick={handleWantClick}
                                 disabled={wantToPlayMutation.isPending}
-                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
                                     isInWishlist
-                                        ? 'bg-amber-400 hover:bg-amber-300 dark:bg-amber-500 hover:dark:bg-amber-700'
-                                        : 'bg-background hover:bg-amber-100 hover:dark:bg-amber-800'
+                                        ? 'bg-brand-400 hover:bg-brand-300 dark:bg-brand-500 hover:dark:bg-brand-700'
+                                        : 'bg-background hover:bg-brand-100 hover:dark:bg-brand-800'
                                 } ${wantToPlayMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <CalendarHeart className={`w-5 h-5 ${isInWishlist ? 'stroke-[3.5]' : ''}`} />
@@ -455,7 +455,7 @@ const queryClient = useQueryClient();
                             <button
                                 onClick={handlePlayClick}
                                 disabled={setPlayingMutation.isPending || stopPlayingMutation.isPending}
-                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
+                                className={`flex flex-col items-center justify-center gap-1 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] transition-all p-2 ${
                                     isCurrentlyPlayingThisGame
                                         ? 'bg-green-400 hover:bg-green-300 dark:bg-green-700 hover:dark:bg-green-500'
                                         : 'bg-background hover:bg-green-100 hover:dark:bg-green-800'
@@ -472,7 +472,7 @@ const queryClient = useQueryClient();
                         {dbUserData?.account && (
                             <button
                                 onClick={() => { posthog.capture('add_to_list_modal_opened', { game_id: gameId, source: 'game_detail' }); setShowAddToListModal(true); }}
-                                className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-purple-800 transition-all p-2"
+                                className="w-full max-w-[280px] flex items-center justify-center gap-2 text-foreground border-4 border-border shadow-hard-3 active:shadow-hard-1 active:translate-x-[2px] active:translate-y-[2px] hover:bg-purple-100 hover:dark:bg-purple-800 transition-all p-2"
                             >
                                 <ListPlus className="w-5 h-5" />
                                 <span className="text-xs uppercase font-bold tracking-wider">Add to List</span>
@@ -486,7 +486,7 @@ const queryClient = useQueryClient();
                             </div>
                             <div className="text-center lg:text-left">
                                 <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Wishlisted</div>
-                                <div className="text-2xl font-bold text-amber-600">{wantToPlayCountPending ? '—' : wantToPlayCountData?.count ?? 0}</div>
+                                <div className="text-2xl font-bold text-brand-600">{wantToPlayCountPending ? '—' : wantToPlayCountData?.count ?? 0}</div>
                             </div>
                             <div className="text-center lg:text-left">
                                 <div className="text-xs uppercase tracking-widest mb-1 text-stone-600 font-medium">Playing</div>
@@ -500,7 +500,7 @@ const queryClient = useQueryClient();
                         <div className="mb-6">
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">{data.game?.name}</h1>
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-sm overflow-hidden">
-                                <span className="bg-amber-200 dark:bg-amber-950 px-2 sm:px-3 py-1 font-semibold border-2 border-border text-foreground text-xs sm:text-sm shrink-0">
+                                <span className="bg-brand-200 dark:bg-brand-950 px-2 sm:px-3 py-1 font-semibold border-2 border-border text-foreground text-xs sm:text-sm shrink-0">
                                     {data.game.releaseDate ? new Date(data.game.releaseDate).getFullYear() : "N/A"}
                                 </span>
                                 <span className="bg-green-200 dark:bg-green-950 px-2 sm:px-3 py-1 text-xs uppercase border-2 border-border text-foreground font-medium shrink-0">IGDB: {data.game.igdbRating}</span>
@@ -528,7 +528,7 @@ const queryClient = useQueryClient();
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
                             {/* Left: Synopsis & Reviews */}
                             <div className="lg:col-span-3 space-y-4 sm:space-y-6">
-                                <div className="bg-accent border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                <div className="bg-accent border-4 border-stone-900 shadow-hard-4 p-4 sm:p-6">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4 text-foreground">Synopsis</h3>
                                     <p className="text-foreground leading-relaxed">
                                       {data.game?.summary && data.game.summary.length > 600 && !isSynopsisExpanded
@@ -552,7 +552,7 @@ const queryClient = useQueryClient();
 
                                 {/* External Links */}
                                 {data.links && data.links.length > 0 && (
-                                    <div className="bg-card border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+                                    <div className="surface text-foreground p-4 sm:p-6">
                                         <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-stone-900 pb-2 mb-4">Links</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {data.links.map((link) => (
@@ -581,7 +581,7 @@ const queryClient = useQueryClient();
 
                                 {/* Featured in Lists */}
                                 {publicListsData && publicListsData.lists.length > 0 && (
-                                    <div className="bg-purple-200 dark:bg-purple-900/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-foreground">
+                                    <div className="bg-purple-200 surface dark:bg-purple-900/40 p-4 sm:p-6 text-foreground">
                                         <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4">
                                             Featured in Lists
                                             {publicListsData.totalCount > publicListsData.lists.length && (
@@ -620,12 +620,12 @@ const queryClient = useQueryClient();
                             {/* Right: Rating & Review Form */}
                             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                                 {/* Average Rating */}
-                                <div className="bg-amber-200 dark:bg-yellow-900 border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-center">
+                                <div className="bg-brand-200 surface dark:bg-yellow-900 text-foreground p-4 sm:p-6 text-center">
                                     <h3 className="text-xs font-bold uppercase tracking-widest mb-4">Average Rating</h3>
                                     {isRatingPending ? (
                                         <>
-                                            <Skeleton className="h-10 w-20 mx-auto mb-2 bg-amber-300" />
-                                            <Skeleton className="h-5 w-28 mx-auto bg-amber-300" />
+                                            <Skeleton className="h-10 w-20 mx-auto mb-2 bg-brand-300" />
+                                            <Skeleton className="h-5 w-28 mx-auto bg-brand-300" />
                                         </>
                                     ) : (
                                         <>
@@ -678,7 +678,7 @@ const queryClient = useQueryClient();
 
             {/* Switch Game Dialog */}
             <Dialog open={showSwitchGameDialog} onOpenChange={setShowSwitchGameDialog}>
-              <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] rounded-none">
+              <DialogContent className="surface bg-background shadow-hard-6">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-foreground">
                     Switch Game
@@ -693,7 +693,7 @@ const queryClient = useQueryClient();
                   <Button
                     onClick={() => handleSwitchGame('finished')}
                     disabled={switchGameMutation.isPending}
-                    className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                    className="bg-lime-100 hover:bg-lime-200 dark:bg-lime-800 hover:dark:bg-lime-600 text-foreground border-4 border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
                   >
                     <Check className="w-5 h-5 mr-2" />
                     <div className="text-left">
@@ -704,7 +704,7 @@ const queryClient = useQueryClient();
                   <Button
                     onClick={() => handleSwitchGame('stashed')}
                     disabled={switchGameMutation.isPending}
-                    className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
+                    className="bg-sky-100 hover:bg-sky-200 dark:bg-sky-800 hover:dark:bg-sky-600 text-foreground border-border shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all h-auto py-3 justify-start"
                   >
                     <Clock className="w-5 h-5 mr-2" />
                     <div className="text-left">
@@ -735,7 +735,7 @@ function GameDetailSkeleton() {
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Left Column */}
       <div className="flex flex-col items-center lg:items-start space-y-4 shrink-0">
-        <div className="border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)]">
+        <div className="border-4 border-border shadow-hard-6">
           <Skeleton className="w-[200px] sm:w-[250px] h-[280px] sm:h-[350px] bg-muted" />
         </div>
         <div className="grid grid-cols-3 gap-2 w-full max-w-[280px] mt-4">
@@ -758,7 +758,7 @@ function GameDetailSkeleton() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6">
+            <div className="surface bg-background p-4 sm:p-6">
               <Skeleton className="h-4 w-24 mb-4 bg-muted" />
               <Skeleton className="h-4 w-full mb-2 bg-muted" />
               <Skeleton className="h-4 w-full mb-2 bg-muted" />
@@ -766,8 +766,8 @@ function GameDetailSkeleton() {
             </div>
           </div>
           <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-24 w-full bg-amber-200 dark:bg-amber-900 border-4 border-border" />
-            <Skeleton className="h-64 w-full bg-orange-200 dark:bg-orange-900 border-4 border-border" />
+            <Skeleton className="h-24 w-full bg-brand-200 dark:bg-brand-900 border-4 border-border" />
+            <Skeleton className="h-64 w-full bg-pop-200 dark:bg-pop-900 border-4 border-border" />
           </div>
         </div>
       </div>
@@ -781,7 +781,7 @@ function ImageGallery({ images }: { images: GameImage[] }) {
   const current = images[currentIdx];
 
   return (
-    <div className="bg-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
+    <div className="bg-stone-900 border-4 border-stone-900 shadow-hard-4 overflow-hidden">
       {/* Main image */}
       {current && (
         <div className="relative group">
@@ -830,7 +830,7 @@ function ImageGallery({ images }: { images: GameImage[] }) {
               key={img.id}
               onClick={() => setCurrentIdx(idx)}
               className={`shrink-0 w-16 h-10 overflow-hidden border-2 transition-colors ${
-                idx === currentIdx ? 'border-amber-400' : 'border-transparent hover:border-stone-500'
+                idx === currentIdx ? 'border-brand-400' : 'border-transparent hover:border-stone-500'
               }`}
             >
               <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -901,10 +901,10 @@ function ReviewFormBox({ isMaximized, onMaximize, onMinimize, form, dbUserData }
 
       {/* Form container */}
       <div
-        className={`bg-orange-300 dark:bg-cyan-950 border-4 border-border text-foreground transition-all duration-300 ease-out ${
+        className={`bg-pop-300 dark:bg-cyan-950 border-4 border-border text-foreground transition-all duration-300 ease-out ${
           isMaximized
-            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] p-6 sm:p-8'
-            : 'relative group shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6'
+            ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-2xl max-h-[90vh] overflow-y-auto shadow-hard-8 p-6 sm:p-8'
+            : 'relative group shadow-hard-4 p-4 sm:p-6'
         }`}
       >
         {/* Maximize Button - top right on mobile, outer left edge on desktop */}

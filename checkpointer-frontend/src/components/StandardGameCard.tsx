@@ -34,9 +34,9 @@ interface StandardGameCardProps {
 
 const cardClasses: Record<Variant, string> = {
   featured:
-    "group text-left bg-white dark:bg-stone-900 hover:bg-orange-100 dark:hover:bg-orange-950 border-2 sm:border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] sm:active-[6px_6px_0px_0px_rgba(41,37,36,1)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] sm:active:shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
+    "group text-left bg-white dark:bg-stone-900 hover:bg-pop-100 dark:hover:bg-pop-950 border-2 sm:border-4 border-stone-900 shadow-hard-3 active:shadow-hard-2 sm:active:shadow-hard-3 active:translate-x-px sm:active:translate-x-[3px] active:translate-y-px sm:active:translate-y-[3px]  transition-all duration-100",
   browse:
-    "group text-left bg-card border-4 border-border hover:bg-orange-100 dark:hover:bg-orange-950 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:active:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
+    "group text-left surface hover:bg-pop-100 dark:hover:bg-pop-950 active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100",
 }
 
 export const StandardGameCard = ({
@@ -206,7 +206,7 @@ export const StandardGameCard = ({
           <Badge
             className={
               variant === "featured"
-                ? "absolute top-2 right-2 sm:top-3 sm:right-3 bg-amber-400 text-stone-900 font-medium text-[10px] sm:text-xs rounded-none border sm:border-2 border-stone-900"
+                ? "absolute top-2 right-2 sm:top-3 sm:right-3 bg-brand-400 text-stone-900 font-medium text-[10px] sm:text-xs rounded-none border sm:border-2 border-stone-900"
                 : "absolute top-2 right-2 bg-primary text-primary-foreground font-medium text-xs rounded-none border-2 border-border"
             }
           >
@@ -275,7 +275,7 @@ export const StandardGameCard = ({
           >
             <EllipsisVertical className="size-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" side="top" className="[&_[role=menuitem]]:hover:bg-orange-200! [&_[role=menuitem]]:focus:bg-orange-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-orange-900! dark:[&_[role=menuitem]]:focus:bg-orange-900!">
+          <DropdownMenuContent align="end" side="top" className="[&_[role=menuitem]]:hover:bg-pop-200! [&_[role=menuitem]]:focus:bg-pop-200! [&_[role=menuitem]]:hover:text-foreground! [&_[role=menuitem]]:focus:text-foreground! dark:[&_[role=menuitem]]:hover:bg-pop-900! dark:[&_[role=menuitem]]:focus:bg-pop-900!">
             <DropdownMenuItem onClick={handleReview}>
               <PenLine className="size-4" />
               Review

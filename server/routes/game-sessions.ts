@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { getAuthUser } from "../kinde";
+import { getAuthUser, getOptionalViewer } from "../kinde";
+import { assertViewableProfile } from "../lib/visibility";
 import { db } from "../db";
 import { gameSessionsTable } from "../db/schema/game-sessions";
 import { gamesTable } from "../db/schema/games";
@@ -120,9 +121,10 @@ export const gameSessionsRoute = new Hono()
   return c.json(session);
 })
 
-// GET /user/:userId - Get any user's currently playing (public)
-.get('/user/:userId', async (c) => {
+// GET /user/:userId - Get any user's currently playing (public profiles; private → owner only)
+.get('/user/:userId', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
 
   const session = await db
     .select({
@@ -164,9 +166,10 @@ export const gameSessionsRoute = new Hono()
   return c.json({ count: result?.count ?? 0 });
 })
 
-// GET /user/:userId/history - Get user's play history
-.get('/user/:userId/history', async (c) => {
+// GET /user/:userId/history - Get user's play history (public profiles; private → owner only)
+.get('/user/:userId/history', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
   const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
   const offset = Number(c.req.query('offset')) || 0;
 

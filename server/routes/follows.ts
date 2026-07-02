@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { getAuthUser } from "../kinde";
+import { getAuthUser, getOptionalViewer } from "../kinde";
 import { db } from "../db";
 import { userFollowsTable } from "../db/schema/user-follows";
 import { usersTable } from "../db/schema/users";
 import { eq, and, desc, count } from "drizzle-orm";
+import { assertViewableProfile } from "../lib/visibility";
 
 export const followsRoute = new Hono()
 
@@ -25,8 +26,9 @@ export const followsRoute = new Hono()
 })
 
 // GET /:userId/followers - Get paginated followers list (public)
-.get('/:userId/followers', async (c) => {
+.get('/:userId/followers', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
   const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
   const offset = Number(c.req.query('offset')) || 0;
 
@@ -55,9 +57,10 @@ export const followsRoute = new Hono()
   });
 })
 
-// GET /:userId/following - Get paginated following list (public)
-.get('/:userId/following', async (c) => {
+// GET /:userId/following - Get paginated following list (public profiles; private → owner only)
+.get('/:userId/following', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
   const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
   const offset = Number(c.req.query('offset')) || 0;
 
@@ -86,9 +89,10 @@ export const followsRoute = new Hono()
   });
 })
 
-// GET /:userId/counts - Get follower and following counts (public)
-.get('/:userId/counts', async (c) => {
+// GET /:userId/counts - Get follower and following counts (public profiles; private → owner only)
+.get('/:userId/counts', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
 
   const [followersResult, followingResult] = await Promise.all([
     db

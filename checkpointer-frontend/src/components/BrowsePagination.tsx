@@ -58,7 +58,7 @@ export function BrowsePagination({
           variant="outline"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || isFetching}
-          className="border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] disabled:opacity-50 rounded-none"
+          className="border-4 border-border shadow-hard-3 disabled:opacity-50 rounded-none"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Previous
@@ -77,8 +77,8 @@ export function BrowsePagination({
               disabled={isFetching}
               className={`min-w-[40px] border-4 border-border rounded-none ${
                 page === currentPage
-                  ? "shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] dark:shadow-[1px_1px_0px_0px_rgba(120,113,108,0.5)] translate-x-[2px] translate-y-[2px]"
-                  : "shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)]"
+                  ? "shadow-hard-1 translate-x-[2px] translate-y-[2px]"
+                  : "shadow-hard-3"
               }`}
             >
               {page}
@@ -90,7 +90,7 @@ export function BrowsePagination({
           variant="outline"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || isFetching}
-          className="border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] disabled:opacity-50 rounded-none"
+          className="border-4 border-border shadow-hard-3 disabled:opacity-50 rounded-none"
         >
           Next
           <ChevronRight className="w-4 h-4 ml-1" />

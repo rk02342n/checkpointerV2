@@ -77,7 +77,7 @@ export function ListsSection({ userId, isOwnProfile = false, showSaveButtons = f
           <Button
             onClick={() => setShowCreateModal(true)}
             variant="outline"
-            className="border-4 border-border rounded-none text-black"
+            className="border-4 border-border rounded-none"
           >
             <Plus className="w-4 h-4 mr-2" />
             New List
@@ -113,7 +113,7 @@ function ListsSectionSkeleton() {
       {[1, 2].map((i) => (
         <div
           key={i}
-          className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden"
+          className="surface overflow-hidden"
         >
           <Skeleton className="aspect-video bg-muted-foreground/20" />
           <div className="p-3">

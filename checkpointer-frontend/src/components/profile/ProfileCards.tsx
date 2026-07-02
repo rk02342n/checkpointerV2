@@ -49,7 +49,7 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
     <Link
       to="/games/$gameId"
       params={{ gameId: review.gameId }}
-      className={`block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
+      className={`block surface profile-card profile-card-hover active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isDeleting ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -103,8 +103,8 @@ export const ReviewCard = memo(function ReviewCard({ review, onDelete, isDeletin
               disabled={isLiking}
               className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                 review.userLiked
-                  ? 'text-orange-400 hover:text-orange-300'
-                  : 'text-muted-foreground hover:text-orange-300'
+                  ? 'text-pop-400 hover:text-pop-300'
+                  : 'text-muted-foreground hover:text-pop-300'
               } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-3 h-3 ${review.userLiked ? 'fill-current' : ''}`} />
@@ -183,7 +183,7 @@ export const SessionCard = memo(function SessionCard({ session, themed }: Sessio
     <Link
       to="/games/$gameId"
       params={{ gameId: session.game.id }}
-      className={`block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
+      className={`block surface profile-card profile-card-hover active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -223,7 +223,7 @@ export const SessionCard = memo(function SessionCard({ session, themed }: Sessio
                 Finished
               </span>
             ) : session.session.status === 'stashed' ? (
-              <span className={`bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-amber-800 ${themed ? '' : 'dark:text-amber-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
+              <span className={`bg-brand-200 ${themed ? '' : 'dark:bg-brand-900'} text-brand-800 ${themed ? '' : 'dark:text-brand-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
                 Stashed
               </span>
             ) : (
@@ -267,7 +267,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
     <Link
       to="/games/$gameId"
       params={{ gameId: item.gameId }}
-      className={`block bg-card profile-card profile-card-hover border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] active:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
+      className={`block surface profile-card profile-card-hover active:shadow-hard-2 active:translate-x-[2px] active:translate-y-[2px] transition-all p-4 ${isRemoving ? 'opacity-50' : ''}`}
     >
       <div className="flex gap-4">
         {/* Game Cover */}
@@ -298,7 +298,7 @@ export const WishlistCard = memo(function WishlistCard({ item, onRemove, isRemov
                 <span>Added {formatDate(item.createdAt)}</span>
               </div>
             </div>
-            <span className={`bg-amber-200 ${themed ? '' : 'dark:bg-amber-900'} text-amber-800 ${themed ? '' : 'dark:text-amber-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
+            <span className={`bg-brand-200 ${themed ? '' : 'dark:bg-brand-900'} text-brand-800 ${themed ? '' : 'dark:text-brand-300'} px-2 py-1 text-xs font-medium border-2 border-border`}>
               Want to Play
             </span>
           </div>

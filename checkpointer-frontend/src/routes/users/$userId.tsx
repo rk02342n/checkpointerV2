@@ -65,6 +65,8 @@ function PublicProfile() {
 
   const isOwnProfile = dbUserData?.account?.id === userId
   const isAuthenticated = !!dbUserData?.account
+  // Private profiles expose identity only; skip the activity queries (they 404).
+  const isPrivate = profileData?.isPrivate === true
   const { settings } = useSettings()
   const isAdmin = dbUserData?.account?.role === 'admin'
   const showBlogPosts = isAdmin || !!settings.blogPostsEnabled
@@ -75,7 +77,7 @@ function PublicProfile() {
   // Get follow counts
   const { data: followCountsData } = useQuery({
     ...followCountsQueryOptions(userId),
-    enabled: !!userId,
+    enabled: !!userId && !isPrivate,
   })
 
   // Check if current user follows this profile
@@ -87,7 +89,7 @@ function PublicProfile() {
   // Get user's currently playing
   const { data: currentlyPlayingData } = useQuery({
     ...userCurrentlyPlayingQueryOptions(userId),
-    enabled: !!userId,
+    enabled: !!userId && !isPrivate,
   })
 
   // Get user's reviews (infinite)
@@ -99,7 +101,7 @@ function PublicProfile() {
     fetchNextPage: fetchMoreReviews,
   } = useInfiniteQuery({
     ...getReviewsByUserIdInfiniteOptions(userId),
-    enabled: !!userId
+    enabled: !!userId && !isPrivate
   })
 
   // Get user's play history (infinite)
@@ -111,7 +113,7 @@ function PublicProfile() {
     fetchNextPage: fetchMoreHistory,
   } = useInfiniteQuery({
     ...playHistoryInfiniteOptions(userId),
-    enabled: !!userId
+    enabled: !!userId && !isPrivate
   })
 
   // Get user's wishlist (infinite)
@@ -123,7 +125,7 @@ function PublicProfile() {
     fetchNextPage: fetchMoreWishlist,
   } = useInfiniteQuery({
     ...userWishlistInfiniteOptions(userId),
-    enabled: !!userId
+    enabled: !!userId && !isPrivate
   })
 
   // Get user's public game lists (for tab count)
@@ -131,13 +133,13 @@ function PublicProfile() {
     data: gameListsData,
   } = useInfiniteQuery({
     ...userGameListsInfiniteOptions(userId),
-    enabled: !!userId
+    enabled: !!userId && !isPrivate
   })
 
   // Get user's published blog posts
   const { data: blogPostsData, isPending: blogPostsPending } = useQuery({
     ...userPublishedPostsQueryOptions(userId),
-    enabled: !!userId && showBlogPosts,
+    enabled: !!userId && !isPrivate && showBlogPosts,
   })
   const blogPosts = blogPostsData?.posts ?? []
 
@@ -255,7 +257,7 @@ function PublicProfile() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
-          <div className="bg-rose-100 dark:bg-rose-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 text-center">
+          <div className="bg-rose-100 surface dark:bg-rose-900/40 shadow-hard-6 p-8 text-center">
             <Gamepad2 className="w-12 h-12 text-rose-600 dark:text-rose-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-foreground mb-2">User Not Found</h2>
             <p className="text-muted-foreground">This user profile doesn't exist.</p>
@@ -271,6 +273,32 @@ function PublicProfile() {
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <ProfileSkeleton />
+        </div>
+      </div>
+    )
+  }
+
+  if (isPrivate && profileData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto max-w-4xl px-6 py-8">
+          <div className="surface p-8 text-center">
+            <Avatar className="w-24 h-24 border-4 border-border mx-auto mb-4">
+              <AvatarImage
+                src={profileData.avatarUrl ? `/api/user/avatar/${profileData.id}?v=${encodeURIComponent(profileData.avatarUrl)}` : undefined}
+                alt={profileData.username || 'User'}
+              />
+              <AvatarFallback className="bg-pop-100 dark:bg-pop-900 text-foreground text-2xl font-bold">
+                {profileData.username ? profileData.username.slice(0, 2).toUpperCase() : '?'}
+              </AvatarFallback>
+            </Avatar>
+            {profileData.username && (
+              <p className="text-muted-foreground text-sm font-medium mb-2">@{profileData.username}</p>
+            )}
+            <h2 className="text-xl font-bold text-foreground mb-2">This profile is private</h2>
+            <p className="text-muted-foreground">Their reviews, play history, and lists are hidden.</p>
+          </div>
         </div>
       </div>
     )
@@ -292,12 +320,12 @@ function PublicProfile() {
   ]
 
   return (
-    <div className="min-h-screen bg-background selection:bg-orange-300/30" style={profileData?.profileTheme?.backgroundColor ? { backgroundColor: profileData.profileTheme.backgroundColor } : undefined}>
+    <div className="min-h-screen bg-background selection:bg-pop-300/30" style={profileData?.profileTheme?.backgroundColor ? { backgroundColor: profileData.profileTheme.backgroundColor } : undefined}>
       <Navbar />
       <div className="container mx-auto bg-background max-w-4xl px-6 py-8 profile-themed-content" style={getProfileContentStyle(profileData?.profileTheme)}>
         {/* Profile Header */}
         <div
-          className="relative border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8"
+          className="relative border-4 border-border shadow-hard-6 p-8 mb-8"
           style={getProfileHeaderStyle(profileData?.profileTheme, "rgb(96 165 250 / 0.4)")}
         >
           {user?.profileGifUrl && (
@@ -314,7 +342,7 @@ function PublicProfile() {
                 src={user?.avatarUrl ? `/api/user/avatar/${user.id}?v=${encodeURIComponent(user.avatarUrl)}` : undefined}
                 alt={user?.displayName || user?.username || 'User'}
               />
-              <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-2xl font-bold">
+              <AvatarFallback className="bg-pop-100 dark:bg-pop-900 text-foreground text-2xl font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -333,15 +361,15 @@ function PublicProfile() {
 
               {/* Stats */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{totalReviewCount}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Reviews</div>
                 </div>
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followersCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Followers</div>
                 </div>
-                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] px-4 py-2`}>
+                <div className={`${themed ? 'profile-accent' : 'bg-background'} border-4 border-border shadow-hard-3 px-4 py-2`}>
                   <div className="text-2xl font-bold text-foreground">{followCountsData?.followingCount ?? 0}</div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Following</div>
                 </div>
@@ -352,7 +380,7 @@ function PublicProfile() {
                   <button
                     onClick={handleFollow}
                     disabled={followMutation.isPending}
-                    className={`flex items-center gap-2 px-6 py-2 border-4 border-border shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] dark:shadow-[3px_3px_0px_0px_rgba(120,113,108,0.5)] font-bold uppercase tracking-wide text-sm transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 ${
+                    className={`flex items-center gap-2 px-6 py-2 border-4 border-border shadow-hard-3 font-bold uppercase tracking-wide text-sm transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-50 ${
                       followStatusData?.following
                         ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 hover:bg-rose-300 dark:hover:bg-rose-900/80'
                         : 'bg-green-200 dark:bg-green-900/60 text-green-800 dark:text-green-200 hover:bg-green-300 dark:hover:bg-green-900/80'
@@ -372,7 +400,7 @@ function PublicProfile() {
 
         {/* Currently Playing Section */}
         {currentlyPlayingData?.game && (
-          <div className="bg-green-600 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] px-4 py-3 mb-8 flex items-center gap-3">
+          <div className="surface bg-green-600 px-4 py-3 mb-8 flex items-center gap-3">
             <Link to="/games/$gameId" params={{ gameId: currentlyPlayingData.game.id }}>
               {currentlyPlayingData.game.coverUrl ? (
                 <img
@@ -580,12 +608,12 @@ function PublicProfile() {
 function ProfileSkeleton() {
   return (
     <>
-      <div className="bg-orange-100 dark:bg-orange-900/40 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 mb-8">
+      <div className="bg-pop-100 surface dark:bg-pop-900/40 shadow-hard-6 p-8 mb-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full bg-orange-300 dark:bg-orange-800 border-4 border-border" />
+          <Skeleton className="w-24 h-24 rounded-full bg-pop-300 dark:bg-pop-800 border-4 border-border" />
           <div className="flex-1 text-center md:text-left">
-            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-orange-300 dark:bg-orange-800" />
-            <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-orange-300 dark:bg-orange-800" />
+            <Skeleton className="h-9 w-48 mb-2 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />
+            <Skeleton className="h-5 w-32 mx-auto md:mx-0 bg-pop-300 dark:bg-pop-800" />
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
               <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
               <Skeleton className="h-16 w-24 bg-background border-4 border-border" />
@@ -593,7 +621,7 @@ function ProfileSkeleton() {
           </div>
         </div>
       </div>
-      <div className="bg-card border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6">
+      <div className="surface shadow-hard-6 p-6">
         <Skeleton className="h-5 w-24 mb-4 bg-muted-foreground/20" />
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (

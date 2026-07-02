@@ -12,7 +12,7 @@ function ListEmbedView({ node, deleteNode, editor }: NodeViewProps) {
   const editable = editor.isEditable
 
   const card = (
-    <div className={`bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] ${!editable ? 'hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(120,113,108,0.5)] hover:translate-x-[2px] hover:translate-y-[2px]' : ''} transition-all`}>
+    <div className={`surface ${!editable ? 'hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px]' : ''} transition-all`}>
       <div className="flex gap-4 p-4">
         {/* Cover image */}
         <div className="shrink-0">
