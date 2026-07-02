@@ -1032,7 +1032,7 @@ function Profile() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 rounded-md" />
                         <div className="flex-1 space-y-2">
                           <div className="h-5 w-32 bg-muted-foreground/20" />
                           <div className="h-4 w-full bg-muted-foreground/20" />
@@ -1084,7 +1084,7 @@ function Profile() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 rounded-md" />
                         <div className="flex-1 space-y-2">
                           <div className="h-5 w-32 bg-muted-foreground/20" />
                           <div className="h-4 w-24 bg-muted-foreground/20" />
@@ -1128,7 +1128,7 @@ function Profile() {
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="surface bg-muted p-4 animate-pulse">
                       <div className="flex gap-4">
-                        <div className="w-16 h-20 bg-muted-foreground/20 border-2 border-border" />
+                        <div className="w-16 h-20 bg-muted-foreground/20 rounded-md" />
                         <div className="flex-1 space-y-2">
                           <div className="h-5 w-32 bg-muted-foreground/20" />
                           <div className="h-4 w-24 bg-muted-foreground/20" />
