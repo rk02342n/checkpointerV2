@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState, useEffect, useCallback } from "react"
 import { usePostHog } from 'posthog-js/react'
 import { Search } from "lucide-react"
-import { useQuery, keepPreviousData } from "@tanstack/react-query"
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import Navbar from "@/components/Navbar"
-import { Skeleton } from "@/components/ui/skeleton"
 import { StandardGameCard } from "@/components/StandardGameCard"
 import { browseGames, getBrowseFiltersQueryOptions, type Game, type BrowseGamesParams } from "@/lib/gameQuery"
 import { useDebounce } from "@/lib/useDebounce"
 import { BrowsePagination } from "@/components/BrowsePagination"
+import { BrowseGamesSkeleton } from "@/components/custom-skeletons/BrowseGamesSkeleton"
 
 type SortBy = "rating" | "year" | "name"
 type SortOrder = "asc" | "desc"
@@ -52,6 +52,7 @@ export default function BrowseGames() {
   const search = Route.useSearch()
   const navigate = useNavigate()
   const posthog = usePostHog()
+  const queryClient = useQueryClient()
 
   // Apply defaults for values not in URL
   const currentPage = search.page ?? 1
@@ -100,7 +101,7 @@ export default function BrowseGames() {
       updateSearch({ q: debouncedSearch || undefined, page: undefined }, { replace: true })
     }
     if (debouncedSearch) {
-      posthog.capture('browse_searched', { query: debouncedSearch, sort_by: sortBy, filters: { year: yearFilter, genre: genreFilter, platform: platformFilter } })
+      // posthog.capture('browse_searched', { query: debouncedSearch, sort_by: sortBy, filters: { year: yearFilter, genre: genreFilter, platform: platformFilter } })
     }
   }, [debouncedSearch]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -119,6 +120,7 @@ export default function BrowseGames() {
   const {
     data,
     isPending,
+    isPlaceholderData,
     isFetching,
     error,
   } = useQuery({
@@ -137,8 +139,31 @@ export default function BrowseGames() {
   const genres = filtersData?.genres ?? []
   const platforms = filtersData?.platforms ?? []
 
+  // Shared prefetch path for a given page — reused by the eager next-page
+  // effect below and the pagination hover/focus handlers. Already-fresh pages
+  // no-op via staleTime, so callers don't need to guard against cache hits.
+  const prefetchPage = useCallback((page: number) => {
+    if (page < 1 || page > totalPages) return
+    const params: BrowseGamesParams = {
+      ...queryParams,
+      offset: (page - 1) * ITEMS_PER_PAGE,
+    }
+    queryClient.prefetchQuery({
+      queryKey: ['browse-games', params],
+      queryFn: () => browseGames(params),
+      staleTime: 1000 * 60 * 2,
+    })
+  }, [queryClient, queryParams, totalPages])
+
+  // Prefetch the next page once the current page's real data has settled, so
+  // paging forward (the dominant flow) resolves from cache with no skeleton.
+  useEffect(() => {
+    if (isPlaceholderData) return
+    prefetchPage(currentPage + 1)
+  }, [data, currentPage, totalPages, isPlaceholderData]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleGameClick = (game: Game) => {
-    posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })
+    // posthog.capture('game_clicked', { game_id: String(game.id), game_name: game.name, source: 'browse' })
     window.scrollTo(0, 0)
     navigate({ to: `/games/${game.id}` })
   }
@@ -150,22 +175,22 @@ export default function BrowseGames() {
 
   const handleSortChange = (value: string) => {
     const [newSortBy, newSortOrder] = value.split("-") as [SortBy, SortOrder]
-    posthog.capture('browse_filter_changed', { filter_type: 'sort', value })
+    // posthog.capture('browse_filter_changed', { filter_type: 'sort', value })
     updateSearch({ sortBy: newSortBy, sortOrder: newSortOrder, page: undefined }, { replace: true })
   }
 
   const handleYearChange = (value: string) => {
-    posthog.capture('browse_filter_changed', { filter_type: 'year', value })
+    // posthog.capture('browse_filter_changed', { filter_type: 'year', value })
     updateSearch({ year: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handleGenreChange = (value: string) => {
-    posthog.capture('browse_filter_changed', { filter_type: 'genre', value })
+    // posthog.capture('browse_filter_changed', { filter_type: 'genre', value })
     updateSearch({ genre: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
   const handlePlatformChange = (value: string) => {
-    posthog.capture('browse_filter_changed', { filter_type: 'platform', value })
+    // posthog.capture('browse_filter_changed', { filter_type: 'platform', value })
     updateSearch({ platform: value === "all" ? undefined : value, page: undefined }, { replace: true })
   }
 
@@ -293,40 +318,38 @@ export default function BrowseGames() {
         {/* Game Grid */}
         <section className="surface bg-muted shadow-hard-6 p-6">
           {isPending ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <GameCardSkeleton key={i} />
-              ))}
-            </div>
+            <BrowseGamesSkeleton count={ITEMS_PER_PAGE} />
           ) : error ? (
             <div className="text-center py-12">
               <p className="text-lg font-semibold text-rose-600">
                 Failed to load games. Please try again.
               </p>
             </div>
-          ) : games.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-lg font-semibold text-muted-foreground">
-                No games found matching your criteria
-              </p>
-            </div>
           ) : (
             <>
-              <div
-                className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity ${
-                  isFetching && !isPending ? "opacity-60" : "opacity-100"
-                }`}
-              >
-                {games.map((game) => (
-                  <StandardGameCard
-                    key={game.id}
-                    game={game}
-                    variant="browse"
-                    onGameClick={handleGameClick}
-                  />
-                ))}
-              </div>
+              {isPlaceholderData ? (
+                <BrowseGamesSkeleton count={ITEMS_PER_PAGE} />
+              ) : games.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-lg font-semibold text-muted-foreground">
+                    No games found matching your criteria
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {games.map((game) => (
+                    <StandardGameCard
+                      key={game.id}
+                      game={game}
+                      variant="browse"
+                      onGameClick={handleGameClick}
+                    />
+                  ))}
+                </div>
+              )}
 
+              {/* Pagination stays mounted through transitions (uses retained
+                  previous totalCount) so chrome doesn't jump. Self-hides at ≤1 page. */}
               <BrowsePagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -334,26 +357,12 @@ export default function BrowseGames() {
                 pageSize={ITEMS_PER_PAGE}
                 isFetching={isFetching}
                 onPageChange={handlePageChange}
+                onPrefetchPage={prefetchPage}
               />
             </>
           )}
         </section>
       </main>
-    </div>
-  )
-}
-
-function GameCardSkeleton() {
-  return (
-    <div className="surface overflow-hidden">
-      <Skeleton className="w-full h-48 sm:h-56 rounded-t-[0.65rem] bg-muted" />
-      <div className="p-4">
-        <Skeleton className="h-5 w-3/4 bg-muted" />
-        <div className="mt-2 flex items-center gap-2">
-          <Skeleton className="h-2 flex-1 bg-muted" />
-          <Skeleton className="h-4 w-8 bg-muted" />
-        </div>
-      </div>
     </div>
   )
 }

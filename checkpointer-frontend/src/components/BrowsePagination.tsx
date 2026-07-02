@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 
 interface BrowsePaginationProps {
@@ -8,7 +9,12 @@ interface BrowsePaginationProps {
   pageSize: number
   isFetching: boolean
   onPageChange: (page: number) => void
+  onPrefetchPage?: (page: number) => void
 }
+
+// Wait for the pointer/focus to linger before prefetching, so a mouse sweep
+// across the bar cancels the timer instead of firing a request per button.
+const HOVER_INTENT_MS = 120
 
 function getPageNumbers(currentPage: number, totalPages: number): (number | "ellipsis")[] {
   if (totalPages <= 7) {
@@ -44,12 +50,39 @@ export function BrowsePagination({
   pageSize,
   isFetching,
   onPageChange,
+  onPrefetchPage,
 }: BrowsePaginationProps) {
+  const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const cancelPrefetch = () => {
+    if (prefetchTimer.current) {
+      clearTimeout(prefetchTimer.current)
+      prefetchTimer.current = null
+    }
+  }
+
+  // Schedule a prefetch after a brief hover/focus dwell; a new schedule or a
+  // leave/blur clears the pending one.
+  const schedulePrefetch = (page: number) => {
+    if (!onPrefetchPage) return
+    cancelPrefetch()
+    prefetchTimer.current = setTimeout(() => onPrefetchPage(page), HOVER_INTENT_MS)
+  }
+
+  useEffect(() => cancelPrefetch, [])
+
   if (totalPages <= 1) return null
 
   const rangeStart = (currentPage - 1) * pageSize + 1
   const rangeEnd = Math.min(currentPage * pageSize, totalCount)
   const pages = getPageNumbers(currentPage, totalPages)
+
+  const hoverProps = (page: number) => ({
+    onMouseEnter: () => schedulePrefetch(page),
+    onFocus: () => schedulePrefetch(page),
+    onMouseLeave: cancelPrefetch,
+    onBlur: cancelPrefetch,
+  })
 
   return (
     <div className="flex flex-col items-center gap-4 mt-8">
@@ -57,6 +90,7 @@ export function BrowsePagination({
         <Button
           variant="outline"
           onClick={() => onPageChange(currentPage - 1)}
+          {...hoverProps(currentPage - 1)}
           disabled={currentPage <= 1 || isFetching}
           className="border-border disabled:opacity-50"
         >
@@ -74,6 +108,7 @@ export function BrowsePagination({
               key={page}
               variant={page === currentPage ? "default" : "outline"}
               onClick={() => onPageChange(page)}
+              {...hoverProps(page)}
               disabled={isFetching}
               className={`min-w-[40px] border-border`}
             >
@@ -85,6 +120,7 @@ export function BrowsePagination({
         <Button
           variant="outline"
           onClick={() => onPageChange(currentPage + 1)}
+          {...hoverProps(currentPage + 1)}
           disabled={currentPage >= totalPages || isFetching}
           className="border-border disabled:opacity-50"
         >
