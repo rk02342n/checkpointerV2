@@ -120,7 +120,7 @@ function SettingsPage() {
           <div className="flex flex-col gap-6">
 
             {/* ── Profile Section ── */}
-            <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-6">
+            <section className="surface p-6">
               <h2 className="text-lg font-bold text-foreground uppercase tracking-wide mb-4">Profile</h2>
 
               <div className="flex flex-col gap-4">
@@ -177,7 +177,7 @@ function SettingsPage() {
             </section>
 
             {/* ── Profile Theme Section ── */}
-            <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-6">
+            <section className="surface p-6">
               <h2 className="text-lg font-bold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
                 <Palette className="w-5 h-5" />
                 Profile Theme
@@ -185,9 +185,9 @@ function SettingsPage() {
               <p className="text-xs text-muted-foreground mb-4">
                 Customize how your profile looks to you and visitors.
               </p>
-              <div className="flex items-start gap-2 bg-amber-100 dark:bg-amber-900/40 border-2 border-border px-3 py-2 mb-4">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 dark:text-amber-200">
+              <div className="flex items-start gap-2 bg-brand-100 dark:bg-brand-900/40 border-2 border-border px-3 py-2 mb-4">
+                <AlertTriangle className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-brand-800 dark:text-brand-200">
                   Dark mode will not apply to your profile page while custom theme settings are active. Reset to default to re-enable dark mode on your profile.
                 </p>
               </div>
@@ -195,7 +195,7 @@ function SettingsPage() {
             </section>
 
             {/* ── Preferences Section ── */}
-            <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-6">
+            <section className="surface p-6">
               <h2 className="text-lg font-bold text-foreground uppercase tracking-wide mb-4">Preferences</h2>
 
               <div className="flex flex-col gap-4">
@@ -238,7 +238,7 @@ function SettingsPage() {
             </section>
 
             {/* ── Account Section ── */}
-            <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-6">
+            <section className="surface p-6">
               <h2 className="text-lg font-bold text-foreground uppercase tracking-wide mb-4">Account</h2>
 
               <div className="flex flex-col gap-3">
@@ -263,7 +263,7 @@ function SettingsPage() {
 
       {/* Delete Account Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+        <DialogContent className="surface bg-background shadow-hard-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
               <AlertTriangle className="w-5 h-5" />

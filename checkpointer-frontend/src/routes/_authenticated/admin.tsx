@@ -67,13 +67,13 @@ function AdminDashboard() {
       <div className="min-h-screen bg-rose-50 p-6">
         <Navbar />
         <div className="container mx-auto max-w-4xl mt-12">
-          <div className="bg-rose-300 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
+          <div className="bg-rose-300 border-4 border-stone-900 shadow-hard-6 p-8 text-center">
             <Shield className="w-16 h-16 text-stone-900 mx-auto mb-4" />
             <h1 className="text-2xl font-black text-stone-900 mb-2">Access Denied</h1>
             <p className="text-stone-900 mb-4">You don't have permission to access the admin dashboard.</p>
             <Button
               onClick={() => navigate({ to: '/' })}
-              className="bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
+              className="bg-white hover:bg-stone-50 text-stone-900 border-4 border-stone-900 shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
             >
               Go Home
             </Button>
@@ -97,7 +97,7 @@ function AdminDashboard() {
 
       <div className="container mx-auto max-w-6xl mt-6">
         {/* Header */}
-        <div className="bg-amber-200/10 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6 mb-6">
+        <div className="bg-brand-200/10 border-4 border-stone-900 shadow-hard-6 p-6 mb-6">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-stone-900" />
             <h1 className="text-3xl font-black text-stone-900">Admin Dashboard</h1>
@@ -112,8 +112,8 @@ function AdminDashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 border-4 border-stone-900 font-bold text-sm transition-all ${
                 activeTab === tab.id
-                  ? 'bg-green-300 text-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]'
-                  : 'bg-white text-stone-900 hover:bg-stone-50 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px]'
+                  ? 'bg-green-300 text-stone-900 shadow-hard-4'
+                  : 'bg-white text-stone-900 hover:bg-stone-50 shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px]'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -161,7 +161,7 @@ function StatsPanel() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Users Stats */}
-      <div className="bg-sky-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-sky-200 border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Users</h3>
@@ -183,7 +183,7 @@ function StatsPanel() {
       </div>
 
       {/* Role Distribution */}
-      <div className="bg-lime-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-lime-200 border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-4">
           <UserCog className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Roles</h3>
@@ -199,7 +199,7 @@ function StatsPanel() {
       </div>
 
       {/* Reviews Stats */}
-      <div className="bg-amber-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-brand-200 border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-4">
           <MessageSquare className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Reviews</h3>
@@ -219,7 +219,7 @@ function StatsPanel() {
       </div>
 
       {/* Games Stats */}
-      <div className="bg-rose-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-rose-200 border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-4">
           <BarChart3 className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Games</h3>
@@ -285,7 +285,7 @@ function UsersPanel({
   }
 
   return (
-    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-hard-6 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-stone-100 border-b-4 border-stone-900">
@@ -413,7 +413,7 @@ function ReviewsPanel({
   }
 
   return (
-    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-hard-6 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-stone-100 border-b-4 border-stone-900">
@@ -436,7 +436,7 @@ function ReviewsPanel({
                   <div className="text-sm text-stone-600">@{review.username}</div>
                 </td>
                 <td className="p-4">
-                  <span className="bg-amber-200 text-amber-900 px-2 py-1 border-2 border-stone-900 text-sm font-bold">
+                  <span className="bg-brand-200 text-brand-900 px-2 py-1 border-2 border-stone-900 text-sm font-bold">
                     {review.rating}/5
                   </span>
                 </td>
@@ -506,7 +506,7 @@ function AuditPanel({
       case 'UNSUSPEND_USER':
         return 'bg-green-200 text-green-800'
       case 'UPDATE_USER_ROLE':
-        return 'bg-amber-200 text-amber-800'
+        return 'bg-brand-200 text-brand-800'
       default:
         return 'bg-stone-200 text-stone-800'
     }
@@ -524,7 +524,7 @@ function AuditPanel({
   }
 
   return (
-    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] overflow-hidden">
+    <div className="bg-white border-4 border-stone-900 shadow-hard-6 overflow-hidden">
       {data.logs.length === 0 ? (
         <div className="p-8 text-center">
           <ScrollText className="w-12 h-12 text-stone-400 mx-auto mb-4" />
@@ -615,7 +615,7 @@ function Pagination({
           variant="outline"
           onClick={() => onOffsetChange(Math.max(0, offset - limit))}
           disabled={offset === 0}
-          className="border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
+          className="border-4 border-stone-900 shadow-hard-3 hover:shadow-hard-1 hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
@@ -627,7 +627,7 @@ function Pagination({
           variant="outline"
           onClick={() => onOffsetChange(offset + limit)}
           disabled={!hasMore}
-          className="border-4 border-stone-900 shadow-[3px_3px_0px_0px_rgba(41,37,36,1)] hover:shadow-[1px_1px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
+          className="border-4 border-stone-900 shadow-hard-3 hover:shadow-hard-1 hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
@@ -672,7 +672,7 @@ function SettingsPanel() {
   return (
     <div className="space-y-6">
       {/* Appearance Settings */}
-      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-white border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-6">
           <Moon className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Appearance</h3>
@@ -715,7 +715,7 @@ function SettingsPanel() {
       </div>
 
       {/* Features Settings */}
-      <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-white border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-center gap-3 mb-6">
           <FileText className="w-6 h-6 text-stone-900" />
           <h3 className="text-lg font-bold text-stone-900">Features</h3>
@@ -761,7 +761,7 @@ function SettingsPanel() {
       <FeaturedGamesPicker />
 
       {/* Info Card */}
-      <div className="bg-sky-100 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+      <div className="bg-sky-100 border-4 border-stone-900 shadow-hard-6 p-6">
         <div className="flex items-start gap-3">
           <Settings className="w-5 h-5 text-stone-900 mt-0.5" />
           <div>
@@ -892,7 +892,7 @@ function FeaturedGamesPicker() {
   }
 
   return (
-    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-6">
+    <div className="bg-white border-4 border-stone-900 shadow-hard-6 p-6">
       <div className="flex items-center gap-3 mb-6">
         <Star className="w-6 h-6 text-stone-900" />
         <h3 className="text-lg font-bold text-stone-900">Featured Games</h3>
@@ -921,7 +921,7 @@ function FeaturedGamesPicker() {
 
         {/* Search Dropdown */}
         {showDropdown && searchResults.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] max-h-60 overflow-y-auto">
+          <div className="absolute z-10 w-full mt-1 bg-white border-4 border-stone-900 shadow-hard-4 max-h-60 overflow-y-auto">
             {searchResults.map((game) => (
               <button
                 key={game.id}
@@ -1003,7 +1003,7 @@ function FeaturedGamesPicker() {
       <Button
         onClick={handleSave}
         disabled={isSaving}
-        className="bg-green-400 hover:bg-green-500 text-stone-900 border-4 border-stone-900 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] hover:shadow-[2px_2px_0px_0px_rgba(41,37,36,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
+        className="bg-green-400 hover:bg-green-500 text-stone-900 border-4 border-stone-900 shadow-hard-4 hover:shadow-hard-2 hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-bold"
       >
         <Save className="w-4 h-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save Featured Games'}
@@ -1014,7 +1014,7 @@ function FeaturedGamesPicker() {
 
 function LoadingCard() {
   return (
-    <div className="bg-white border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8">
+    <div className="bg-white border-4 border-stone-900 shadow-hard-6 p-8">
       <div className="flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-stone-900 border-t-transparent"></div>
         <span className="ml-3 text-stone-900 font-bold">Loading...</span>
@@ -1025,7 +1025,7 @@ function LoadingCard() {
 
 function ErrorCard({ message }: { message: string }) {
   return (
-    <div className="bg-rose-200 border-4 border-stone-900 shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] p-8 text-center">
+    <div className="bg-rose-200 border-4 border-stone-900 shadow-hard-6 p-8 text-center">
       <p className="text-rose-800 font-bold">{message}</p>
     </div>
   )

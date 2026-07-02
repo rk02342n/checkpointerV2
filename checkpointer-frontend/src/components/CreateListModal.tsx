@@ -116,7 +116,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
       else onOpenChange(isOpen);
     }}>
       <DialogContent
-        className="bg-background border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto"
+        className="surface bg-background text-foreground w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto"
         showCloseButton={true}
       >
         <DialogHeader>
@@ -154,7 +154,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
               className="bg-muted border-4 border-border text-foreground rounded-none focus:ring-2 focus:ring-border min-h-20"
               maxLength={500}
             />
-            <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+            <p className={`text-xs ${description.length >= 500 ? 'text-rose-600' : description.length >= 450 ? 'text-brand-600' : 'text-muted-foreground'}`}>
               {description.length} / 500
             </p>
           </div>
@@ -223,7 +223,7 @@ export function CreateListModal({ open, onOpenChange, onSuccess }: CreateListMod
                 onClick={() => setVisibility("private")}
                 className={`flex items-center justify-center gap-2 p-3 border-4 font-semibold text-sm transition-colors ${
                   visibility === "private"
-                    ? "bg-amber-200 border-border text-foreground dark:bg-amber-700"
+                    ? "bg-brand-200 border-border text-foreground dark:bg-brand-700"
                     : "bg-muted border-border text-muted-foreground hover:border-muted-foreground"
                 }`}
               >

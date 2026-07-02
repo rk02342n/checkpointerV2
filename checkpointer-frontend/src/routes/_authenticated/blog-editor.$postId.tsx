@@ -417,7 +417,7 @@ function BlogEditorPage() {
                 className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest border-4 border-border ${
                   isPublished
                     ? 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'
-                    : 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200'
+                    : 'bg-brand-200 dark:bg-brand-900/60 text-brand-900 dark:text-brand-200'
                 }`}
               >
                 {isPublished ? 'Published' : 'Draft'}

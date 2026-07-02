@@ -7,6 +7,8 @@ import {
   resetAndSeed,
   setActingUser,
   actingUser,
+  actingViewer,
+  setActingViewer,
   type Seed,
 } from "./harness";
 
@@ -20,6 +22,10 @@ mock.module("../db", () => ({ db: testDb }));
 mock.module("../kinde", () => ({
   getAuthUser: async (c: any, next: any) => {
     c.set("dbUser", actingUser());
+    await next();
+  },
+  getOptionalViewer: async (c: any, next: any) => {
+    c.set("viewer", actingViewer());
     await next();
   },
   // Named exports other route files pull from ../kinde; unused in these tests
@@ -54,6 +60,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   seed = await resetAndSeed();
+  setActingViewer(null);
 });
 
 describe("ownership module (direct)", () => {

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { getAuthUser } from "../kinde";
+import { getAuthUser, getOptionalViewer } from "../kinde";
+import { assertViewableProfile } from "../lib/visibility";
 import { db } from "../db";
 import { wantToPlayTable } from "../db/schema/want-to-play";
 import { gamesTable } from "../db/schema/games";
@@ -63,9 +64,10 @@ export const wantToPlayRoute = new Hono()
   return c.json({ inWishlist: existing.length > 0 });
 })
 
-// GET /user/:userId - Get user's public wishlist
-.get('/user/:userId', async (c) => {
+// GET /user/:userId - Get user's wishlist (public profiles; private → owner only)
+.get('/user/:userId', getOptionalViewer, async (c) => {
   const userId = c.req.param('userId');
+  await assertViewableProfile(userId, c.var.viewer);
   const limit = Math.min(Number(c.req.query('limit')) || 20, 50);
   const offset = Number(c.req.query('offset')) || 0;
 

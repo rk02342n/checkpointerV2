@@ -174,7 +174,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
         onOpenChange(isOpen);
       }}>
         <DialogContent
-          className="bg-background border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md"
+          className="surface bg-background text-foreground w-[calc(100%-2rem)] sm:max-w-md"
           showCloseButton={true}
         >
           <DialogHeader>
@@ -246,7 +246,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
       onOpenChange(isOpen);
     }}>
       <DialogContent
-        className="bg-background border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
+        className="surface bg-background w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
         showCloseButton={true}
       >
         <DialogHeader className="p-4 sm:p-6 pb-0 sm:pb-0">
@@ -275,7 +275,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
               onClick={() => setLogType("played-before")}
               className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 border-4 font-semibold text-[10px] sm:text-xs transition-colors ${
                 logType === "played-before"
-                  ? "bg-orange-200 border-border dark:bg-fuchsia-800"
+                  ? "bg-pop-200 border-border dark:bg-fuchsia-800"
                   : "bg-muted border-border"
               }`}
             >
@@ -287,7 +287,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
               onClick={() => setLogType("want-to-play")}
               className={`flex flex-col items-center justify-center gap-2 p-2 h-full sm:p-3 border-4 font-semibold text-[10px] sm:text-xs transition-colors ${
                 logType === "want-to-play"
-                  ? "bg-amber-200 border-border dark:bg-amber-700"
+                  ? "bg-brand-200 border-border dark:bg-brand-700"
                   : "bg-muted border-border"
               }`}
             >
@@ -332,8 +332,8 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
                       onClick={() => handleGameSelect(game)}
                       className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
                         isSelected
-                          ? "bg-orange-200 dark:bg-orange-900"
-                          : "hover:bg-orange-100 dark:hover:bg-orange-700"
+                          ? "bg-pop-200 dark:bg-pop-900"
+                          : "hover:bg-pop-100 dark:hover:bg-pop-700"
                       }`}
                     >
                       {game.coverUrl ? (
@@ -370,7 +370,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
 
           {/* Selected Game Strip */}
           {selectedGame && (
-            <div className="flex items-center gap-3 p-3 bg-orange-100 dark:bg-orange-900 border-4 border-stone-900">
+            <div className="flex items-center gap-3 p-3 bg-pop-100 dark:bg-pop-900 border-4 border-stone-900">
               {selectedGame.coverUrl ? (
                 <img
                   className="w-10 h-10 object-cover border-2 border-border shrink-0"
@@ -391,7 +391,7 @@ export function LogGameModal({ open, onOpenChange, preselectedGame }: LogGameMod
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="p-1.5 hover:bg-orange-200 dark:hover:bg-red-400 transition-colors"
+                className="p-1.5 hover:bg-pop-200 dark:hover:bg-red-400 transition-colors"
                 aria-label="Clear selection"
               >
                 <X className="w-4 h-4 text-stone-600" />

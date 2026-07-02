@@ -252,7 +252,7 @@ export function ProfileThemeEditor({ currentTheme }: ProfileThemeEditorProps) {
             </div>
             {/* Preview accent (tab) */}
             <div className="mt-2 flex border-2 border-border">
-              <div className={`flex-1 px-3 py-1.5 text-xs font-bold uppercase text-foreground ${accentColor ? 'profile-accent' : 'bg-amber-200'}`}>
+              <div className={`flex-1 px-3 py-1.5 text-xs font-bold uppercase text-foreground ${accentColor ? 'profile-accent' : 'bg-brand-200'}`}>
                 Tab
               </div>
               <div className="flex-1 px-3 py-1.5 text-xs text-muted-foreground bg-muted border-l-2 border-border">

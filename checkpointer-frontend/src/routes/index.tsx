@@ -39,16 +39,16 @@ export default function Checkpointer() {
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
         {/* Hero Section */}
         <section className="mb-10 sm:mb-16">
-          <div className="bg-secondary brightness-100 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-5 sm:p-8 md:p-12 lg:p-16">
+          <div className="bg-secondary brightness-100 border-4 border-border shadow-hard-4 sm:shadow-hard-8 p-5 sm:p-8 md:p-12 lg:p-16">
             <div className="grid lg:grid-cols-2 gap-8 items-center">
               <div className="space-y-6 text-center sm:text-left">
                 {/* Checks logo - mobile only */}
                 <div className="sm:hidden">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-amber-100 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                    <div className="bg-stone-900 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                    <div className="bg-stone-900 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                    <div className="bg-amber-100 border-4 border-border h-24 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                    <div className="bg-brand-100 border-4 border-border h-24 shadow-hard-4" />
+                    <div className="bg-stone-900 border-4 border-border h-24 shadow-hard-4" />
+                    <div className="bg-stone-900 border-4 border-border h-24 shadow-hard-4" />
+                    <div className="bg-brand-100 border-4 border-border h-24 shadow-hard-4" />
                   </div>
                 </div>
                 <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight font-alt text-foreground hover:opacity-80">
@@ -69,7 +69,7 @@ export default function Checkpointer() {
                       <Button
                         onClick={() => { posthog.capture('cta_clicked', { button_name: 'browse_games' }); navigate({ to: '/browse' }); }}
                         variant="outline"
-                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-amber-50 dark:hover:bg-muted w-full sm:w-auto"
+                        className="px-6 py-5 sm:px-8 sm:py-6 text-base sm:text-lg hover:bg-brand-50 dark:hover:bg-muted w-full sm:w-auto"
                       >
                         Browse Games
                       </Button>
@@ -95,10 +95,10 @@ export default function Checkpointer() {
               </div>
               <div className="hidden lg:block">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-amber-100 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-stone-900 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-stone-900 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
-                  <div className="bg-amber-100 border-4 border-border h-32 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)]" />
+                  <div className="bg-brand-100 border-4 border-border h-32 shadow-hard-4" />
+                  <div className="bg-stone-900 border-4 border-border h-32 shadow-hard-4" />
+                  <div className="bg-stone-900 border-4 border-border h-32 shadow-hard-4" />
+                  <div className="bg-brand-100 border-4 border-border h-32 shadow-hard-4" />
                 </div>
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function Checkpointer() {
         </section>
 
         {/* Featured Games Section */}
-        <section className="bg-card border-4 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="bg-card border-4 shadow-hard-4 sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
           {isPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : featuredData ? (
@@ -121,7 +121,7 @@ export default function Checkpointer() {
         {!areListsPending && popularListsData
          && <ListCarousel gameList={popularListsData?.lists}/>}
         {/* Trending This Week */}
-        <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="surface sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
           {isTrendingPending ? (
             <FeaturedGamesSkeleton count={4} />
           ) : trendingData && trendingData.games.length > 0 ? (
@@ -136,7 +136,7 @@ export default function Checkpointer() {
         <br/>
         <br/>
         {/*Top Rated*/}
-        <section className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+        <section className="surface sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
           {!isTopRatedPending && topRatedData && (
             <FeaturedGames
               title="Top rated on Checkpointer"
@@ -150,7 +150,7 @@ export default function Checkpointer() {
           <>
             <br/>
             <br/>
-            <section className="bg-muted border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)] p-4 sm:p-6 md:p-10">
+            <section className="surface bg-muted sm:shadow-hard-8 p-4 sm:p-6 md:p-10">
               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 font-alt text-foreground">Popular Lists</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {popularListsData.lists.map((list: PopularGameListSummary) => (
@@ -168,7 +168,7 @@ export default function Checkpointer() {
 
         {/* CTA Section */}
         <section className="mt-10 sm:mt-16">
-          <div className="bg-blue-400/80 text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] sm:shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:sm:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
+          <div className="bg-blue-400/80 text-foreground border-4 border-border p-5 sm:p-8 md:p-12 shadow-hard-4 sm:shadow-hard-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center md:text-left">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">

@@ -95,14 +95,14 @@ export const StarRating: React.FC<StarRatingProps> = ({
                 <Star className={`${sizeClass} fill-white text-black transition-colors`} />
                 {/* Half star overlay */}
                 <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%' }}>
-                  <Star className={`${sizeClass} fill-amber-400 text-black transition-colors`} />
+                  <Star className={`${sizeClass} fill-brand-400 text-black transition-colors`} />
                 </div>
               </div>
             ) : (
               <Star
                 className={`${sizeClass} transition-colors ${
                   fillType === 'full'
-                    ? 'fill-amber-400 text-black' 
+                    ? 'fill-brand-400 text-black' 
                     : 'fill-white text-black'
                 }`}
               />

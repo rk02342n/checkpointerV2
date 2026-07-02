@@ -103,7 +103,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     }));
 
     return(
-      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 bg-primary border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] mb-0 mx-4 mt-0`}>
+      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4 mt-0`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
         <Button
@@ -161,7 +161,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+              <DropdownMenuContent align="end" className="surface">
                 <DropdownMenuItem
                   onClick={() => navigate({to: `/profile`})}
                   className="font-medium rounded-none hover:bg-primary/20"
@@ -233,7 +233,7 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+              <DropdownMenuContent align="end" className="surface">
                 <DropdownMenuItem
                   onClick={() => setCreateListModalOpen(true)}
                   className="font-medium rounded-none hover:bg-primary/20"

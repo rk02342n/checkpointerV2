@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getAuthUser } from "../kinde";
+import { getAuthUser, getOptionalViewer } from "../kinde";
 import { db } from "../db";
 import { gameListsTable } from "../db/schema/game-lists";
 import { gameListItemsTable } from "../db/schema/game-list-items";
@@ -10,7 +10,8 @@ import { eq, and, desc, asc, count, sql, ilike } from "drizzle-orm";
 import { assertOwned, ownerScope } from "../lib/ownership";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { s3Client, R2_BUCKET, PutObjectCommand, GetObjectCommand } from "../s3";
+import { s3Client, R2_BUCKET, PutObjectCommand } from "../s3";
+import { streamR2Image } from "../lib/images";
 
 const LIST_LIMITS = {
   free: 10,
@@ -838,54 +839,33 @@ export const gameListsRoute = new Hono()
   return c.json({ removed: true });
 })
 
-// GET /:listId/cover - Serve cover image for list (public)
-.get('/:listId/cover', async (c) => {
+// GET /:listId/cover - Serve cover image for list (public; private lists → owner only)
+.get('/:listId/cover', getOptionalViewer, async (c) => {
   const listId = c.req.param('listId');
 
-  // Get list's cover key and visibility from database
   const list = await db
-    .select({ coverUrl: gameListsTable.coverUrl, visibility: gameListsTable.visibility })
+    .select({
+      coverUrl: gameListsTable.coverUrl,
+      visibility: gameListsTable.visibility,
+      userId: gameListsTable.userId,
+    })
     .from(gameListsTable)
     .where(eq(gameListsTable.id, listId))
     .limit(1)
     .then(res => res[0]);
 
-  if (list?.visibility === 'private') {
-    return c.notFound();
-  }
-
   if (!list?.coverUrl) {
     return c.notFound();
   }
 
-  // Fetch from R2 via S3 API
-  try {
-    const response = await s3Client.send(new GetObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: list.coverUrl,
-    }));
-
-    if (!response.Body) {
-      return c.notFound();
-    }
-
-    // Convert stream to buffer
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-
-    // Return image with appropriate content type
-    return new Response(buffer, {
-      headers: {
-        "Content-Type": response.ContentType || "image/jpeg",
-        "Cache-Control": "public, max-age=31536000",
-      },
-    });
-  } catch {
+  const isPrivate = list.visibility === 'private';
+  if (isPrivate && c.var.viewer?.id !== list.userId) {
     return c.notFound();
   }
+
+  return streamR2Image(list.coverUrl, {
+    cacheControl: isPrivate ? 'no-store' : undefined,
+  });
 })
 
 // GET /:listId/save - Check if list is saved + save count (authenticated)

@@ -333,7 +333,7 @@ function ListDetailView() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto max-w-4xl px-6 py-8">
-          <div className="bg-rose-100 dark:bg-rose-950 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-8 text-center">
+          <div className="bg-rose-100 surface dark:bg-rose-950 shadow-hard-6 p-8 text-center">
             <Gamepad2 className="w-12 h-12 text-rose-600 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-foreground mb-2">List Not Found</h2>
             <p className="text-muted-foreground mb-4">
@@ -384,7 +384,7 @@ function ListDetailView() {
                 <img
                   src={getListCoverUrl(listId)}
                   alt={`${list.name} cover`}
-                  className="w-full aspect-21/9 object-cover border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]"
+                  className="w-full aspect-21/9 object-cover border-4 border-border shadow-hard-6"
                 />
                 {isOwner && (
                   <div className="absolute top-3 right-3 flex gap-2">
@@ -438,7 +438,7 @@ function ListDetailView() {
         )}
 
         {/* List Header */}
-        <div className="bg-sky-200 dark:bg-sky-950 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6 mb-8">
+        <div className="bg-sky-200 surface dark:bg-sky-950 shadow-hard-6 p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -473,7 +473,7 @@ function ListDetailView() {
                     }
                     alt={list.ownerUsername || "User"}
                   />
-                  <AvatarFallback className="bg-orange-100 dark:bg-orange-900 text-foreground text-xs font-bold">
+                  <AvatarFallback className="bg-pop-100 dark:bg-pop-900 text-foreground text-xs font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -544,7 +544,7 @@ function ListDetailView() {
                   disabled={saveMutation.isPending || unsaveMutation.isPending}
                   className={`border-2 border-border rounded-none gap-1.5 ${
                     saveData.isSaved
-                      ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800"
+                      ? "bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-800"
                       : "hover:bg-accent"
                   }`}
                 >
@@ -568,7 +568,7 @@ function ListDetailView() {
         </div>
 
         {/* Games List */}
-        <div className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]">
+        <div className="surface bg-background shadow-hard-6">
           <div className="border-b-4 border-border p-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
               Games
@@ -627,7 +627,7 @@ function ListDetailView() {
 
       {/* Delete List Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+        <DialogContent className="surface bg-background shadow-hard-6">
           <DialogHeader>
             <DialogTitle className="text-rose-600">Delete List</DialogTitle>
             <DialogDescription>
@@ -663,7 +663,7 @@ function ListDetailView() {
 
       {/* Remove Game Dialog */}
       <Dialog open={!!gameToRemove} onOpenChange={() => setGameToRemove(null)}>
-        <DialogContent className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] rounded-none">
+        <DialogContent className="surface bg-background shadow-hard-6">
           <DialogHeader>
             <DialogTitle>Remove Game</DialogTitle>
             <DialogDescription>
@@ -703,7 +703,7 @@ function ListDetailSkeleton() {
   return (
     <>
       <Skeleton className="h-5 w-16 mb-6 bg-muted" />
-      <div className="bg-sky-200 dark:bg-sky-950 border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6 mb-8">
+      <div className="bg-sky-200 surface dark:bg-sky-950 shadow-hard-6 p-6 mb-8">
         <Skeleton className="h-8 w-2/3 mb-4 bg-sky-300 dark:bg-sky-800" />
         <Skeleton className="h-4 w-full mb-2 bg-sky-300 dark:bg-sky-800" />
         <div className="flex items-center gap-2 mt-4">
@@ -711,7 +711,7 @@ function ListDetailSkeleton() {
           <Skeleton className="h-4 w-24 bg-sky-300 dark:bg-sky-800" />
         </div>
       </div>
-      <div className="bg-background border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)]">
+      <div className="surface bg-background shadow-hard-6">
         <div className="border-b-4 border-border p-4">
           <Skeleton className="h-4 w-32 bg-muted" />
         </div>
@@ -897,7 +897,7 @@ function GameRow({ game, index }: { game: GameListGame; index: number }) {
 
 function GameRowOverlay({ game }: { game: GameListGame }) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-background border-4 border-border shadow-[8px_8px_0px_0px_rgba(41,37,36,1)] dark:shadow-[8px_8px_0px_0px_rgba(120,113,108,0.5)]">
+    <div className="flex items-center gap-4 p-4 surface bg-background shadow-hard-8">
       <div className="p-1 text-muted-foreground">
         <GripVertical className="w-5 h-5" />
       </div>

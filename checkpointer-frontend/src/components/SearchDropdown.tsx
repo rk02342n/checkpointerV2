@@ -90,7 +90,7 @@ export function SearchDropdown({
       )}
 
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] overflow-hidden max-h-64 overflow-y-auto z-50">
+        <div className="absolute top-full left-0 right-0 mt-2 surface overflow-hidden max-h-64 overflow-y-auto z-50">
           {isLoading ? (
             <div className="p-4 text-center text-muted-foreground text-sm flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />

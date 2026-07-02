@@ -188,7 +188,7 @@ export default function BrowseGames() {
         </div>
 
         {/* Search & Filters Section */}
-        <section className="bg-secondary border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6 mb-8">
+        <section className="surface bg-secondary shadow-hard-6 p-6 mb-8">
           {/* Search Input */}
           <div className="relative mb-4">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -291,7 +291,7 @@ export default function BrowseGames() {
         </div>
 
         {/* Game Grid */}
-        <section className="bg-muted border-4 border-border shadow-[6px_6px_0px_0px_rgba(41,37,36,1)] dark:shadow-[6px_6px_0px_0px_rgba(120,113,108,0.5)] p-6">
+        <section className="surface bg-muted shadow-hard-6 p-6">
           {isPending ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -345,7 +345,7 @@ export default function BrowseGames() {
 
 function GameCardSkeleton() {
   return (
-    <div className="bg-card border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)]">
+    <div className="surface">
       <Skeleton className="w-full h-48 sm:h-56 rounded-none bg-muted" />
       <div className="p-4 border-t-4 border-border">
         <Skeleton className="h-5 w-3/4 bg-muted rounded-none" />

@@ -58,13 +58,13 @@ export function TopReviewsSection({
     const hasMoreReviews = visibleCount < gameReviews.length;
 
     return (
-        <div ref={reviewsSectionRef} className="bg-blue-400 dark:bg-blue-700/40 border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] p-4 sm:p-6 text-foreground">
+        <div ref={reviewsSectionRef} className="bg-blue-400 surface dark:bg-blue-700/40 p-4 sm:p-6 text-foreground">
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest border-b-2 border-border pb-2 mb-4">
                 {title}
             </h3>
             {loadingCreateReview?.review && (
                 <div className="space-y-4 mb-4">
-                    <div className="bg-orange-50 border-4 border-border p-3 sm:p-4">
+                    <div className="bg-pop-50 border-4 border-border p-3 sm:p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0">
                                 <Avatar className="w-6 h-6 border-2 border-stone-900 shrink-0">
@@ -76,7 +76,7 @@ export function TopReviewsSection({
                                             : undefined}
                                         alt={dbUserData?.account?.username || 'You'}
                                     />
-                                    <AvatarFallback className="bg-orange-400 text-stone-900 text-xs font-bold">
+                                    <AvatarFallback className="bg-pop-400 text-stone-900 text-xs font-bold">
                                         {dbUserData?.account?.username
                                             ? dbUserData.account.username.slice(0, 2).toUpperCase()
                                             : 'YO'}
@@ -123,7 +123,7 @@ export function TopReviewsSection({
                                                     }
                                                     alt={r.username || 'User'}
                                                 />
-                                                <AvatarFallback className="bg-orange-400 text-stone-900 text-xs font-bold">
+                                                <AvatarFallback className="bg-pop-400 text-stone-900 text-xs font-bold">
                                                     {initials}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -145,7 +145,7 @@ export function TopReviewsSection({
                                                     else next.add(r.id);
                                                     return next;
                                                 })}
-                                                className="text-xs font-semibold text-orange-500 hover:text-orange-400 mt-1"
+                                                className="text-xs font-semibold text-pop-500 hover:text-pop-400 mt-1"
                                             >
                                                 {isExpanded ? 'less' : 'more'}
                                             </button>
@@ -157,8 +157,8 @@ export function TopReviewsSection({
                                             disabled={likePending}
                                             className={`flex items-center gap-1 px-2 py-1 text-xs font-medium transition-colors ${
                                                 r.userLiked
-                                                    ? 'text-orange-400 hover:text-orange-300'
-                                                    : 'text-stone-600 hover:text-orange-300'
+                                                    ? 'text-pop-400 hover:text-pop-300'
+                                                    : 'text-stone-600 hover:text-pop-300'
                                             } ${likePending ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
                                             <Heart className={`w-3 h-3 ${r.userLiked ? 'fill-current' : ''}`} />

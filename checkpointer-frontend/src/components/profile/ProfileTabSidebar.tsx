@@ -35,7 +35,7 @@ export function ProfileTabSidebar({
   layout = 'sidebar',
   children,
 }: ProfileTabSidebarProps) {
-  const activeClass = themed ? 'profile-accent' : 'bg-amber-200 dark:bg-amber-900'
+  const activeClass = themed ? 'profile-accent' : 'bg-brand-200 dark:bg-brand-900'
   const inactiveClass = `cursor-pointer ${themed ? 'profile-accent-muted text-foreground hover:opacity-80' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'}`
 
   if (layout === 'bar') {

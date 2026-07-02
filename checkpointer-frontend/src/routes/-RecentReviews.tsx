@@ -62,16 +62,16 @@ function Poster({
 
 const RecentReviews = () => {
   const games: Game[] = [
-    { id: 1, title: "Elden Ring", year: 2022, dev: "FromSoftware", genre: "RPG", color: "from-amber-700 to-yellow-900" },
+    { id: 1, title: "Elden Ring", year: 2022, dev: "FromSoftware", genre: "RPG", color: "from-brand-700 to-yellow-900" },
     { id: 2, title: "Baldur's Gate 3", year: 2023, dev: "Larian", genre: "RPG", color: "from-red-900 to-purple-900" },
     { id: 3, title: "Hollow Knight", year: 2017, dev: "Team Cherry", genre: "Metroidvania", color: "from-slate-700 to-slate-900" },
     { id: 4, title: "Breath of the Wild", year: 2017, dev: "Nintendo", genre: "Adventure", color: "from-sky-400 to-emerald-400" },
     { id: 5, title: "Cyberpunk 2077", year: 2020, dev: "CDPR", genre: "RPG", color: "from-yellow-400 to-yellow-600 text-black" },
     { id: 6, title: "God of War", year: 2018, dev: "Santa Monica", genre: "Action", color: "from-blue-800 to-slate-800" },
-    { id: 7, title: "Hades", year: 2020, dev: "Supergiant", genre: "Roguelike", color: "from-red-600 to-orange-600" },
+    { id: 7, title: "Hades", year: 2020, dev: "Supergiant", genre: "Roguelike", color: "from-red-600 to-pop-600" },
     { id: 8, title: "Stardew Valley", year: 2016, dev: "ConcernedApe", genre: "Sim", color: "from-green-500 to-emerald-700" },
     { id: 9, title: "The Last of Us Part II", year: 2020, dev: "Naughty Dog", genre: "Action", color: "from-stone-800 to-stone-950" },
-    { id: 10, title: "Disco Elysium", year: 2019, dev: "ZA/UM", genre: "RPG", color: "from-orange-200 to-orange-400 text-black" },
+    { id: 10, title: "Disco Elysium", year: 2019, dev: "ZA/UM", genre: "RPG", color: "from-pop-200 to-pop-400 text-black" },
     { id: 11, title: "Outer Wilds", year: 2019, dev: "Mobius", genre: "Adventure", color: "from-indigo-900 to-purple-900" },
     { id: 12, title: "Celeste", year: 2018, dev: "EXOK", genre: "Platformer", color: "from-pink-500 to-purple-600" },
     { id: 13, title: "Portal 2", year: 2011, dev: "Valve", genre: "Puzzle", color: "from-cyan-600 to-blue-700" },

@@ -140,7 +140,7 @@ export function AddToListModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="bg-background border-4 border-border text-foreground shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] rounded-none w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
+          className="surface bg-background text-foreground w-[calc(100%-2rem)] sm:max-w-md p-0 gap-0 max-h-[90vh] flex flex-col"
           showCloseButton={true}
         >
           <DialogHeader className="p-4 sm:p-6 pb-0 sm:pb-0">
@@ -196,7 +196,7 @@ export function AddToListModal({
                         className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
                           list.hasGame
                             ? "bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800"
-                            : "hover:bg-orange-100 hover:dark:bg-orange-800"
+                            : "hover:bg-pop-100 hover:dark:bg-pop-800"
                         } ${isPending ? "opacity-50" : ""}`}
                       >
                         <div

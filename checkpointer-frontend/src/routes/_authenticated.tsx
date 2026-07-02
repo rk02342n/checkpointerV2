@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 
 const Login = () => {
     return (
-        <div className="min-h-screen bg-amber-100 dark:bg-black p-6">
+        <div className="min-h-screen bg-brand-100 dark:bg-black p-6">
             <Navbar />
             <div className="container mx-auto max-w-2xl mt-12">
                 {/* Hero Card */}
@@ -28,7 +28,7 @@ const Login = () => {
                     {/* Features */}
                     <div className="flex flex-wrap justify-center gap-4 mb-8">
                         <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-black/20">
-                            <Star className="w-4 h-4 text-black fill-amber-300" />
+                            <Star className="w-4 h-4 text-black fill-brand-300" />
                             <span className="text-sm font-medium text-black">Rate games</span>
                         </div>
                         <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-black/20">
@@ -36,7 +36,7 @@ const Login = () => {
                             <span className="text-sm font-medium text-black">Track progress</span>
                         </div>
                         <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-black/20">
-                            <Calendar className="w-4 h-4 text-black fill-amber-200" />
+                            <Calendar className="w-4 h-4 text-black fill-brand-200" />
                             <span className="text-sm font-medium text-black">Log your journey</span>
                         </div>
                     </div>

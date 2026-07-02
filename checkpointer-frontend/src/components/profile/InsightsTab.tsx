@@ -98,7 +98,7 @@ function GamingHabitsSection({
   data: InsightsData["gaming"];
   themed: boolean;
 }) {
-  const cardClass = `${themed ? "profile-accent" : "bg-card"} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-4`;
+  const cardClass = `surface ${themed ? "profile-accent" : ""} p-4`;
 
   return (
     <section>
@@ -128,7 +128,7 @@ function GamingHabitsSection({
         </div>
         <div className={cardClass}>
           <div className="text-2xl font-bold text-foreground flex items-center gap-1">
-            <Archive className="w-5 h-5 text-amber-500" />
+            <Archive className="w-5 h-5 text-brand-500" />
             {data.gamesStashed}
           </div>
           <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
@@ -327,7 +327,7 @@ function ReviewStatsSection({
   };
   themed: boolean;
 }) {
-  const cardClass = `${themed ? "profile-accent" : "bg-card"} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-4`;
+  const cardClass = `surface ${themed ? "profile-accent" : ""} p-4`;
 
   if (data.totalReviews === 0) {
     return (
@@ -366,7 +366,7 @@ function ReviewStatsSection({
         </div>
         <div className={cardClass}>
           <div className="text-2xl font-bold text-foreground flex items-center gap-1">
-            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+            <Star className="w-5 h-5 text-brand-500 fill-brand-500" />
             {data.avgRating !== null ? data.avgRating.toFixed(1) : "—"}
           </div>
           <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
@@ -423,7 +423,7 @@ function ReviewStatsSection({
       {/* Most liked review */}
       {data.mostLikedReview && (
         <div className={`${cardClass} flex items-center gap-3`}>
-          <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
+          <Trophy className="w-5 h-5 text-brand-500 shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
               Most Liked Review
@@ -439,7 +439,7 @@ function ReviewStatsSection({
           <div className="flex items-center gap-2 shrink-0">
             {data.mostLikedReview.rating && (
               <span className="text-sm text-muted-foreground flex items-center gap-0.5">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <Star className="w-3.5 h-3.5 text-brand-500 fill-brand-500" />
                 {data.mostLikedReview.rating}
               </span>
             )}
@@ -470,7 +470,7 @@ function SocialInsightsSection({
   };
   themed: boolean;
 }) {
-  const cardClass = `${themed ? "profile-accent" : "bg-card"} border-4 border-border shadow-[4px_4px_0px_0px_rgba(41,37,36,1)] dark:shadow-[4px_4px_0px_0px_rgba(120,113,108,0.5)] p-4`;
+  const cardClass = `surface ${themed ? "profile-accent" : ""} p-4`;
 
   return (
     <section>
