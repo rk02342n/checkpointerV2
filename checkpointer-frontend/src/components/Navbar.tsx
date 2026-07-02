@@ -24,9 +24,11 @@ import { toast } from "sonner";
 interface NavbarProps {
   logModalTrigger?: boolean;
   sticky?: boolean;
+  /** Overrides the default `bg-primary` background, e.g. a profile's accent color. */
+  accentColor?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
+const Navbar: React.FC<NavbarProps> = ({ sticky = true, accentColor }) => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [logGameModalOpen, setLogGameModalOpen] = useState(false);
     const [createListModalOpen, setCreateListModalOpen] = useState(false);
@@ -103,7 +105,10 @@ const Navbar: React.FC<NavbarProps> = ({ sticky = true }) => {
     }));
 
     return(
-      <nav className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4`}>
+      <nav
+        className={`${sticky ? 'sticky top-0' : ''} z-40 surface bg-primary mb-0 mx-4`}
+        style={accentColor ? { backgroundColor: accentColor } : undefined}
+      >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Mobile Search Button - navigates to browse page */}
         <Button
