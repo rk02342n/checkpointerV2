@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, toggleReviewLike, type UserReviewsRe
 import { userCurrentlyPlayingQueryOptions, playHistoryInfiniteOptions } from '@/lib/gameSessionsQuery'
 import { userWishlistInfiniteOptions } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followStatusQueryOptions, toggleFollow, type FollowCounts } from '@/lib/followsQuery'
-import { Gamepad2, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus, FileText } from 'lucide-react'
+import { Gamepad2, Gamepad, Heart, History, CalendarHeart, ListPlus, UserPlus, UserMinus, FileText } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { toast } from 'sonner'
@@ -18,8 +18,10 @@ import { LoadMoreButton } from '@/components/LoadMoreButton'
 import { userGameListsInfiniteOptions } from '@/lib/gameListsQuery'
 import { userPublishedPostsQueryOptions, type BlogPost } from '@/lib/blogPostsQuery'
 import { BlogPostCard } from '@/components/BlogPostCard'
+import { SteamTab } from '@/components/profile/SteamTab'
+import { steamSummaryQueryOptions } from '@/lib/steamQuery'
 
-const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'posts'] as const
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'posts', 'steam'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
 
 export const Route = createFileRoute('/users/$userId')({
@@ -142,6 +144,13 @@ function PublicProfile() {
     enabled: !!userId && !isPrivate && showBlogPosts,
   })
   const blogPosts = blogPostsData?.posts ?? []
+
+  // Steam summary — the Steam tab only appears when a library is connected
+  const { data: steamSummaryData } = useQuery({
+    ...steamSummaryQueryOptions(userId),
+    enabled: !!userId && !isPrivate,
+  })
+  const showSteamTab = steamSummaryData?.connected === true
 
   // Track public profile view
   useEffect(() => {
@@ -317,6 +326,7 @@ function PublicProfile() {
     { id: 'wishlist', label: 'Want to Play', icon: CalendarHeart, count: totalWishlistCount },
     { id: 'lists', label: 'Lists', icon: ListPlus, count: totalListsCount },
     ...(showBlogPosts ? [{ id: 'posts', label: 'Posts', icon: FileText, count: blogPosts.length } as ProfileTabItem] : []),
+    ...(showSteamTab ? [{ id: 'steam', label: 'Steam', icon: Gamepad, count: steamSummaryData.totalGames } as ProfileTabItem] : []),
   ]
 
   return (
@@ -357,6 +367,28 @@ function PublicProfile() {
               )}
               {user?.bio && (
                 <p className="text-sm text-muted-foreground mt-2 max-w-md">{user.bio}</p>
+              )}
+
+              {/* Steam badge */}
+              {showSteamTab && (
+                <div className="flex justify-center md:justify-start mt-2">
+                  {steamSummaryData.profileUrl ? (
+                    <a
+                      href={steamSummaryData.profileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 px-2 py-0.5 text-xs font-bold shadow-hard-2 hover:opacity-80 transition-opacity"
+                    >
+                      <Gamepad className="w-3.5 h-3.5" />
+                      {steamSummaryData.personaName ?? 'Steam'}
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 px-2 py-0.5 text-xs font-bold shadow-hard-2">
+                      <Gamepad className="w-3.5 h-3.5" />
+                      {steamSummaryData.personaName ?? 'Steam'}
+                    </span>
+                  )}
+                </div>
               )}
 
               {/* Stats */}
@@ -599,6 +631,13 @@ function PublicProfile() {
                 </div>
               )}
             </div>}
+
+            {/* Steam Tab */}
+            {showSteamTab && (
+              <div className={activeTab !== 'steam' ? 'hidden' : ''}>
+                <SteamTab userId={userId} isOwnProfile={false} themed={themed} />
+              </div>
+            )}
         </ProfileTabSidebar>
       </div>
     </div>

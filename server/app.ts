@@ -18,6 +18,7 @@ import { settingsRoute } from './routes/settings'
 import { followsRoute } from './routes/follows'
 import { blogPostsRoute } from './routes/blog-posts'
 import { insightsRoute } from './routes/insights'
+import { steamRoute } from './routes/steam'
 
 const app = new Hono()
 
@@ -51,7 +52,8 @@ const apiRoutes = app
   .route("/settings", settingsRoute)
   .route("/follows", followsRoute)
   .route("/blog-posts", blogPostsRoute)
-  .route("/insights", insightsRoute);
+  .route("/insights", insightsRoute)
+  .route("/steam", steamRoute);
 
 // The error-handler seam: one place where a thrown error becomes a response.
 // Throwers like notFound()/forbidden() (server/lib/errors.ts) render here into

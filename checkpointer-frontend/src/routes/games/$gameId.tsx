@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePostHog } from 'posthog-js/react'
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Poster } from "@/components/Poster";
-import { Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Maximize2, Minimize2, Check, Clock, Pencil, CalendarHeart, ConciergeBell, ListPlus, ExternalLink, ChevronLeft, ChevronRight, Gamepad } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { getReviewsByGameIdQueryOptions, getReviewsByUserIdQueryOptions, loading
 import { dbUserQueryOptions } from "@/lib/api";
 import { currentlyPlayingQueryOptions, setCurrentlyPlaying, stopPlaying, gameActivePlayersQueryOptions, type SessionStatus } from "@/lib/gameSessionsQuery";
 import { gameInWishlistQueryOptions, gameWantToPlayCountQueryOptions, addToWishlist, removeFromWishlist, type WishlistResponse } from "@/lib/wantToPlayQuery";
+import { gameSteamPlaytimeQueryOptions, formatPlaytime } from "@/lib/steamQuery";
 import { type UserReviewsResponse } from "@/lib/reviewsQuery";
 
 import { Label } from "@/components/ui/label"
@@ -150,6 +151,12 @@ function GameView () {
     const { data: activePlayersData, isPending: activePlayersPending } = useQuery(
       gameActivePlayersQueryOptions(gameId)
     );
+
+    // Viewer's own Steam playtime for this game
+    const { data: steamPlaytimeData } = useQuery({
+      ...gameSteamPlaytimeQueryOptions(gameId),
+      enabled: !!dbUserData?.account,
+    });
 
     // Want to play (wishlist) state
     const { data: wishlistStatus } = useQuery({
@@ -521,6 +528,16 @@ const queryClient = useQueryClient();
                                             {platform.abbreviation || platform.name}
                                         </span>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Viewer's Steam playtime */}
+                            {steamPlaytimeData?.playtime && steamPlaytimeData.playtime.playtimeForeverMin > 0 && (
+                                <div className="flex justify-center lg:justify-start mt-3">
+                                    <span className="inline-flex items-center gap-1.5 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 px-3 py-1 text-xs font-bold shadow-hard-2">
+                                        <Gamepad className="w-3.5 h-3.5" />
+                                        You've played {formatPlaytime(steamPlaytimeData.playtime.playtimeForeverMin)} on Steam
+                                    </span>
                                 </div>
                             )}
                         </div>

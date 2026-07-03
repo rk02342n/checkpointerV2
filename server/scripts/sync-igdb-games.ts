@@ -22,6 +22,7 @@ import { gamePlatformsTable } from "../db/schema/game-platforms";
 import { gameKeywordsTable } from "../db/schema/game-keywords";
 import { gameImagesTable } from "../db/schema/game-images";
 import { gameLinksTable } from "../db/schema/game-links";
+import { steamAppMapTable } from "../db/schema/steam-app-map";
 import { inArray, sql } from "drizzle-orm";
 
 import {
@@ -501,6 +502,124 @@ async function runIncrementalSync(
   });
 }
 
+// --- Steam appid → IGDB id map sync ---
+//
+// Seeds steam_app_map from IGDB's external_games endpoint (source 1 = Steam).
+// Runs after the game sync with its own checkpoint state, so a failure here
+// never flips the games sync into a full re-import. The map is what lets
+// syncSteamUser retro-match library entries that had no IGDB link yet.
+
+const STEAM_MAP_STATE_KEY = "steam_app_map_sync_state";
+const STEAM_EXTERNAL_SOURCE = 1;
+
+interface IgdbExternalGame {
+  id: number;
+  uid?: string;
+  game?: number;
+  updated_at?: number;
+}
+
+/** Returns true on success; owns its failure state instead of throwing. */
+async function syncSteamAppMap(token: string, clientId: string): Promise<boolean> {
+  const state = await getSyncState(db, STEAM_MAP_STATE_KEY);
+  const forceFull = process.argv.includes("--full");
+  const mode: SyncMode =
+    forceFull || !state || state.status === "failed" || state.lastSyncTimestamp === 0
+      ? "full"
+      : "incremental";
+
+  console.log(`\n=== Steam appid map sync (${mode}) ===`);
+
+  const sinceFilter =
+    mode === "incremental" ? ` & updated_at > ${state!.lastSyncTimestamp - 3600}` : "";
+  // Resume a failed full pass from its checkpoint
+  let offset = mode === "full" && state?.status === "failed" ? state.lastCompletedOffset : 0;
+  if (offset > 0) console.log(`Resuming from offset ${offset} (previous run failed)`);
+
+  let maxUpdatedAt = state?.lastSyncTimestamp ?? 0;
+  let totalProcessed = 0;
+
+  try {
+    while (true) {
+      const query = `
+        fields uid, game, updated_at;
+        where external_game_source = ${STEAM_EXTERNAL_SOURCE} & game != null${sinceFilter};
+        sort id asc;
+        limit ${IGDB_BATCH_SIZE};
+        offset ${offset};
+      `;
+
+      const externals = await fetchIgdb<IgdbExternalGame[]>("external_games", query, token, clientId);
+      if (externals.length === 0) break;
+
+      // Steam uids are numeric appid strings; dedupe within the batch so the
+      // upsert never touches the same appid twice in one statement.
+      const byAppId = new Map<number, number>();
+      for (const ext of externals) {
+        if (ext.updated_at && ext.updated_at > maxUpdatedAt) maxUpdatedAt = ext.updated_at;
+        const appId = Number(ext.uid);
+        if (!Number.isInteger(appId) || appId <= 0 || !ext.game) continue;
+        if (!byAppId.has(appId)) byAppId.set(appId, ext.game);
+      }
+
+      const mapRows = Array.from(byAppId.entries()).map(([steamAppId, igdbId]) => ({
+        steamAppId,
+        igdbId,
+        updatedAt: new Date(),
+      }));
+      for (const rowChunk of chunk(mapRows, 500)) {
+        await db
+          .insert(steamAppMapTable)
+          .values(rowChunk)
+          .onConflictDoUpdate({
+            target: steamAppMapTable.steamAppId,
+            set: {
+              igdbId: sql`excluded.igdb_id`,
+              updatedAt: sql`excluded.updated_at`,
+            },
+          });
+      }
+
+      totalProcessed += externals.length;
+      offset += IGDB_BATCH_SIZE;
+
+      await setSyncState(db, {
+        lastSyncTimestamp: state?.lastSyncTimestamp ?? 0,
+        lastCompletedOffset: offset,
+        totalGamesProcessed: totalProcessed,
+        status: "running",
+        lastRunAt: new Date().toISOString(),
+      }, STEAM_MAP_STATE_KEY);
+
+      console.log(`  Processed ${totalProcessed} Steam mappings so far (offset ${offset})`);
+      await delay(IGDB_DELAY_MS);
+    }
+
+    await setSyncState(db, {
+      lastSyncTimestamp: maxUpdatedAt,
+      lastCompletedOffset: 0,
+      totalGamesProcessed: totalProcessed,
+      status: "idle",
+      lastRunAt: new Date().toISOString(),
+    }, STEAM_MAP_STATE_KEY);
+
+    console.log(`Steam appid map sync complete (${totalProcessed} mappings processed).`);
+    return true;
+  } catch (err) {
+    console.error("Steam appid map sync failed:", err);
+    const current = await getSyncState(db, STEAM_MAP_STATE_KEY);
+    await setSyncState(db, {
+      lastSyncTimestamp: state?.lastSyncTimestamp ?? 0,
+      lastCompletedOffset: current?.lastCompletedOffset ?? offset,
+      totalGamesProcessed: totalProcessed,
+      status: "failed",
+      lastRunAt: new Date().toISOString(),
+      error: (err as Error).message,
+    }, STEAM_MAP_STATE_KEY);
+    return false;
+  }
+}
+
 // --- Main ---
 
 async function main() {
@@ -509,6 +628,11 @@ async function main() {
   const token = await getIgdbToken();
   const clientId = process.env.TWITCH_CLIENT_ID!;
   console.log("Authenticated with IGDB\n");
+
+  if (process.argv.includes("--steam-map-only")) {
+    const ok = await syncSteamAppMap(token, clientId);
+    process.exit(ok ? 0 : 1);
+  }
 
   const existingState = await getSyncState(db);
   const mode = detectMode(existingState);
@@ -533,6 +657,11 @@ async function main() {
     }
 
     console.log("\nSync complete!");
+
+    // Steam appid map rides along after every game sync; its failure exits
+    // nonzero without marking the games sync failed.
+    const steamMapOk = await syncSteamAppMap(token, clientId);
+    if (!steamMapOk) process.exit(1);
   } catch (err) {
     console.error("\nSync failed:", err);
     // Save failure state for resume

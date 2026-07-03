@@ -31,6 +31,19 @@ export type InsightsData = {
     blogPostsPublished: number;
     wishlistSize: number;
   };
+  steam: {
+    personaName: string | null;
+    totalGames: number;
+    totalPlaytimeMin: number;
+    topGames: Array<{
+      steamAppId: number;
+      name: string;
+      gameId: string | null;
+      coverUrl: string | null;
+      playtimeForeverMin: number;
+    }>;
+    hoursByGenre: Array<{ name: string; playtimeMin: number }>;
+  } | null;
 };
 
 async function getInsights(): Promise<InsightsData> {

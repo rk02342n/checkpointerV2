@@ -3,6 +3,7 @@ import { insightsQueryOptions, type InsightsData } from "@/lib/insightsQuery";
 import { Link } from "@tanstack/react-router";
 import {
   Gamepad2,
+  Gamepad,
   Heart,
   Star,
   Users,
@@ -14,6 +15,7 @@ import {
   Trophy,
   Archive,
 } from "lucide-react";
+import { formatPlaytime } from "@/lib/steamQuery";
 import {
   BarChart,
   Bar,
@@ -83,9 +85,137 @@ export function InsightsTab({ themed }: Props) {
     <div className="space-y-8">
       <GamingHabitsSection data={data.gaming} themed={themed} />
       <GenreBreakdownSection data={data.genres} themed={themed} />
+      {data.steam && <SteamInsightsSection data={data.steam} themed={themed} />}
       <ReviewStatsSection data={data.reviews} themed={themed} />
       <SocialInsightsSection data={data.social} themed={themed} />
     </div>
+  );
+}
+
+// ── Steam ──────────────────────────────────────────────────────
+
+function SteamInsightsSection({
+  data,
+  themed,
+}: {
+  data: NonNullable<InsightsData["steam"]>;
+  themed: boolean;
+}) {
+  const cardClass = `surface ${themed ? "profile-accent" : ""} p-4`;
+  const maxGenreMin = data.hoursByGenre.length > 0 ? data.hoursByGenre[0].playtimeMin : 1;
+
+  return (
+    <section>
+      <h3 className="text-sm font-bold uppercase tracking-widest text-foreground mb-4 flex items-center gap-2">
+        <Gamepad className="w-4 h-4" />
+        Steam
+      </h3>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className={cardClass}>
+          <div className="text-2xl font-bold text-foreground">{data.totalGames}</div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+            Library Size
+          </div>
+        </div>
+        <div className={cardClass}>
+          <div className="text-2xl font-bold text-foreground">
+            {formatPlaytime(data.totalPlaytimeMin)}
+          </div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+            Total Playtime
+          </div>
+        </div>
+        <div className={cardClass}>
+          <div className="text-2xl font-bold text-foreground">
+            {data.topGames.length > 0 ? formatPlaytime(data.topGames[0].playtimeForeverMin) : "—"}
+          </div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium truncate" title={data.topGames[0]?.name}>
+            {data.topGames.length > 0 ? `Most Played · ${data.topGames[0].name}` : "Most Played"}
+          </div>
+        </div>
+      </div>
+
+      {/* Top games by playtime */}
+      {data.topGames.length > 0 && (
+        <div className="mb-6">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+            Most Played
+          </div>
+          <div className="space-y-2">
+            {data.topGames.map((game) => {
+              const row = (
+                <>
+                  {game.coverUrl ? (
+                    <img
+                      src={game.coverUrl}
+                      alt={game.name}
+                      loading="lazy"
+                      className="w-8 h-10 object-cover border-2 border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-10 bg-muted border-2 border-border flex items-center justify-center shrink-0">
+                      <Gamepad2 className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground truncate flex-1">
+                    {game.name}
+                  </span>
+                  <span className="text-sm text-muted-foreground tabular-nums shrink-0">
+                    {formatPlaytime(game.playtimeForeverMin)}
+                  </span>
+                </>
+              );
+              return game.gameId ? (
+                <Link
+                  key={game.steamAppId}
+                  to="/games/$gameId"
+                  params={{ gameId: game.gameId }}
+                  className="flex items-center gap-3 p-2 hover:bg-accent transition-colors"
+                >
+                  {row}
+                </Link>
+              ) : (
+                <div key={game.steamAppId} className="flex items-center gap-3 p-2">
+                  {row}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hours by genre */}
+      {data.hoursByGenre.length > 0 && (
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+            Hours by Genre
+          </div>
+          <div className="space-y-2">
+            {data.hoursByGenre.map((genre, i) => (
+              <div key={genre.name} className="flex items-center gap-3">
+                <span className="text-sm text-foreground font-medium w-32 truncate shrink-0">
+                  {genre.name}
+                </span>
+                <div className="flex-1 h-3 bg-muted border-2 border-border overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{
+                      width: `${Math.max(2, Math.round((genre.playtimeMin / maxGenreMin) * 100))}%`,
+                      backgroundColor: GENRE_COLORS[i % GENRE_COLORS.length],
+                    }}
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground tabular-nums w-14 text-right shrink-0">
+                  {formatPlaytime(genre.playtimeMin)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

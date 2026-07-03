@@ -20,7 +20,8 @@
     "dev": "bun --watch server/index.ts",
     "test": "bun test server/test",
     "sync:igdb": "bun server/scripts/sync-igdb-games.ts",
-    "sync:igdb:full": "bun server/scripts/sync-igdb-games.ts --full"
+    "sync:igdb:full": "bun server/scripts/sync-igdb-games.ts --full",
+    "sync:steam-map": "bun server/scripts/sync-igdb-games.ts --steam-map-only"
   },
   "private": true,
   "devDependencies": {
