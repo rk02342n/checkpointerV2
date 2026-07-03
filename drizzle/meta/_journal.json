@@ -190,6 +190,13 @@
       "when": 1775622752778,
       "tag": "0026_exotic_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1783075045387,
+      "tag": "0027_lethal_kylun",
+      "breakpoints": true
     }
   ]
 }
