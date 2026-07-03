@@ -1,6 +1,9 @@
-import { uuid, pgTable, timestamp, primaryKey, index } from "drizzle-orm/pg-core";
+import { uuid, pgTable, pgEnum, timestamp, primaryKey, index } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { gamesTable } from "./games";
+
+// "steam" = explicitly imported from the user's Steam wishlist
+export const wantToPlaySourceEnum = pgEnum("want_to_play_source", ["manual", "steam"]);
 
 export const wantToPlayTable = pgTable("want_to_play", {
   userId: uuid("user_id")
@@ -9,6 +12,7 @@ export const wantToPlayTable = pgTable("want_to_play", {
   gameId: uuid("game_id")
     .notNull()
     .references(() => gamesTable.id, { onDelete: "cascade" }),
+  source: wantToPlaySourceEnum("source").default("manual").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.userId, table.gameId] }),
