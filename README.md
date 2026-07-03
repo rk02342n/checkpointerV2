@@ -13,6 +13,14 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 - **Game Discovery** - Browse and search games from IGDB database (~311k games)
 - **Admin Panel** - Manage users, view audit logs, and moderate content
 
+### Steam Integration
+- **Connect Your Steam Account** - Sign in through Steam (OpenID) to link your library
+- **Library Sync** - Import your Steam library and playtime, matched against the IGDB catalog
+- **Wishlist Import** - Review your Steam wishlist and confirm which games to add to your Checkpointer wishlist
+- **Steam Badge** - A badge linking to your Steam profile shown on your public profile header
+- **Playtime Chip** - Game pages show your logged Steam playtime when the game is matched in your library
+- **Insights** - A Steam-powered breakdown (library size, total playtime, most-played games, hours by genre) in your Insights tab
+
 ### Blog Posts
 - **Rich Text Editor** - Full TipTap/ProseMirror-powered editor with toolbar (bold, italic, headings, text alignment)
 - **Autosave** - Drafts are automatically saved as you write
@@ -108,6 +116,9 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
    TWITCH_CLIENT_ID=your_twitch_client_id
    TWITCH_CLIENT_SECRET=your_twitch_client_secret
 
+   # Steam Web API (for Steam integration)
+   STEAM_API_KEY=your_steam_web_api_key
+
    # Email
    RESEND_API_KEY=your_resend_api_key
 
@@ -156,6 +167,8 @@ checkpointerv2/
 │       ├── game-lists.ts     # Game list management
 │       ├── follows.ts        # Follow/unfollow system
 │       ├── settings.ts       # Profile customization settings
+│       ├── steam.ts          # Steam connect/sync/library/wishlist
+│       ├── insights.ts       # Aggregated profile insights (incl. Steam)
 │       └── admin.ts          # Admin operations
 │
 ├── checkpointer-frontend/    # React + Vite frontend
@@ -209,6 +222,18 @@ All API endpoints are prefixed with `/api`:
 | GET | `/follows/:userId/following` | Get following |
 | GET | `/settings` | Get user settings |
 | PATCH | `/settings` | Update user settings (profile customization) |
+| GET | `/steam/connect` | Redirect to Steam OpenID login |
+| GET | `/steam/callback` | Verify Steam OpenID callback, link account, trigger first sync |
+| GET | `/steam/status` | Get own Steam connection + library stats |
+| POST | `/steam/sync` | Manually re-sync Steam library (rate-limited) |
+| DELETE | `/steam/connection` | Disconnect Steam and purge the Steam layer |
+| GET | `/steam/wishlist/pending` | Get staged Steam wishlist entries awaiting import |
+| POST | `/steam/wishlist/import` | Import selected Steam wishlist games into Want to Play |
+| GET | `/steam/game/:gameId/playtime` | Get own Steam playtime for a game |
+| GET | `/steam/user/:userId/summary` | Get a user's public Steam summary |
+| GET | `/steam/user/:userId/library` | Get a user's public Steam library (paginated) |
+| GET | `/steam/user/:userId/unmatched` | Get a user's Steam entries with no IGDB match |
+| GET | `/insights` | Get aggregated profile insights (gaming, genres, reviews, social, Steam) |
 
 ## Database Schema
 
@@ -225,7 +250,13 @@ All API endpoints are prefixed with `/api`:
 - `game_list_items` - Games within a list (with order)
 - `follows` - User follow relationships
 - `settings` - Per-user profile customization (accent color, fonts, background)
+- `steam_connections` - Linked Steam account per user (one Steam account per user)
+- `user_steam_games` - Synced Steam library entries with playtime, matched to `games` where possible
+- `user_steam_wishlist` - Staged Steam wishlist entries, confirm-to-import into `want_to_play`
+- `steam_app_map` - Global Steam appid → IGDB id lookup, refreshed weekly alongside the IGDB sync
 - `audit_logs` - Admin action history
+
+`want_to_play` also has a `source` column (`manual` / `steam`) marking rows promoted from a Steam wishlist import.
 
 ## Deployment
 
@@ -394,6 +425,9 @@ For **Recharts tooltips**, use the function form of the `content` prop so rechar
 - Debounced search for game discovery
 - Cached queries with Tanstack React Query
 - Lazy loading on paginated routes
+- Browse page prefetches the next results page (eagerly once the current page settles, and on pagination-control hover/focus intent) so paging forward resolves from cache
+- Skeletons mirror real card layouts (browse grid, game cards) for zero layout shift while loading
+- No-cover game art falls back to an inline data-URI placeholder instead of a network-fetched asset, avoiding a slow uncached round trip
 
 ## Contributing
 

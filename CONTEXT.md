@@ -94,15 +94,82 @@ approval step, so it would gate nothing. The module is
 `assertViewableProfile` (guard for `/user/:userId/...` reads),
 `visibleUsersScope` (join filter for multi-user feeds).
 
+## Steam integration
+
+Steam data lives in its own layer — `steam_connections`, `user_steam_games`,
+`user_steam_wishlist` — and never synthesizes `game_sessions` rows. Playtime is
+observational data, not a substitute for a user-logged play session; the two
+stay separate by design.
+
+`steam_app_map` (`steamAppId → igdbId`) is the global bridge between Steam's
+catalog and IGDB's, seeded and refreshed weekly as a step in the IGDB sync (see
+README's "IGDB Game Sync"). Library/wishlist entries with no map hit are
+stored anyway (nullable `gameId`) rather than dropped, and surfaced separately
+in the UI as unmatched — a later IGDB sync can retro-match them without
+re-importing.
+
+The sync engine, `syncSteamUser` (`server/lib/steam.ts`), is a single
+idempotent function: fetch summary + owned games + wishlist, upsert, delete
+what's gone. It's written to be cron-ready but today only runs on connect or a
+manual "Sync now" click; the 10-minute cooldown is enforced at the route
+(`POST /api/steam/sync`), not inside the function itself, so the initial
+connect-callback sync always fires regardless of cooldown state.
+
+Connect uses Steam OpenID 2.0, not OAuth: `buildSteamLoginUrl` builds the
+"Sign in through Steam" redirect, and `verifySteamOpenId` never trusts the
+callback params directly — it echoes them back to Steam's
+`check_authentication` endpoint and only proceeds on Steam's own
+`is_valid:true`. `steamId64` is extracted from `claimed_id` with a strict
+pattern match so a forged callback pointing at a non-Steam URL is rejected.
+
+The Steam wishlist is confirm-to-import, mirroring the app's general
+preference for explicit user action over silent merges: entries are staged in
+`user_steam_wishlist` and only promoted into `want_to_play` (tagged
+`source: 'steam'`, alongside the existing `source: 'manual'` rows) when the
+user explicitly selects them. Re-syncing never re-adds a game the user removed
+from `want_to_play` after import.
+
+Visibility follows the existing seam — no separate Steam toggle. Public reads
+go through `assertViewableProfile` (see Profile visibility above), so a
+private profile's Steam data is gated exactly like its sessions and reviews.
+
 ## Surface (frontend)
 
 The one owner of the neobrutalist card/panel look: the `.surface` class in
-`checkpointer-frontend/src/index.css` (bg `--card`, 4px `--border` border,
-square corners, hard offset shadow). `ui/card.tsx` and `ui/dialog.tsx` are
-built on it. The shadow is tokenized: `--shadow-color` (flips with `.dark`)
-feeds `shadow-hard-1/2/3/4/6/8` utilities — call sites never write a `dark:`
-shadow twin. `shadow-soft-*` is the deliberately-quieter variant (same color
-both modes, e.g. the outline button). Restyling the look = editing `index.css`.
+`checkpointer-frontend/src/index.css` (bg `--card`, **no border** — shadow-only,
+`border-radius: 0.65rem` soft-rounded corners, hard offset shadow). `ui/card.tsx`
+and `ui/dialog.tsx` are built on it. The shadow is tokenized: `--shadow-color`
+(flips with `.dark`) feeds `shadow-hard-1/2/3/4/6/8` utilities — call sites
+never write a `dark:` shadow twin. `shadow-soft-*` is the deliberately-quieter
+variant (same color both modes, e.g. the outline button). Restyling the look =
+editing `index.css`.
+
+**Border convention** (two tiers, solidified in the border-4 removal sweep):
+surfaces, buttons, and dropdown panels are shadow-only with no border at all;
+inputs, avatars, toggles, badges, and thumbnail chips use `border-2 border-border`.
+`border-4` no longer appears anywhere as a border width except the logo
+checkerboard motif and spinner geometry (`border-4 ... border-t-transparent`,
+which is drawing, not a panel border). Exception: the profile sidebar tab
+pills (`ProfileTabSidebar`) and the profile header stat boxes intentionally
+stay square — `shadow-hard-3`, no border, not `.surface`.
+
+`rounded-t-[0.65rem]` is hand-matched to `.surface`'s radius at several call
+sites (game cover images, skeleton cards) since it isn't sourced from a shared
+token — changing `.surface`'s radius means updating those call sites too.
+
+Dropdown/popover panels (`DropdownMenuContent`) always set an explicit
+`bg-card`/`bg-muted` rather than inheriting one, and use `pop-200`/`pop-900`
+for menu-item hover/focus rather than `primary/20` — same "always use
+`brand-*`/`pop-*`, never a raw default" rule as Brand palettes below, applied
+to backgrounds and interaction states, not just accents.
+
+Profile theming plugs into three CSS variables at the bottom of `index.css`:
+`--profile-card-bg`, `--profile-accent`, `--profile-accent-font`, consumed by
+the `.profile-card` / `.profile-accent` / `.profile-accent-muted` utility
+classes. `Navbar` accepts an `accentColor` prop wired from
+`profileTheme.accentColor` on the owner's themed profile route
+(`routes/_authenticated/profile.tsx`) so the nav bar itself picks up the
+user's accent color; the public profile route doesn't wire this yet.
 
 ## Brand palettes (frontend)
 
@@ -111,3 +178,19 @@ they use the aliases defined in `index.css`: **`brand-*`** (the base family,
 currently amber) and **`pop-*`** (the louder highlight family, currently
 orange). Reskinning the app = re-pointing those ~22 values in one file.
 `primary`/`secondary`/`card`/etc. remain the shadcn semantic tokens.
+
+## Browse prefetching (frontend)
+
+`routes/_authenticated/browse.tsx` prefetches results via imperative React
+Query (`queryClient.prefetchQuery`), not TanStack Router loaders. The next
+page prefetches eagerly once the current page's data has settled, and again
+on 120ms hover/focus-intent over pagination controls
+(`components/BrowsePagination.tsx`) — both call the same `prefetchPage`
+helper, so paging forward is the common case that resolves from cache with no
+skeleton flash. Skeletons (`components/custom-skeletons/BrowseGamesSkeleton.tsx`)
+mirror the real card layout exactly, for zero layout shift when data lands.
+
+The no-cover game placeholder (`lib/placeholderCover.ts`) is an inline
+data-URI SVG, not a fetched asset — the prior `/bitmap.svg` static file was
+served `no-cache`, so it forced a network round trip on every render and
+became the slowest image on the page despite being the "cheap" fallback.
