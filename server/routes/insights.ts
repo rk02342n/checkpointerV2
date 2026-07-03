@@ -13,6 +13,8 @@ import { savedGameListsTable } from "../db/schema/saved-game-lists";
 import { blogPostsTable } from "../db/schema/blog-posts";
 import { wantToPlayTable } from "../db/schema/want-to-play";
 import { gamesTable } from "../db/schema/games";
+import { steamConnectionsTable } from "../db/schema/steam-connections";
+import { userSteamGamesTable } from "../db/schema/user-steam-games";
 
 async function getGamingHabits(userId: string) {
   const [uniqueGames, statusCounts, monthlyActivity] = await Promise.all([
@@ -189,16 +191,79 @@ async function getSocialInsights(userId: string) {
   };
 }
 
+/** Steam-layer stats; null when no connection so the section can hide. */
+async function getSteamInsights(userId: string) {
+  const connection = await db
+    .select({ personaName: steamConnectionsTable.personaName })
+    .from(steamConnectionsTable)
+    .where(eq(steamConnectionsTable.userId, userId))
+    .limit(1)
+    .then(rows => rows[0]);
+  if (!connection) return null;
+
+  const [totals, topGames, hoursByGenre] = await Promise.all([
+    db
+      .select({
+        totalGames: count(),
+        totalPlaytimeMin: sql<string | null>`sum(${userSteamGamesTable.playtimeForeverMin})`,
+      })
+      .from(userSteamGamesTable)
+      .where(eq(userSteamGamesTable.userId, userId))
+      .then(res => res[0]),
+
+    // Most played (matched and unmatched alike — playtime is playtime)
+    db
+      .select({
+        steamAppId: userSteamGamesTable.steamAppId,
+        name: userSteamGamesTable.name,
+        gameId: userSteamGamesTable.gameId,
+        coverUrl: gamesTable.coverUrl,
+        playtimeForeverMin: userSteamGamesTable.playtimeForeverMin,
+      })
+      .from(userSteamGamesTable)
+      .leftJoin(gamesTable, eq(userSteamGamesTable.gameId, gamesTable.id))
+      .where(eq(userSteamGamesTable.userId, userId))
+      .orderBy(desc(userSteamGamesTable.playtimeForeverMin))
+      .limit(5),
+
+    // Hours by genre through the IGDB match
+    db
+      .select({
+        name: genresTable.name,
+        playtimeMin: sql<string>`sum(${userSteamGamesTable.playtimeForeverMin})`,
+      })
+      .from(userSteamGamesTable)
+      .innerJoin(gameGenresTable, eq(userSteamGamesTable.gameId, gameGenresTable.gameId))
+      .innerJoin(genresTable, eq(gameGenresTable.genreId, genresTable.id))
+      .where(eq(userSteamGamesTable.userId, userId))
+      .groupBy(genresTable.name)
+      .orderBy(desc(sql`sum(${userSteamGamesTable.playtimeForeverMin})`))
+      .limit(8),
+  ]);
+
+  return {
+    personaName: connection.personaName,
+    totalGames: totals?.totalGames ?? 0,
+    totalPlaytimeMin: Number(totals?.totalPlaytimeMin ?? 0),
+    topGames: topGames.filter(g => g.playtimeForeverMin > 0),
+    hoursByGenre: hoursByGenre.map(g => ({
+      name: g.name,
+      playtimeMin: Number(g.playtimeMin),
+    })),
+  };
+}
+
 export const insightsRoute = new Hono()
   .get("/", getAuthUser, async (c) => {
     const dbUser = c.var.dbUser;
 
-    const [gaming, genres, reviews, social] = await Promise.all([
+    const [gaming, genres, reviews, social, steam] = await Promise.all([
       getGamingHabits(dbUser.id),
       getGenreBreakdown(dbUser.id),
       getReviewStats(dbUser.id),
       getSocialInsights(dbUser.id),
+      getSteamInsights(dbUser.id),
     ]);
 
-    return c.json({ gaming, genres, reviews, social });
+    return c.json({ gaming, genres, reviews, social, steam });
   });

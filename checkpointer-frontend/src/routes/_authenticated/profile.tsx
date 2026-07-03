@@ -7,7 +7,7 @@ import { getReviewsByUserIdInfiniteOptions, deleteReview, toggleReviewLike, type
 import { currentlyPlayingQueryOptions, stopPlaying, playHistoryInfiniteOptions, type SessionStatus } from '@/lib/gameSessionsQuery'
 import { wishlistInfiniteOptions, removeFromWishlist, type WishlistResponse } from '@/lib/wantToPlayQuery'
 import { followCountsQueryOptions, followersInfiniteOptions, followingInfiniteOptions } from '@/lib/followsQuery'
-import { Gamepad2, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Plus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut, ImagePlus } from 'lucide-react'
+import { Gamepad2, Gamepad, X, Camera, Pencil, Check, Loader2, AlertTriangle, Clock, History, CalendarHeart, Heart, ListPlus, Plus, Bookmark, Users, FileText, Trash2, BarChart3, EllipsisVertical, LogOut, ImagePlus } from 'lucide-react'
 import { getProfileHeaderStyle, getProfileContentStyle, hasCustomColors } from '@/lib/profileTheme'
 import { useProfileFont } from '@/lib/useProfileFont'
 import { type WishlistItem } from '@/lib/wantToPlayQuery'
@@ -47,17 +47,26 @@ import Navbar from '@/components/Navbar'
 import { useSettings } from '@/lib/settingsContext'
 import { BlogPostCard } from '@/components/BlogPostCard'
 import { InsightsTab } from '@/components/profile/InsightsTab'
+import { SteamTab } from '@/components/profile/SteamTab'
+import { steamStatusQueryOptions } from '@/lib/steamQuery'
 
-const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts', 'insights'] as const
+const VALID_TABS = ['reviews', 'history', 'wishlist', 'lists', 'saved', 'posts', 'insights', 'steam'] as const
 type ProfileTab = (typeof VALID_TABS)[number]
+
+// Result codes the Steam OpenID callback can land with (?steam=...)
+const STEAM_RESULTS = ['verify_failed', 'already_linked'] as const
+type SteamResult = (typeof STEAM_RESULTS)[number]
 
 export const Route = createFileRoute('/_authenticated/profile')({
   component: Profile,
-  validateSearch: (search: Record<string, unknown>): { tab?: ProfileTab } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: ProfileTab; steam?: SteamResult } => {
     const tab = VALID_TABS.includes(search.tab as ProfileTab) && search.tab !== 'reviews'
       ? (search.tab as ProfileTab)
       : undefined
-    return { tab }
+    const steam = STEAM_RESULTS.includes(search.steam as SteamResult)
+      ? (search.steam as SteamResult)
+      : undefined
+    return { tab, steam }
   },
 })
 
@@ -65,7 +74,7 @@ function Profile() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const posthog = usePostHog()
-  const { tab } = Route.useSearch()
+  const { tab, steam } = Route.useSearch()
   const activeTab = tab ?? 'reviews'
   const setActiveTab = useCallback(
     (newTab: ProfileTab) => {
@@ -98,6 +107,22 @@ function Profile() {
   const { settings } = useSettings()
   const isAdmin = dbUserData?.account?.role === 'admin'
   const showBlogPosts = isAdmin || !!settings.blogPostsEnabled
+
+  // Surface the Steam OpenID callback result, then clear the param
+  useEffect(() => {
+    if (!steam) return
+    if (steam === 'verify_failed') {
+      toast.error('Steam verification failed. Please try connecting again.')
+    } else if (steam === 'already_linked') {
+      toast.error('That Steam account is already linked to another Checkpointer user.')
+    }
+    navigate({
+      from: Route.fullPath,
+      search: (prev) => ({ ...prev, steam: undefined }),
+      replace: true,
+      resetScroll: false,
+    })
+  }, [steam, navigate])
 
   useProfileFont(dbUserData?.account?.profileTheme?.fontFamily)
   const themed = hasCustomColors(dbUserData?.account?.profileTheme)
@@ -514,6 +539,12 @@ function Profile() {
   })
   const blogPosts = blogPostsData?.posts ?? []
 
+  // Steam connection status (for the tab count)
+  const { data: steamStatusData } = useQuery({
+    ...steamStatusQueryOptions,
+    enabled: !!dbUserData?.account,
+  })
+
   // Redirect away from posts tab if blog posts are not accessible
   useEffect(() => {
     if (!isUserPending && !showBlogPosts && activeTab === 'posts') {
@@ -685,7 +716,9 @@ function Profile() {
     removeWishlistMutation.mutate(gameId)
   }, [])
 
-  if (isPending) {
+  // Wait for the db user too — it carries username, display name, and the
+  // custom theme, so rendering without it flashes an unthemed "Anonymous User".
+  if (isPending || isUserPending) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -721,6 +754,7 @@ function Profile() {
     { id: 'lists', label: 'Lists', icon: ListPlus, count: totalListsCount },
     { id: 'saved', label: 'Saved', icon: Bookmark, count: totalSavedCount },
     ...(showBlogPosts ? [{ id: 'posts', label: 'Posts', icon: FileText, count: blogPosts.length } as ProfileTabItem] : []),
+    { id: 'steam', label: 'Steam', icon: Gamepad, count: steamStatusData?.connected ? steamStatusData.totalGames : undefined },
     { id: 'insights', label: 'Insights', icon: BarChart3 },
   ]
 
@@ -1313,6 +1347,11 @@ function Profile() {
               )}
             </div>
             )}
+
+            {/* Steam Tab */}
+            <div className={activeTab !== 'steam' ? 'hidden' : ''}>
+              <SteamTab userId={dbUserId} isOwnProfile={true} themed={themed} />
+            </div>
 
             {/* Insights Tab */}
             <div className={activeTab !== 'insights' ? 'hidden' : ''}>

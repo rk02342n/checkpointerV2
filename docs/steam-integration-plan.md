@@ -1,6 +1,10 @@
 # Steam Integration Plan
 
-Status: agreed via design grilling, 2026-07-03. Not yet implemented.
+Status: agreed via design grilling, 2026-07-03. Steps 1–7 implemented same day
+(migration 0027, `server/lib/steam.ts`, `steam_app_map` seeded with ~171k
+mappings, `server/routes/steam.ts`, SteamTab frontend, wishlist import UI,
+Insights/game-page/header surfaces). Step 8 (cron auto-sync, achievements)
+remains future work.
 
 ## Decisions (agreed)
 

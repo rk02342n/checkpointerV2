@@ -15,22 +15,22 @@ export interface SyncState {
 
 const SYNC_STATE_KEY = "igdb_sync_state";
 
-export async function getSyncState(db: PostgresJsDatabase): Promise<SyncState | null> {
+export async function getSyncState(db: PostgresJsDatabase, key: string = SYNC_STATE_KEY): Promise<SyncState | null> {
   const rows = await db
     .select({ value: appSettingsTable.value })
     .from(appSettingsTable)
-    .where(eq(appSettingsTable.key, SYNC_STATE_KEY))
+    .where(eq(appSettingsTable.key, key))
     .limit(1);
 
   if (rows.length === 0) return null;
   return rows[0]!.value as SyncState;
 }
 
-export async function setSyncState(db: PostgresJsDatabase, state: SyncState): Promise<void> {
+export async function setSyncState(db: PostgresJsDatabase, state: SyncState, key: string = SYNC_STATE_KEY): Promise<void> {
   await db
     .insert(appSettingsTable)
     .values({
-      key: SYNC_STATE_KEY,
+      key,
       value: state as unknown as Record<string, unknown>,
       updatedAt: new Date(),
     })

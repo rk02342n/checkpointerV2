@@ -278,6 +278,9 @@ bun run sync:igdb
 
 # Force a full import (~311k games, ~20-30 min)
 bun run sync:igdb:full
+
+# Steam appid → IGDB id map only (normally rides along after every game sync)
+bun run sync:steam-map
 ```
 
 The sync is resumable — if it crashes or the connection drops, re-running `bun run sync:igdb` picks up from the last checkpoint.
@@ -292,6 +295,7 @@ A weekly cron job runs every Sunday at 4:00 AM UTC via `.github/workflows/igdb-s
 
 - **Full sync**: Paginates through all IGDB games (500 per batch), upserts game data and metadata (genres, platforms, keywords, images, links). Progress is checkpointed to the `app_settings` table after each batch.
 - **Incremental sync**: Only fetches games updated since the last sync (with a 1-hour buffer). Typically processes a few hundred to a few thousand games.
+- **Steam appid map**: After each game sync, a second pass over IGDB's `external_games` endpoint upserts `steam_app_map` (Steam appid → IGDB id), which the Steam integration uses to match imported libraries to the catalog. It keeps its own checkpoint state (`steam_app_map_sync_state`), so a failure there never forces a full game re-sync.
 - **Preserved fields**: The sync never overwrites app-managed fields (`rating`, `avgUserRating`, `userReviewCount`). Only IGDB-sourced fields are updated.
 
 ### Neon Database Notes
