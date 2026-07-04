@@ -8,6 +8,7 @@ export const auditActionEnum = pgEnum("audit_action", [
   "DELETE_REVIEW",
   "DELETE_USER",
   "UPDATE_SETTING",
+  "TRIGGER_JOB",
 ]);
 
 export const auditLogsTable = pgTable("audit_logs", {

@@ -6,7 +6,16 @@
 app = 'checkpointerv2'
 primary_region = 'ewr'
 
+# Let the worker's graceful drain (25s) finish before SIGKILL.
+kill_timeout = 30
+
 [build]
+
+[processes]
+  app = 'bun run start'
+  # Background job worker (server/worker.ts): no public services, so Fly never
+  # auto-stops it — it stays up to poll the queue and run the cron schedule.
+  worker = 'bun run start:worker'
 
 [http_service]
   internal_port = 3000
@@ -20,4 +29,11 @@ primary_region = 'ewr'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 1024
+  processes = ['app']
+
+[[vm]]
+  # Sized for the weekly IGDB sync's in-memory lookup maps.
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  processes = ['worker']

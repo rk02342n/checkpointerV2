@@ -1,0 +1,728 @@
+// IGDB catalog sync engine, extracted from the old standalone script so the
+// worker can run it as a job (server/worker.ts) and the CLI wrapper
+// (server/scripts/sync-igdb-games.ts) stays available for manual runs.
+//
+// Each run opens its own keepalive DB connection — full syncs take hours and
+// the app's shared pool isn't tuned for that — and closes it on the way out.
+// Progress is checkpointed to app_settings after every batch, so a retried
+// job resumes from the last completed offset instead of starting over.
+
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { inArray, sql } from "drizzle-orm";
+
+import { gamesTable } from "../db/schema/games";
+import { genresTable } from "../db/schema/genres";
+import { platformsTable } from "../db/schema/platforms";
+import { keywordsTable } from "../db/schema/keywords";
+import { gameGenresTable } from "../db/schema/game-genres";
+import { gamePlatformsTable } from "../db/schema/game-platforms";
+import { gameKeywordsTable } from "../db/schema/game-keywords";
+import { gameImagesTable } from "../db/schema/game-images";
+import { gameLinksTable } from "../db/schema/game-links";
+import { steamAppMapTable } from "../db/schema/steam-app-map";
+
+import {
+  getIgdbToken,
+  fetchIgdb,
+  chunk,
+  delay,
+  igdbCoverUrl,
+  igdbImageUrl,
+  IGDB_BATCH_SIZE,
+  IGDB_DELAY_MS,
+  IGDB_WEBSITE_CATEGORY_MAP,
+  type IgdbGameFull,
+  type LinkCategory,
+  type ImageType,
+} from "./igdb";
+
+import {
+  getSyncState,
+  setSyncState,
+  bulkInsertIgnore,
+  deleteStaleJunctionRows,
+  type SyncState,
+} from "./sync-helpers";
+
+export type IgdbSyncMode = "auto" | "full" | "incremental" | "steam-map-only";
+
+/** Batch-boundary progress callback; shape matches the queue's JobProgress. */
+export type SyncProgressReporter = (progress: {
+  done: number;
+  total: number | null;
+  phase: string;
+}) => void;
+
+// --- IGDB query template ---
+
+const IGDB_FIELDS = `
+fields name, slug, summary, first_release_date,
+       cover.image_id,
+       total_rating, total_rating_count, updated_at,
+       genres.name, genres.slug,
+       platforms.name, platforms.slug, platforms.abbreviation,
+       keywords.name, keywords.slug,
+       screenshots.image_id, screenshots.width, screenshots.height,
+       artworks.image_id, artworks.width, artworks.height,
+       websites.category, websites.url;
+`.trim();
+
+// Game type filter: main game (0), expansion (2), standalone expansion (4),
+// remake (8), remaster (9), expanded game (10), port (11), fork (12), updated version (14)
+const GAME_TYPE_FILTER = "where game_type = (0,2,4,8,9,10,11,12,14)";
+
+function resolveGamesMode(mode: IgdbSyncMode, state: SyncState | null): "full" | "incremental" {
+  if (mode === "full") return "full";
+  if (mode === "incremental") return "incremental";
+  // Auto-detect
+  if (!state || state.status === "failed" || state.lastSyncTimestamp === 0) {
+    return "full";
+  }
+  return "incremental";
+}
+
+// --- Batch processing ---
+
+async function processBatch(
+  db: PostgresJsDatabase,
+  igdbGames: IgdbGameFull[],
+  genreIgdbToId: Map<number | null, string>,
+  platformIgdbToId: Map<number | null, string>,
+  keywordIgdbToId: Map<number | null, string>,
+  isIncremental: boolean,
+): Promise<{ maxUpdatedAt: number }> {
+  if (igdbGames.length === 0) return { maxUpdatedAt: 0 };
+
+  let maxUpdatedAt = 0;
+
+  // --- 1. Upsert game core data ---
+  const gameRows = igdbGames
+    .filter((ig) => ig.name) // skip games without a name
+    .map((ig) => {
+      if (ig.updated_at && ig.updated_at > maxUpdatedAt) {
+        maxUpdatedAt = ig.updated_at;
+      }
+      return {
+        igdbId: ig.id,
+        name: ig.name!,
+        slug: ig.slug ?? null,
+        summary: ig.summary ?? null,
+        releaseDate: ig.first_release_date
+          ? new Date(ig.first_release_date * 1000)
+          : null,
+        coverUrl: ig.cover?.image_id
+          ? igdbCoverUrl(ig.cover.image_id)
+          : null,
+        igdbRating: ig.total_rating
+          ? ig.total_rating.toFixed(2)
+          : "0",
+        updatedAt: new Date(),
+      };
+    });
+
+  // Upsert in chunks to stay within parameter limits
+  for (const gameChunk of chunk(gameRows, 500)) {
+    await db
+      .insert(gamesTable)
+      .values(gameChunk)
+      .onConflictDoUpdate({
+        target: gamesTable.igdbId,
+        set: {
+          name: sql`excluded.name`,
+          slug: sql`excluded.slug`,
+          summary: sql`excluded.summary`,
+          releaseDate: sql`excluded.release_date`,
+          coverUrl: sql`excluded.cover_url`,
+          igdbRating: sql`excluded.igdb_rating`,
+          updatedAt: sql`CASE WHEN (
+            games.name, games.slug, games.summary, games.release_date,
+            games.cover_url, games.igdb_rating
+          ) IS DISTINCT FROM (
+            excluded.name, excluded.slug, excluded.summary, excluded.release_date,
+            excluded.cover_url, excluded.igdb_rating
+          ) THEN now() ELSE games.updated_at END`,
+        },
+      });
+  }
+
+  // --- 2. Get game UUID mapping for this batch ---
+  const batchIgdbIds = igdbGames.filter((ig) => ig.name).map((ig) => ig.id);
+  if (batchIgdbIds.length === 0) return { maxUpdatedAt };
+
+  // Fetch in chunks since IN clause has limits
+  const igdbToGameId = new Map<number, string>();
+  for (const idChunk of chunk(batchIgdbIds, 500)) {
+    const rows = await db
+      .select({ id: gamesTable.id, igdbId: gamesTable.igdbId })
+      .from(gamesTable)
+      .where(inArray(gamesTable.igdbId, idChunk));
+    for (const r of rows) {
+      igdbToGameId.set(r.igdbId, r.id);
+    }
+  }
+
+  // --- 3. Upsert lookup tables (genres, platforms, keywords) ---
+  const genreMap = new Map<number, { name: string; slug: string }>();
+  const platformMap = new Map<number, { name: string; slug: string; abbreviation?: string }>();
+  const keywordMap = new Map<number, { name: string; slug: string }>();
+
+  for (const ig of igdbGames) {
+    if (ig.genres) {
+      for (const g of ig.genres) genreMap.set(g.id, { name: g.name, slug: g.slug });
+    }
+    if (ig.platforms) {
+      for (const p of ig.platforms) platformMap.set(p.id, { name: p.name, slug: p.slug, abbreviation: p.abbreviation });
+    }
+    if (ig.keywords) {
+      for (const k of ig.keywords) keywordMap.set(k.id, { name: k.name, slug: k.slug });
+    }
+  }
+
+  if (genreMap.size > 0) {
+    await bulkInsertIgnore(db, genresTable,
+      Array.from(genreMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug }))
+    );
+  }
+  if (platformMap.size > 0) {
+    await bulkInsertIgnore(db, platformsTable,
+      Array.from(platformMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug, abbreviation: d.abbreviation ?? null }))
+    );
+  }
+  if (keywordMap.size > 0) {
+    await bulkInsertIgnore(db, keywordsTable,
+      Array.from(keywordMap.entries()).map(([igdbId, d]) => ({ igdbId, name: d.name, slug: d.slug }))
+    );
+  }
+
+  // --- 4. Refresh lookup maps if new entities were added ---
+  if (genreMap.size > 0) {
+    const rows = await db.select({ igdbId: genresTable.igdbId, id: genresTable.id }).from(genresTable);
+    for (const r of rows) genreIgdbToId.set(r.igdbId, r.id);
+  }
+  if (platformMap.size > 0) {
+    const rows = await db.select({ igdbId: platformsTable.igdbId, id: platformsTable.id }).from(platformsTable);
+    for (const r of rows) platformIgdbToId.set(r.igdbId, r.id);
+  }
+  if (keywordMap.size > 0) {
+    const rows = await db.select({ igdbId: keywordsTable.igdbId, id: keywordsTable.id }).from(keywordsTable);
+    for (const r of rows) keywordIgdbToId.set(r.igdbId, r.id);
+  }
+
+  // --- 5. Collect desired junction/image/link rows ---
+  const gameUuids = Array.from(igdbToGameId.values());
+
+  const allGenreJunctions: { gameId: string; genreId: string }[] = [];
+  const allPlatformJunctions: { gameId: string; platformId: string }[] = [];
+  const allKeywordJunctions: { gameId: string; keywordId: string }[] = [];
+  const allImageRows: { gameId: string; igdbImageId: string; imageType: ImageType; url: string; width: number | null; height: number | null; position: number }[] = [];
+  const allLinkRows: { gameId: string; category: LinkCategory; url: string; label: string | null }[] = [];
+
+  for (const ig of igdbGames) {
+    const gameId = igdbToGameId.get(ig.id);
+    if (!gameId) continue;
+
+    if (ig.genres) {
+      for (const g of ig.genres) {
+        const genreId = genreIgdbToId.get(g.id);
+        if (genreId) allGenreJunctions.push({ gameId, genreId });
+      }
+    }
+
+    if (ig.platforms) {
+      for (const p of ig.platforms) {
+        const platformId = platformIgdbToId.get(p.id);
+        if (platformId) allPlatformJunctions.push({ gameId, platformId });
+      }
+    }
+
+    if (ig.keywords) {
+      for (const k of ig.keywords) {
+        const keywordId = keywordIgdbToId.get(k.id);
+        if (keywordId) allKeywordJunctions.push({ gameId, keywordId });
+      }
+    }
+
+    if (ig.screenshots) {
+      ig.screenshots.forEach((s, idx) => {
+        allImageRows.push({
+          gameId,
+          igdbImageId: s.image_id,
+          imageType: "screenshot",
+          url: igdbImageUrl(s.image_id),
+          width: s.width ?? null,
+          height: s.height ?? null,
+          position: idx,
+        });
+      });
+    }
+
+    if (ig.artworks) {
+      ig.artworks.forEach((a, idx) => {
+        allImageRows.push({
+          gameId,
+          igdbImageId: a.image_id,
+          imageType: "artwork",
+          url: igdbImageUrl(a.image_id),
+          width: a.width ?? null,
+          height: a.height ?? null,
+          position: idx,
+        });
+      });
+    }
+
+    if (ig.websites) {
+      for (const w of ig.websites) {
+        const category = (IGDB_WEBSITE_CATEGORY_MAP[w.category] || "other") as LinkCategory;
+        allLinkRows.push({ gameId, category, url: w.url, label: null });
+      }
+    }
+  }
+
+  // --- 6. Write junction/image/link rows ---
+  if (isIncremental) {
+    // Junction tables: insert new rows + delete stale (avoids unnecessary I/O)
+    await bulkInsertIgnore(db, gameGenresTable, allGenreJunctions);
+    await bulkInsertIgnore(db, gamePlatformsTable, allPlatformJunctions);
+    await bulkInsertIgnore(db, gameKeywordsTable, allKeywordJunctions);
+
+    // Build desired FK sets per game for stale deletion
+    const desiredGenres = new Map<string, string[]>();
+    for (const j of allGenreJunctions) {
+      if (!desiredGenres.has(j.gameId)) desiredGenres.set(j.gameId, []);
+      desiredGenres.get(j.gameId)!.push(j.genreId);
+    }
+    const desiredPlatforms = new Map<string, string[]>();
+    for (const j of allPlatformJunctions) {
+      if (!desiredPlatforms.has(j.gameId)) desiredPlatforms.set(j.gameId, []);
+      desiredPlatforms.get(j.gameId)!.push(j.platformId);
+    }
+    const desiredKeywords = new Map<string, string[]>();
+    for (const j of allKeywordJunctions) {
+      if (!desiredKeywords.has(j.gameId)) desiredKeywords.set(j.gameId, []);
+      desiredKeywords.get(j.gameId)!.push(j.keywordId);
+    }
+
+    await deleteStaleJunctionRows(db, gameGenresTable, gameGenresTable.gameId, gameGenresTable.genreId, gameUuids, desiredGenres);
+    await deleteStaleJunctionRows(db, gamePlatformsTable, gamePlatformsTable.gameId, gamePlatformsTable.platformId, gameUuids, desiredPlatforms);
+    await deleteStaleJunctionRows(db, gameKeywordsTable, gameKeywordsTable.gameId, gameKeywordsTable.keywordId, gameUuids, desiredKeywords);
+
+    // Images/links: delete + re-insert (no natural unique constraint)
+    for (const uuidChunk of chunk(gameUuids, 500)) {
+      await db.delete(gameImagesTable).where(inArray(gameImagesTable.gameId, uuidChunk));
+      await db.delete(gameLinksTable).where(inArray(gameLinksTable.gameId, uuidChunk));
+    }
+    await bulkInsertIgnore(db, gameImagesTable, allImageRows);
+    await bulkInsertIgnore(db, gameLinksTable, allLinkRows);
+  } else {
+    // Full sync: delete all + re-insert (faster for bulk operations)
+    for (const uuidChunk of chunk(gameUuids, 500)) {
+      await db.delete(gameGenresTable).where(inArray(gameGenresTable.gameId, uuidChunk));
+      await db.delete(gamePlatformsTable).where(inArray(gamePlatformsTable.gameId, uuidChunk));
+      await db.delete(gameKeywordsTable).where(inArray(gameKeywordsTable.gameId, uuidChunk));
+      await db.delete(gameImagesTable).where(inArray(gameImagesTable.gameId, uuidChunk));
+      await db.delete(gameLinksTable).where(inArray(gameLinksTable.gameId, uuidChunk));
+    }
+    await bulkInsertIgnore(db, gameGenresTable, allGenreJunctions);
+    await bulkInsertIgnore(db, gamePlatformsTable, allPlatformJunctions);
+    await bulkInsertIgnore(db, gameKeywordsTable, allKeywordJunctions);
+    await bulkInsertIgnore(db, gameImagesTable, allImageRows);
+    await bulkInsertIgnore(db, gameLinksTable, allLinkRows);
+  }
+
+  return { maxUpdatedAt };
+}
+
+// --- Full import ---
+
+async function runFullSync(
+  db: PostgresJsDatabase,
+  token: string,
+  clientId: string,
+  state: SyncState,
+  onProgress?: SyncProgressReporter,
+): Promise<void> {
+  // Get total count for progress reporting
+  const countResult = await fetchIgdb<{ count: number }>(
+    "games/count",
+    `${GAME_TYPE_FILTER};`,
+    token,
+    clientId,
+  );
+  const totalCount = countResult.count;
+  console.log(`Total games to sync: ${totalCount}`);
+
+  // Resume from last checkpoint if previous run failed
+  let offset = state.status === "failed" ? state.lastCompletedOffset : 0;
+  if (offset > 0) {
+    console.log(`Resuming from offset ${offset} (previous run failed)`);
+  }
+
+  // Persistent lookup maps
+  const genreIgdbToId = new Map<number | null, string>();
+  const platformIgdbToId = new Map<number | null, string>();
+  const keywordIgdbToId = new Map<number | null, string>();
+
+  // Pre-load existing lookup maps
+  const genreRows = await db.select({ igdbId: genresTable.igdbId, id: genresTable.id }).from(genresTable);
+  for (const r of genreRows) genreIgdbToId.set(r.igdbId, r.id);
+  const platformRows = await db.select({ igdbId: platformsTable.igdbId, id: platformsTable.id }).from(platformsTable);
+  for (const r of platformRows) platformIgdbToId.set(r.igdbId, r.id);
+  const keywordRows = await db.select({ igdbId: keywordsTable.igdbId, id: keywordsTable.id }).from(keywordsTable);
+  for (const r of keywordRows) keywordIgdbToId.set(r.igdbId, r.id);
+
+  let maxUpdatedAt = state.lastSyncTimestamp;
+  let totalProcessed = offset > 0 ? state.totalGamesProcessed : 0;
+
+  onProgress?.({ done: totalProcessed, total: totalCount, phase: "catalog (full)" });
+
+  while (true) {
+    const query = `
+      ${IGDB_FIELDS}
+      ${GAME_TYPE_FILTER};
+      sort id asc;
+      limit ${IGDB_BATCH_SIZE};
+      offset ${offset};
+    `;
+
+    const igdbGames = await fetchIgdb<IgdbGameFull[]>("games", query, token, clientId);
+
+    if (igdbGames.length === 0) {
+      console.log("No more games to fetch. Full sync complete.");
+      break;
+    }
+
+    const batchNum = Math.floor(offset / IGDB_BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(totalCount / IGDB_BATCH_SIZE);
+    console.log(`Batch ${batchNum}/${totalBatches} — processing ${igdbGames.length} games (offset ${offset})...`);
+
+    const result = await processBatch(db, igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId, false);
+
+    if (result.maxUpdatedAt > maxUpdatedAt) {
+      maxUpdatedAt = result.maxUpdatedAt;
+    }
+
+    totalProcessed += igdbGames.length;
+    offset += IGDB_BATCH_SIZE;
+
+    // Checkpoint progress
+    await setSyncState(db, {
+      ...state,
+      status: "running",
+      lastCompletedOffset: offset,
+      totalGamesProcessed: totalProcessed,
+      lastSyncTimestamp: maxUpdatedAt,
+      lastRunAt: new Date().toISOString(),
+    });
+
+    onProgress?.({ done: totalProcessed, total: totalCount, phase: "catalog (full)" });
+    console.log(`  Processed ${totalProcessed}/${totalCount} games`);
+
+    // Rate limit
+    await delay(IGDB_DELAY_MS);
+  }
+
+  // Final state
+  await setSyncState(db, {
+    lastSyncTimestamp: maxUpdatedAt,
+    lastCompletedOffset: 0,
+    totalGamesProcessed: totalProcessed,
+    status: "idle",
+    lastRunAt: new Date().toISOString(),
+  });
+}
+
+// --- Incremental sync ---
+
+async function runIncrementalSync(
+  db: PostgresJsDatabase,
+  token: string,
+  clientId: string,
+  state: SyncState,
+  onProgress?: SyncProgressReporter,
+): Promise<void> {
+  // Buffer: go back 1 hour to catch any edge cases
+  const sinceTimestamp = state.lastSyncTimestamp - 3600;
+  console.log(`Incremental sync: fetching games updated since ${new Date(sinceTimestamp * 1000).toISOString()}`);
+
+  // Denominator for progress reporting; games updated mid-run can drift it
+  // slightly, which is fine for a progress bar.
+  const countResult = await fetchIgdb<{ count: number }>(
+    "games/count",
+    `${GAME_TYPE_FILTER} & updated_at > ${sinceTimestamp};`,
+    token,
+    clientId,
+  );
+  const totalCount = countResult.count;
+  console.log(`Updated games to sync: ${totalCount}`);
+
+  // Pre-load lookup maps
+  const genreIgdbToId = new Map<number | null, string>();
+  const platformIgdbToId = new Map<number | null, string>();
+  const keywordIgdbToId = new Map<number | null, string>();
+
+  const genreRows = await db.select({ igdbId: genresTable.igdbId, id: genresTable.id }).from(genresTable);
+  for (const r of genreRows) genreIgdbToId.set(r.igdbId, r.id);
+  const platformRows = await db.select({ igdbId: platformsTable.igdbId, id: platformsTable.id }).from(platformsTable);
+  for (const r of platformRows) platformIgdbToId.set(r.igdbId, r.id);
+  const keywordRows = await db.select({ igdbId: keywordsTable.igdbId, id: keywordsTable.id }).from(keywordsTable);
+  for (const r of keywordRows) keywordIgdbToId.set(r.igdbId, r.id);
+
+  let offset = 0;
+  let totalProcessed = 0;
+  let maxUpdatedAt = state.lastSyncTimestamp;
+
+  onProgress?.({ done: 0, total: totalCount, phase: "catalog (incremental)" });
+
+  while (true) {
+    const query = `
+      ${IGDB_FIELDS}
+      ${GAME_TYPE_FILTER} & updated_at > ${sinceTimestamp};
+      sort id asc;
+      limit ${IGDB_BATCH_SIZE};
+      offset ${offset};
+    `;
+
+    const igdbGames = await fetchIgdb<IgdbGameFull[]>("games", query, token, clientId);
+
+    if (igdbGames.length === 0) {
+      console.log("No more updated games. Incremental sync complete.");
+      break;
+    }
+
+    console.log(`Batch — processing ${igdbGames.length} updated games (offset ${offset})...`);
+
+    const result = await processBatch(db, igdbGames, genreIgdbToId, platformIgdbToId, keywordIgdbToId, true);
+
+    if (result.maxUpdatedAt > maxUpdatedAt) {
+      maxUpdatedAt = result.maxUpdatedAt;
+    }
+
+    totalProcessed += igdbGames.length;
+    offset += IGDB_BATCH_SIZE;
+
+    onProgress?.({ done: totalProcessed, total: totalCount, phase: "catalog (incremental)" });
+    console.log(`  Processed ${totalProcessed} updated games so far`);
+
+    await delay(IGDB_DELAY_MS);
+  }
+
+  // Final state
+  await setSyncState(db, {
+    lastSyncTimestamp: maxUpdatedAt,
+    lastCompletedOffset: 0,
+    totalGamesProcessed: totalProcessed,
+    status: "idle",
+    lastRunAt: new Date().toISOString(),
+  });
+}
+
+// --- Steam appid → IGDB id map sync ---
+//
+// Seeds steam_app_map from IGDB's external_games endpoint (source 1 = Steam).
+// Runs after the game sync with its own checkpoint state, so a failure here
+// never flips the games sync into a full re-import. The map is what lets
+// syncSteamUser retro-match library entries that had no IGDB link yet.
+
+const STEAM_MAP_STATE_KEY = "steam_app_map_sync_state";
+const STEAM_EXTERNAL_SOURCE = 1;
+
+interface IgdbExternalGame {
+  id: number;
+  uid?: string;
+  game?: number;
+  updated_at?: number;
+}
+
+/** Returns true on success; owns its failure state instead of throwing. */
+async function syncSteamAppMap(
+  db: PostgresJsDatabase,
+  token: string,
+  clientId: string,
+  forceFull: boolean,
+  onProgress?: SyncProgressReporter,
+): Promise<boolean> {
+  const state = await getSyncState(db, STEAM_MAP_STATE_KEY);
+  const mode: "full" | "incremental" =
+    forceFull || !state || state.status === "failed" || state.lastSyncTimestamp === 0
+      ? "full"
+      : "incremental";
+
+  console.log(`\n=== Steam appid map sync (${mode}) ===`);
+
+  const sinceFilter =
+    mode === "incremental" ? ` & updated_at > ${state!.lastSyncTimestamp - 3600}` : "";
+  // Resume a failed full pass from its checkpoint
+  let offset = mode === "full" && state?.status === "failed" ? state.lastCompletedOffset : 0;
+  if (offset > 0) console.log(`Resuming from offset ${offset} (previous run failed)`);
+
+  let maxUpdatedAt = state?.lastSyncTimestamp ?? 0;
+  let totalProcessed = 0;
+  const phase = `steam map (${mode})`;
+
+  try {
+    const countResult = await fetchIgdb<{ count: number }>(
+      "external_games/count",
+      `where external_game_source = ${STEAM_EXTERNAL_SOURCE} & game != null${sinceFilter};`,
+      token,
+      clientId,
+    );
+    onProgress?.({ done: 0, total: countResult.count, phase });
+
+    while (true) {
+      const query = `
+        fields uid, game, updated_at;
+        where external_game_source = ${STEAM_EXTERNAL_SOURCE} & game != null${sinceFilter};
+        sort id asc;
+        limit ${IGDB_BATCH_SIZE};
+        offset ${offset};
+      `;
+
+      const externals = await fetchIgdb<IgdbExternalGame[]>("external_games", query, token, clientId);
+      if (externals.length === 0) break;
+
+      // Steam uids are numeric appid strings; dedupe within the batch so the
+      // upsert never touches the same appid twice in one statement.
+      const byAppId = new Map<number, number>();
+      for (const ext of externals) {
+        if (ext.updated_at && ext.updated_at > maxUpdatedAt) maxUpdatedAt = ext.updated_at;
+        const appId = Number(ext.uid);
+        if (!Number.isInteger(appId) || appId <= 0 || !ext.game) continue;
+        if (!byAppId.has(appId)) byAppId.set(appId, ext.game);
+      }
+
+      const mapRows = Array.from(byAppId.entries()).map(([steamAppId, igdbId]) => ({
+        steamAppId,
+        igdbId,
+        updatedAt: new Date(),
+      }));
+      for (const rowChunk of chunk(mapRows, 500)) {
+        await db
+          .insert(steamAppMapTable)
+          .values(rowChunk)
+          .onConflictDoUpdate({
+            target: steamAppMapTable.steamAppId,
+            set: {
+              igdbId: sql`excluded.igdb_id`,
+              updatedAt: sql`excluded.updated_at`,
+            },
+          });
+      }
+
+      totalProcessed += externals.length;
+      offset += IGDB_BATCH_SIZE;
+
+      await setSyncState(db, {
+        lastSyncTimestamp: state?.lastSyncTimestamp ?? 0,
+        lastCompletedOffset: offset,
+        totalGamesProcessed: totalProcessed,
+        status: "running",
+        lastRunAt: new Date().toISOString(),
+      }, STEAM_MAP_STATE_KEY);
+
+      onProgress?.({ done: totalProcessed, total: countResult.count, phase });
+      console.log(`  Processed ${totalProcessed} Steam mappings so far (offset ${offset})`);
+      await delay(IGDB_DELAY_MS);
+    }
+
+    await setSyncState(db, {
+      lastSyncTimestamp: maxUpdatedAt,
+      lastCompletedOffset: 0,
+      totalGamesProcessed: totalProcessed,
+      status: "idle",
+      lastRunAt: new Date().toISOString(),
+    }, STEAM_MAP_STATE_KEY);
+
+    console.log(`Steam appid map sync complete (${totalProcessed} mappings processed).`);
+    return true;
+  } catch (err) {
+    console.error("Steam appid map sync failed:", err);
+    const current = await getSyncState(db, STEAM_MAP_STATE_KEY);
+    await setSyncState(db, {
+      lastSyncTimestamp: state?.lastSyncTimestamp ?? 0,
+      lastCompletedOffset: current?.lastCompletedOffset ?? offset,
+      totalGamesProcessed: totalProcessed,
+      status: "failed",
+      lastRunAt: new Date().toISOString(),
+      error: (err as Error).message,
+    }, STEAM_MAP_STATE_KEY);
+    return false;
+  }
+}
+
+// --- Entry point ---
+
+/**
+ * Run the IGDB catalog sync (games + steam appid map). Throws on failure —
+ * checkpoint state in app_settings makes a retried run resume, not restart.
+ */
+export async function runIgdbSync(
+  mode: IgdbSyncMode = "auto",
+  onProgress?: SyncProgressReporter,
+): Promise<void> {
+  // Dedicated connection with keepalive for the long-running sync.
+  const queryClient = postgres(process.env.DATABASE_URL!, {
+    idle_timeout: 0,
+    max_lifetime: null,
+    connect_timeout: 30,
+    keep_alive: 5, // send keepalive every 5 seconds
+  });
+  const db = drizzle({ client: queryClient });
+
+  try {
+    console.log("=== IGDB Game Sync ===\n");
+
+    const token = await getIgdbToken();
+    const clientId = process.env.TWITCH_CLIENT_ID!;
+    console.log("Authenticated with IGDB\n");
+
+    if (mode === "steam-map-only") {
+      const ok = await syncSteamAppMap(db, token, clientId, false, onProgress);
+      if (!ok) throw new Error("Steam appid map sync failed");
+      return;
+    }
+
+    const existingState = await getSyncState(db);
+    const gamesMode = resolveGamesMode(mode, existingState);
+    console.log(`Mode: ${gamesMode}`);
+
+    const state: SyncState = existingState ?? {
+      lastSyncTimestamp: 0,
+      lastCompletedOffset: 0,
+      totalGamesProcessed: 0,
+      status: "idle",
+      lastRunAt: new Date().toISOString(),
+    };
+
+    // Mark as running
+    await setSyncState(db, { ...state, status: "running", lastRunAt: new Date().toISOString() });
+
+    try {
+      if (gamesMode === "full") {
+        await runFullSync(db, token, clientId, state, onProgress);
+      } else {
+        await runIncrementalSync(db, token, clientId, state, onProgress);
+      }
+    } catch (err) {
+      // Save failure state for resume
+      const currentState = await getSyncState(db);
+      if (currentState) {
+        await setSyncState(db, {
+          ...currentState,
+          status: "failed",
+          error: (err as Error).message,
+        });
+      }
+      throw err;
+    }
+
+    console.log("\nSync complete!");
+
+    // Steam appid map rides along after every game sync; its failure fails the
+    // run without marking the games sync failed.
+    const steamMapOk = await syncSteamAppMap(db, token, clientId, mode === "full", onProgress);
+    if (!steamMapOk) throw new Error("Steam appid map sync failed");
+  } finally {
+    await queryClient.end();
+  }
+}

@@ -7,7 +7,7 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 ### Core
 - **Game Tracking** - Log play sessions with start/end times and current status (playing, finished, stashed)
 - **Game Reviews** - Rate games 0-5 stars and write detailed reviews
-- **Review Interactions** - Like and comment on other players' reviews
+- **Review Interactions** - View and like other players' reviews
 - **Wishlist** - Add games to your want-to-play list
 - **Expense Tracking** - Track gaming-related expenses and view total spending
 - **Game Discovery** - Browse and search games from IGDB database (~311k games)
@@ -142,6 +142,12 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
    ```bash
    cd checkpointer-frontend
    bun run dev
+   ```
+
+   Background worker (optional — needed for Steam syncs and scheduled jobs;
+   without it, enqueued jobs just wait):
+   ```bash
+   bun run dev:worker
    ```
 
    The app will be available at `http://localhost:5173`
@@ -316,11 +322,9 @@ bun run sync:steam-map
 
 The sync is resumable — if it crashes or the connection drops, re-running `bun run sync:igdb` picks up from the last checkpoint.
 
-### Automated Sync (GitHub Actions)
+### Automated Sync (background worker)
 
-A weekly cron job runs every Sunday at 4:00 AM UTC via `.github/workflows/igdb-sync.yml`. It can also be triggered manually from the GitHub Actions tab with a mode selector (auto/full/incremental).
-
-**Required repository secrets:** `DATABASE_URL`, `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET`
+The background worker (`server/worker.ts`, the `worker` process group on Fly) schedules an `igdb-sync` job every Sunday at 4:00 AM UTC — no CI cron involved. If the worker was down when a run was due, it catches up on boot. Failures retry with backoff and email an alert when retries are exhausted; job history is visible at `GET /api/admin/jobs`.
 
 ### How It Works
 

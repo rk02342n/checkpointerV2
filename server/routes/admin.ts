@@ -9,6 +9,10 @@ import { gamesTable } from "../db/schema/games";
 import { auditLogsTable } from "../db/schema/audit-logs";
 import { eq, desc, count, sql } from "drizzle-orm";
 import { appSettingsTable } from "../db/schema/app-settings";
+import { jobStatusEnum, jobsTable } from "../db/schema/jobs";
+import { listJobs, enqueue } from "../lib/queue";
+import { getSyncState } from "../lib/sync-helpers";
+import { kickWorker, fetchWorkerHealth } from "../lib/kick";
 
 // Validation schemas
 const updateRoleSchema = z.object({
@@ -23,6 +27,18 @@ const paginationSchema = z.object({
 const updateSettingSchema = z.object({
   key: z.string().min(1),
   value: z.unknown(),
+});
+
+const jobsQuerySchema = z.object({
+  status: z.enum(jobStatusEnum.enumValues).optional(),
+  limit: z.coerce.number().min(1).max(200).default(50),
+});
+
+// Manually triggerable job types. steam-sync is excluded: it needs a userId
+// and users trigger their own syncs from the profile page.
+const triggerJobSchema = z.object({
+  type: z.enum(["igdb-sync", "prune-jobs"]),
+  mode: z.enum(["auto", "full", "incremental", "steam-map-only"]).optional(),
 });
 
 export const adminRoute = new Hono()
@@ -347,6 +363,64 @@ export const adminRoute = new Hono()
     });
 
     return c.json({ message: "Review deleted" });
+  })
+
+  // GET /admin/jobs - Inspect the background job queue (dead-letters included)
+  .get("/jobs", zValidator("query", jobsQuerySchema), async (c) => {
+    const { status, limit } = c.req.valid("query");
+    const jobs = await listJobs({ status, limit });
+    return c.json({ jobs });
+  })
+
+  // GET /admin/jobs/overview - Queue counts, sync checkpoint states, worker liveness
+  .get("/jobs/overview", async (c) => {
+    const [statusCounts, igdbState, steamMapState, worker] = await Promise.all([
+      db
+        .select({ status: jobsTable.status, count: count() })
+        .from(jobsTable)
+        .groupBy(jobsTable.status),
+      getSyncState(db, "igdb_sync_state"),
+      getSyncState(db, "steam_app_map_sync_state"),
+      fetchWorkerHealth(),
+    ]);
+
+    return c.json({
+      counts: Object.fromEntries(statusCounts.map((r) => [r.status, r.count])),
+      syncStates: {
+        igdb: igdbState,
+        steamAppMap: steamMapState,
+      },
+      worker,
+    });
+  })
+
+  // POST /admin/jobs/trigger - Manually enqueue a job and kick the worker
+  .post("/jobs/trigger", zValidator("json", triggerJobSchema), async (c) => {
+    const { type, mode } = c.req.valid("json");
+    const admin = c.var.dbUser;
+
+    const job = await enqueue({
+      type,
+      payload: type === "igdb-sync" && mode ? { mode } : {},
+      // One manual trigger per type at a time; a second click while it's
+      // queued/running is a no-op (the partial unique index absorbs it).
+      dedupeKey: `manual:${type}`,
+    });
+    if (!job) {
+      return c.json({ error: "A manually triggered job of this type is already queued or running" }, 409);
+    }
+
+    kickWorker();
+
+    await db.insert(auditLogsTable).values({
+      adminId: admin.id,
+      action: "TRIGGER_JOB",
+      resourceType: "job",
+      resourceId: job.id,
+      details: { jobType: type, ...(mode ? { mode } : {}) },
+    });
+
+    return c.json({ job });
   })
 
   // GET /admin/audit-logs - View audit history

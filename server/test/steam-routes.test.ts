@@ -37,6 +37,7 @@ mock.module("../kinde", () => ({
 }));
 
 const { steamConnectionsTable } = await import("../db/schema/steam-connections");
+const { jobsTable } = await import("../db/schema/jobs");
 const { userSteamGamesTable } = await import("../db/schema/user-steam-games");
 const { userSteamWishlistTable } = await import("../db/schema/user-steam-wishlist");
 const { steamAppMapTable } = await import("../db/schema/steam-app-map");
@@ -104,6 +105,7 @@ beforeEach(async () => {
   seed = await resetAndSeed();
   setActingUser(seed.owner);
   setActingViewer(null);
+  await testDb.delete(jobsTable);
   await testDb.delete(steamAppMapTable);
   await testDb.insert(steamAppMapTable).values({ steamAppId: MATCHED_APPID, igdbId: 1 });
 });
@@ -117,7 +119,7 @@ async function connectOwner(overrides: Partial<typeof steamConnectionsTable.$inf
 }
 
 describe("GET /api/steam/callback", () => {
-  it("verifies, stores the connection, and runs the first sync", async () => {
+  it("verifies, stores the connection, and enqueues the first sync", async () => {
     const restore = stubSteamFetch();
     try {
       const res = await app.request(`/api/steam/callback?${openIdCallbackQuery}`);
@@ -132,14 +134,16 @@ describe("GET /api/steam/callback", () => {
       .from(steamConnectionsTable)
       .where(eq(steamConnectionsTable.userId, seed.owner.id));
     expect(connection!.steamId64).toBe(STEAM_ID);
-    expect(connection!.syncStatus).toBe("ok");
-    expect(connection!.personaName).toBe("RoutePersona");
+    // The sync itself now runs on the worker; the callback leaves the
+    // connection pending with a queued job.
+    expect(connection!.syncStatus).toBe("pending");
 
-    const games = await testDb
-      .select()
-      .from(userSteamGamesTable)
-      .where(eq(userSteamGamesTable.userId, seed.owner.id));
-    expect(games).toHaveLength(2);
+    const jobs = await testDb.select().from(jobsTable);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]!.type).toBe("steam-sync");
+    expect(jobs[0]!.status).toBe("queued");
+    expect(jobs[0]!.payload).toEqual({ userId: seed.owner.id });
+    expect(jobs[0]!.dedupeKey).toBe(`steam-sync:${seed.owner.id}`);
   });
 
   it("redirects with verify_failed when the assertion is rejected", async () => {
@@ -215,19 +219,30 @@ describe("POST /api/steam/sync", () => {
     expect(body.retryAfterMs).toBeGreaterThan(0);
   });
 
-  it("syncs once the cooldown has passed", async () => {
-    await connectOwner({ lastSyncedAt: new Date(Date.now() - 11 * 60 * 1000) });
-    const restore = stubSteamFetch();
-    try {
-      const res = await app.request("/api/steam/sync", { method: "POST" });
-      expect(res.status).toBe(200);
-      const body = await json(res);
-      expect(body.status).toBe("ok");
-      expect(body.totalGames).toBe(2);
-      expect(body.matchedGames).toBe(1);
-    } finally {
-      restore();
-    }
+  it("queues a sync once the cooldown has passed", async () => {
+    await connectOwner({
+      lastSyncedAt: new Date(Date.now() - 11 * 60 * 1000),
+      syncStatus: "ok",
+    });
+    const res = await app.request("/api/steam/sync", { method: "POST" });
+    expect(res.status).toBe(202);
+    expect(await json(res)).toEqual({ queued: true });
+
+    // Status flips to pending so the profile's polling engages.
+    const [connection] = await testDb
+      .select()
+      .from(steamConnectionsTable)
+      .where(eq(steamConnectionsTable.userId, seed.owner.id));
+    expect(connection!.syncStatus).toBe("pending");
+
+    const jobs = await testDb.select().from(jobsTable);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]!.type).toBe("steam-sync");
+
+    // A second request while the job is still queued dedupes to one job.
+    const again = await app.request("/api/steam/sync", { method: "POST" });
+    expect(again.status).toBe(202);
+    expect(await testDb.select().from(jobsTable)).toHaveLength(1);
   });
 });
 

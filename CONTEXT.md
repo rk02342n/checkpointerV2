@@ -110,10 +110,13 @@ re-importing.
 
 The sync engine, `syncSteamUser` (`server/lib/steam.ts`), is a single
 idempotent function: fetch summary + owned games + wishlist, upsert, delete
-what's gone. It's written to be cron-ready but today only runs on connect or a
-manual "Sync now" click; the 10-minute cooldown is enforced at the route
-(`POST /api/steam/sync`), not inside the function itself, so the initial
-connect-callback sync always fires regardless of cooldown state.
+what's gone. It runs on the background worker as a `steam-sync` job (see
+Background jobs below) — the connect callback and `POST /api/steam/sync` only
+enqueue (deduped per user) and return; the profile polls
+`steam_connections.syncStatus` (`pending` = job queued/running) until it
+settles. The 10-minute cooldown is enforced at enqueue time in the route, not
+inside the function itself, so the initial connect-callback sync always fires
+regardless of cooldown state.
 
 Connect uses Steam OpenID 2.0, not OAuth: `buildSteamLoginUrl` builds the
 "Sign in through Steam" redirect, and `verifySteamOpenId` never trusts the
@@ -132,6 +135,27 @@ from `want_to_play` after import.
 Visibility follows the existing seam — no separate Steam toggle. Public reads
 go through `assertViewableProfile` (see Profile visibility above), so a
 private profile's Steam data is gated exactly like its sessions and reviews.
+
+## Background jobs
+
+Async work runs through a `jobs` table in the app database (`server/lib/queue.ts`)
+claimed with `FOR UPDATE SKIP LOCKED` — no Redis, no external queue vendor.
+The worker (`server/worker.ts`, the `worker` process group in fly.toml, same
+image as the web app) claims in two lanes so the multi-hour weekly IGDB catalog
+sync can never starve user-facing Steam syncs. Wake-up is kick-driven: the API
+pokes the worker over Fly's private network right after an enqueue
+(`server/lib/kick.ts`), with a slow fallback poll as the safety net so Neon can
+autosuspend when idle.
+
+Lifecycle contract: retries with exponential backoff reuse the same row; a job
+that exhausts `maxAttempts` stays as its own dead-letter record (visible at
+`GET /api/admin/jobs`, alerted via Resend — `server/lib/alerts.ts`). Claims
+carry a heartbeated lease, so a crashed worker's jobs get reclaimed rather than
+lost. Recurring work (weekly IGDB sync, daily prune) is declared in
+`SCHEDULES` in the worker with per-occurrence dedupe keys — this replaced the
+GitHub Actions cron, and catch-up after downtime is automatic. The enqueue-side
+dedupe (partial unique index on active jobs only) is a different mechanism from
+the scheduler's any-status existence check; don't conflate them.
 
 ## Surface (frontend)
 

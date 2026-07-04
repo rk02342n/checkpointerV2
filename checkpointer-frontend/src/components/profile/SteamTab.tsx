@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usePostHog } from 'posthog-js/react'
@@ -37,6 +37,7 @@ import {
   disconnectSteam,
   formatPlaytime,
   type SteamLibraryItem,
+  type SteamSyncStatus,
 } from '@/lib/steamQuery'
 
 interface SteamTabProps {
@@ -71,20 +72,37 @@ function OwnSteamTab({ userId, themed }: { userId: string; themed: boolean }) {
 
   const syncMutation = useMutation({
     mutationFn: syncSteam,
-    onSuccess: (result) => {
-      posthog.capture('steam_synced', { total_games: result.totalGames })
-      if (result.status === 'private_profile') {
-        toast.warning('Steam says your game details are private — update your Steam privacy settings and sync again.')
-      } else {
-        toast.success(`Synced ${result.totalGames} games from Steam`)
-      }
-      invalidateSteam()
+    onSuccess: () => {
+      posthog.capture('steam_sync_queued')
+      // The status query flips to pending and polls; the effect below reacts
+      // when the worker finishes.
+      queryClient.invalidateQueries({ queryKey: ['steam-status'] })
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to sync with Steam')
       invalidateSteam()
     },
   })
+
+  // The sync runs on a background worker; the status query polls while
+  // pending. Surface the outcome when it settles.
+  const syncStatus: SteamSyncStatus | null = status?.connected ? status.syncStatus : null
+  const prevSyncStatus = useRef<SteamSyncStatus | null>(null)
+  useEffect(() => {
+    const prev = prevSyncStatus.current
+    prevSyncStatus.current = syncStatus
+    if (prev !== 'pending' || syncStatus === 'pending' || syncStatus === null) return
+    if (syncStatus === 'ok') {
+      posthog.capture('steam_synced', { total_games: status?.connected ? status.totalGames : 0 })
+      toast.success('Steam library synced')
+    } else if (syncStatus === 'private_profile') {
+      toast.warning('Steam says your game details are private — update your Steam privacy settings and sync again.')
+    } else {
+      toast.error('Steam sync failed. Try again in a few minutes.')
+    }
+    invalidateSteam()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncStatus])
 
   const disconnectMutation = useMutation({
     mutationFn: disconnectSteam,
@@ -123,6 +141,7 @@ function OwnSteamTab({ userId, themed }: { userId: string; themed: boolean }) {
   }
 
   const inCooldown = !!status.nextSyncAvailableAt && new Date(status.nextSyncAvailableAt) > new Date()
+  const isSyncing = status.syncStatus === 'pending'
 
   return (
     <div className="space-y-6">
@@ -161,17 +180,23 @@ function OwnSteamTab({ userId, themed }: { userId: string; themed: boolean }) {
               variant="outline"
               size="sm"
               onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending || inCooldown}
-              title={inCooldown ? 'Synced recently — try again in a few minutes' : 'Pull latest data from Steam'}
+              disabled={syncMutation.isPending || isSyncing || inCooldown}
+              title={
+                isSyncing
+                  ? 'Sync in progress'
+                  : inCooldown
+                    ? 'Synced recently — try again in a few minutes'
+                    : 'Pull latest data from Steam'
+              }
             >
-              {syncMutation.isPending ? (
+              {syncMutation.isPending || isSyncing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : inCooldown ? (
                 <Clock className="w-4 h-4" />
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              Sync now
+              {isSyncing ? 'Syncing…' : 'Sync now'}
             </Button>
             <Button
               variant="ghost"
@@ -185,6 +210,16 @@ function OwnSteamTab({ userId, themed }: { userId: string; themed: boolean }) {
           </div>
         </div>
       </div>
+
+      {/* Sync in progress (first sync after connect, or a manual re-sync) */}
+      {isSyncing && (
+        <div className="surface bg-sky-100 dark:bg-sky-900/40 text-sky-950 dark:text-sky-100 p-4 flex items-start gap-3">
+          <Loader2 className="w-5 h-5 shrink-0 mt-0.5 animate-spin" />
+          <p className="text-sm">
+            Syncing your Steam library — this usually takes a few seconds. The page updates on its own.
+          </p>
+        </div>
+      )}
 
       {/* Sync problems */}
       {status.syncStatus === 'private_profile' && (

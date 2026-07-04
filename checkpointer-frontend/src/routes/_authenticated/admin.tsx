@@ -7,13 +7,21 @@ import {
   adminUsersQueryOptions,
   adminReviewsQueryOptions,
   auditLogsQueryOptions,
+  adminJobsQueryOptions,
+  jobsOverviewQueryOptions,
   updateUserRole,
   toggleUserSuspension,
   deleteReviewAdmin,
+  triggerJob,
   type AdminUser,
   type AdminReview,
   type AuditLog,
   type UserRole,
+  type AdminJob,
+  type JobStatus,
+  type SyncState,
+  type TriggerableJobType,
+  type IgdbSyncMode,
 } from '@/lib/adminApi'
 import { searchGames, type Game } from '@/lib/gameQuery'
 import {
@@ -37,6 +45,8 @@ import {
   ArrowDown,
   Save,
   FileText,
+  Activity,
+  Play,
 } from 'lucide-react'
 import { useSettings } from '@/lib/settingsContext'
 import { toast } from 'sonner'
@@ -47,7 +57,7 @@ export const Route = createFileRoute('/_authenticated/admin')({
   component: AdminDashboard,
 })
 
-type Tab = 'stats' | 'users' | 'reviews' | 'audit' | 'settings'
+type Tab = 'stats' | 'users' | 'reviews' | 'jobs' | 'audit' | 'settings'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -87,6 +97,7 @@ function AdminDashboard() {
     { id: 'stats' as Tab, label: 'Overview', icon: BarChart3 },
     { id: 'users' as Tab, label: 'Users', icon: Users },
     { id: 'reviews' as Tab, label: 'Reviews', icon: MessageSquare },
+    { id: 'jobs' as Tab, label: 'Jobs', icon: Activity },
     { id: 'audit' as Tab, label: 'Audit Log', icon: ScrollText },
     { id: 'settings' as Tab, label: 'Settings', icon: Settings },
   ]
@@ -138,6 +149,7 @@ function AdminDashboard() {
             queryClient={queryClient}
           />
         )}
+        {activeTab === 'jobs' && <JobsPanel />}
         {activeTab === 'audit' && (
           <AuditPanel offset={logsOffset} onOffsetChange={setLogsOffset} />
         )}
@@ -585,6 +597,375 @@ function AuditPanel({
         </>
       )}
     </div>
+  )
+}
+
+const JOB_STATUS_STYLES: Record<JobStatus, string> = {
+  queued: 'bg-sky-200 text-sky-800',
+  running: 'bg-amber-200 text-amber-800',
+  succeeded: 'bg-green-200 text-green-800',
+  failed: 'bg-rose-200 text-rose-800',
+}
+
+const SYNC_STATUS_META: Record<SyncState['status'], { label: string; style: string }> = {
+  idle: { label: 'Last run OK', style: 'bg-green-200 text-green-800' },
+  running: { label: 'Running', style: 'bg-amber-200 text-amber-800' },
+  failed: { label: 'Failed', style: 'bg-rose-200 text-rose-800' },
+}
+
+const TRIGGER_PRESETS: {
+  label: string
+  description: string
+  type: TriggerableJobType
+  mode?: IgdbSyncMode
+  confirm?: string
+}[] = [
+  {
+    label: 'IGDB Sync',
+    description: 'Incremental catalog + Steam map sync (same as the weekly run)',
+    type: 'igdb-sync',
+    mode: 'auto',
+  },
+  {
+    label: 'Steam Map Only',
+    description: 'Refresh only the Steam appid → game mapping',
+    type: 'igdb-sync',
+    mode: 'steam-map-only',
+  },
+  {
+    label: 'Full Resync',
+    description: 'Re-fetch the entire IGDB catalog (takes hours)',
+    type: 'igdb-sync',
+    mode: 'full',
+    confirm: 'A full resync re-fetches the entire IGDB catalog and takes several hours. Run it?',
+  },
+  {
+    label: 'Prune Jobs',
+    description: 'Delete settled jobs past retention (7d succeeded / 30d failed)',
+    type: 'prune-jobs',
+  },
+]
+
+function jobTimestamp(dateStr: string): { relative: string; full: string } {
+  const date = new Date(dateStr)
+  const diffSec = Math.round((Date.now() - date.getTime()) / 1000)
+  const abs = Math.abs(diffSec)
+  let span: string
+  if (abs < 60) span = `${abs}s`
+  else if (abs < 3600) span = `${Math.round(abs / 60)}m`
+  else if (abs < 86400) span = `${Math.round(abs / 3600)}h`
+  else span = `${Math.round(abs / 86400)}d`
+  return {
+    relative: diffSec >= 0 ? `${span} ago` : `in ${span}`,
+    full: date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+    }),
+  }
+}
+
+function describeJobPayload(job: AdminJob): string | null {
+  const parts: string[] = []
+  if (typeof job.payload.mode === 'string') parts.push(`mode: ${job.payload.mode}`)
+  if (typeof job.payload.userId === 'string') parts.push(`user: ${job.payload.userId.slice(0, 8)}…`)
+  return parts.length > 0 ? parts.join(' · ') : null
+}
+
+function SyncStateCard({ title, state }: { title: string; state: SyncState | null }) {
+  if (!state) {
+    return (
+      <div className="surface bg-muted shadow-hard-4 p-4">
+        <h4 className="font-bold text-foreground mb-2">{title}</h4>
+        <p className="text-sm text-muted-foreground italic">Never run</p>
+      </div>
+    )
+  }
+
+  const meta = SYNC_STATUS_META[state.status]
+  const lastRun = state.lastRunAt ? jobTimestamp(state.lastRunAt) : null
+  const dataThrough =
+    state.lastSyncTimestamp > 0 ? jobTimestamp(new Date(state.lastSyncTimestamp * 1000).toISOString()) : null
+
+  return (
+    <div className="surface bg-card shadow-hard-4 p-4">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <h4 className="font-bold text-foreground">{title}</h4>
+        <span className={`px-2 py-1 border-2 border-border text-xs font-bold ${meta.style}`}>
+          {meta.label}
+        </span>
+      </div>
+      <div className="space-y-1 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-muted-foreground">Last run</span>
+          <span className="font-bold text-foreground" title={lastRun?.full}>
+            {lastRun ? lastRun.relative : 'unknown'}
+          </span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-muted-foreground">Data current through</span>
+          <span className="font-bold text-foreground" title={dataThrough?.full}>
+            {dataThrough ? dataThrough.full : 'n/a'}
+          </span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-muted-foreground">Rows processed last run</span>
+          <span className="font-bold text-foreground">{state.totalGamesProcessed.toLocaleString()}</span>
+        </div>
+        {state.lastCompletedOffset > 0 && (
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Resume checkpoint</span>
+            <span className="font-bold text-amber-700">offset {state.lastCompletedOffset.toLocaleString()}</span>
+          </div>
+        )}
+        {state.error && (
+          <p className="text-xs text-rose-700 font-mono mt-2 break-all">{state.error}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function JobsPanel() {
+  const queryClient = useQueryClient()
+  const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all')
+
+  const { data: overview, isPending: isOverviewPending, isError: isOverviewError } =
+    useQuery(jobsOverviewQueryOptions)
+  const { data: jobsData, isPending: isJobsPending, isError: isJobsError } = useQuery(
+    adminJobsQueryOptions(statusFilter === 'all' ? undefined : statusFilter),
+  )
+
+  const triggerMutation = useMutation({
+    mutationFn: ({ type, mode }: { type: TriggerableJobType; mode?: IgdbSyncMode }) =>
+      triggerJob(type, mode),
+    onSuccess: () => {
+      toast.success('Job queued — worker kicked')
+      queryClient.invalidateQueries({ queryKey: ['admin', 'jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'jobs-overview'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'audit-logs'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message)
+    },
+  })
+
+  if (isOverviewPending || isJobsPending) return <LoadingCard />
+  if (isOverviewError || isJobsError || !overview || !jobsData) {
+    return <ErrorCard message="Failed to load job queue" />
+  }
+
+  const statusOrder: JobStatus[] = ['queued', 'running', 'succeeded', 'failed']
+  const worker = overview.worker
+
+  return (
+    <div className="space-y-6">
+      {/* Worker liveness + queue counts */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className={`surface shadow-hard-4 p-4 ${worker.reachable ? 'bg-green-200' : 'bg-rose-200'}`}>
+          <div className="text-sm font-bold text-foreground mb-1">Worker</div>
+          <div className={`text-lg font-black ${worker.reachable ? 'text-green-800' : 'text-rose-800'}`}>
+            {worker.reachable ? 'Online' : 'Unreachable'}
+          </div>
+          {worker.reachable && (
+            <div className="text-xs text-foreground mt-1">
+              {worker.interactiveRunning ?? 0} interactive · {worker.batchRunning ?? 0} batch
+            </div>
+          )}
+        </div>
+        {statusOrder.map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
+            className={`surface bg-card shadow-hard-4 p-4 text-left transition-all hover:bg-muted ${
+              statusFilter === status ? 'translate-x-[2px] translate-y-[2px] shadow-hard-2 bg-muted' : ''
+            }`}
+            title={`Filter table by ${status}`}
+          >
+            <div className="text-sm font-bold text-foreground mb-1 capitalize">{status}</div>
+            <div className="text-lg font-black text-foreground">{overview.counts[status] ?? 0}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Sync checkpoint states */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <SyncStateCard title="IGDB Catalog Sync" state={overview.syncStates.igdb} />
+        <SyncStateCard title="Steam App Map Sync" state={overview.syncStates.steamAppMap} />
+      </div>
+
+      {/* Manual triggers */}
+      <div className="surface shadow-hard-6 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Play className="w-6 h-6 text-foreground" />
+          <h3 className="text-lg font-bold text-foreground">Run a Job Now</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Enqueues the job and kicks the worker immediately. Duplicate triggers while a manual job
+          of the same type is queued or running are ignored.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {TRIGGER_PRESETS.map((preset) => (
+            <div key={preset.label} className="flex items-center justify-between gap-3 p-3 surface bg-muted">
+              <div className="min-w-0">
+                <div className="font-bold text-foreground text-sm">{preset.label}</div>
+                <div className="text-xs text-muted-foreground">{preset.description}</div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (preset.confirm && !window.confirm(preset.confirm)) return
+                  triggerMutation.mutate({ type: preset.type, mode: preset.mode })
+                }}
+                disabled={triggerMutation.isPending}
+                className="bg-green-400 hover:bg-green-500 text-foreground shadow-hard-3 transition-all font-bold shrink-0"
+              >
+                <Play className="w-4 h-4 mr-1" />
+                Run
+              </Button>
+            </div>
+          ))}
+        </div>
+        {!worker.reachable && (
+          <p className="text-xs text-amber-700 font-bold mt-3">
+            The worker is currently unreachable — triggered jobs stay queued until a worker picks
+            them up (start one locally with <code className="font-mono">bun run dev:worker</code>).
+          </p>
+        )}
+      </div>
+
+      {/* Jobs table */}
+      <div className="surface shadow-hard-6 overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b-2 border-border bg-muted">
+          <h3 className="font-bold text-foreground">
+            Recent Jobs{statusFilter !== 'all' && <span className="capitalize"> — {statusFilter}</span>}
+          </h3>
+          <span className="text-xs text-muted-foreground">auto-refreshes every 10s</span>
+        </div>
+        {jobsData.jobs.length === 0 ? (
+          <div className="p-8 text-center">
+            <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {statusFilter === 'all' ? 'No jobs yet' : `No ${statusFilter} jobs`}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted border-b-2 border-border">
+                <tr>
+                  <th className="text-left p-4 font-bold text-foreground">Job</th>
+                  <th className="text-left p-4 font-bold text-foreground">Status</th>
+                  <th className="text-left p-4 font-bold text-foreground">Attempts</th>
+                  <th className="text-left p-4 font-bold text-foreground">Enqueued</th>
+                  <th className="text-left p-4 font-bold text-foreground">Last Update</th>
+                  <th className="text-left p-4 font-bold text-foreground">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobsData.jobs.map((job) => (
+                  <JobRow key={job.id} job={job} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function JobProgressBar({ progress, settled }: { progress: NonNullable<AdminJob['progress']>; settled: boolean }) {
+  const pct =
+    progress.total && progress.total > 0
+      ? Math.min(100, Math.round((progress.done / progress.total) * 100))
+      : null
+
+  return (
+    <div className="min-w-[160px]">
+      <div className="text-xs text-muted-foreground mb-1">
+        {progress.phase} — {progress.done.toLocaleString()}
+        {progress.total !== null && ` / ${progress.total.toLocaleString()}`}
+        {pct !== null && ` (${pct}%)`}
+      </div>
+      {pct !== null && !settled && (
+        <div className="h-3 border-2 border-border bg-muted">
+          <div className="h-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function JobRow({ job }: { job: AdminJob }) {
+  const created = jobTimestamp(job.createdAt)
+  const updated = jobTimestamp(job.updatedAt)
+  const payloadHint = describeJobPayload(job)
+
+  // What the worker is doing (or will do) next, derived from the row's state.
+  let statusDetail: { text: string; alert?: boolean } | null = null
+  if (job.status === 'running' && job.leaseExpiresAt) {
+    const leaseMs = new Date(job.leaseExpiresAt).getTime() - Date.now()
+    statusDetail =
+      leaseMs > 0
+        ? { text: `lease healthy (${Math.round(leaseMs / 1000)}s left)` }
+        : { text: 'lease expired — will be reclaimed', alert: true }
+  } else if (job.status === 'queued' && new Date(job.runAt).getTime() > Date.now()) {
+    statusDetail = { text: `retry ${jobTimestamp(job.runAt).relative}` }
+  }
+
+  return (
+    <tr className="border-b-2 border-border hover:bg-muted align-top">
+      <td className="p-4">
+        <div className="font-bold text-foreground">{job.type}</div>
+        {payloadHint && <div className="text-xs text-muted-foreground">{payloadHint}</div>}
+        {job.dedupeKey && (
+          <div className="text-xs text-muted-foreground font-mono truncate max-w-[220px]" title={job.dedupeKey}>
+            {job.dedupeKey}
+          </div>
+        )}
+      </td>
+      <td className="p-4">
+        <span className={`px-2 py-1 border-2 border-border text-xs font-bold ${JOB_STATUS_STYLES[job.status]}`}>
+          {job.status}
+        </span>
+        {statusDetail && (
+          <div className={`text-xs mt-1 ${statusDetail.alert ? 'text-rose-700 font-bold' : 'text-muted-foreground'}`}>
+            {statusDetail.text}
+          </div>
+        )}
+      </td>
+      <td className="p-4 text-sm font-bold text-foreground">
+        {job.attempts}/{job.maxAttempts}
+      </td>
+      <td className="p-4 text-sm text-muted-foreground" title={created.full}>
+        {created.relative}
+      </td>
+      <td className="p-4 text-sm text-muted-foreground" title={updated.full}>
+        {updated.relative}
+      </td>
+      <td className="p-4 max-w-[280px]">
+        {job.progress && (
+          <div className={job.lastError ? 'mb-2' : ''}>
+            <JobProgressBar progress={job.progress} settled={job.status !== 'running'} />
+          </div>
+        )}
+        {job.lastError && (
+          <details>
+            <summary className="text-xs text-rose-700 font-bold cursor-pointer truncate">
+              {job.lastError.split('\n')[0]}
+            </summary>
+            <pre className="text-xs text-rose-700 font-mono whitespace-pre-wrap break-all mt-2 max-h-48 overflow-y-auto">
+              {job.lastError}
+            </pre>
+          </details>
+        )}
+        {!job.progress && !job.lastError && <span className="text-xs text-muted-foreground">—</span>}
+      </td>
+    </tr>
   )
 }
 

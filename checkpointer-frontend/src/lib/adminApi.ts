@@ -52,6 +52,48 @@ export interface AdminStats {
   };
 }
 
+export type JobStatus = "queued" | "running" | "succeeded" | "failed";
+export type TriggerableJobType = "igdb-sync" | "prune-jobs";
+export type IgdbSyncMode = "auto" | "full" | "incremental" | "steam-map-only";
+
+export interface AdminJob {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  status: JobStatus;
+  dedupeKey: string | null;
+  runAt: string;
+  attempts: number;
+  maxAttempts: number;
+  leaseExpiresAt: string | null;
+  progress: { done: number; total: number | null; phase: string } | null;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SyncState {
+  lastSyncTimestamp: number;
+  lastCompletedOffset: number;
+  totalGamesProcessed: number;
+  status: "idle" | "running" | "failed";
+  lastRunAt: string;
+  error?: string;
+}
+
+export interface JobsOverview {
+  counts: Partial<Record<JobStatus, number>>;
+  syncStates: {
+    igdb: SyncState | null;
+    steamAppMap: SyncState | null;
+  };
+  worker: {
+    reachable: boolean;
+    interactiveRunning?: number;
+    batchRunning?: number;
+  };
+}
+
 export interface PaginatedResponse<T> {
   hasMore: boolean;
   nextOffset: number | null;
@@ -121,6 +163,55 @@ export const auditLogsQueryOptions = (limit = 20, offset = 0) =>
     queryFn: () => getAuditLogs(limit, offset),
     staleTime: 1000 * 30,
   });
+
+async function getAdminJobs(status?: JobStatus, limit = 50): Promise<{ jobs: AdminJob[] }> {
+  const res = await api.admin.jobs.$get({
+    query: { limit: String(limit), ...(status ? { status } : {}) },
+  });
+  if (!res.ok) {
+    if (res.status === 403) throw new Error("Access denied");
+    throw new Error("Failed to fetch jobs");
+  }
+  return res.json() as Promise<{ jobs: AdminJob[] }>;
+}
+
+async function getJobsOverview(): Promise<JobsOverview> {
+  const res = await api.admin.jobs.overview.$get();
+  if (!res.ok) {
+    if (res.status === 403) throw new Error("Access denied");
+    throw new Error("Failed to fetch jobs overview");
+  }
+  return res.json() as Promise<JobsOverview>;
+}
+
+// The jobs tab auto-refreshes while open so a running sync's progress
+// (attempts, lease heartbeat, status flips) is visible without reloading.
+export const adminJobsQueryOptions = (status?: JobStatus, limit = 50) =>
+  queryOptions({
+    queryKey: ["admin", "jobs", status ?? "all", limit],
+    queryFn: () => getAdminJobs(status, limit),
+    refetchInterval: 10_000,
+  });
+
+export const jobsOverviewQueryOptions = queryOptions({
+  queryKey: ["admin", "jobs-overview"],
+  queryFn: getJobsOverview,
+  refetchInterval: 10_000,
+});
+
+export async function triggerJob(
+  type: TriggerableJobType,
+  mode?: IgdbSyncMode,
+): Promise<{ job: AdminJob }> {
+  const res = await api.admin.jobs.trigger.$post({
+    json: { type, ...(mode ? { mode } : {}) },
+  });
+  if (!res.ok) {
+    const error = (await res.json()) as { error?: string };
+    throw new Error(error.error || "Failed to trigger job");
+  }
+  return res.json() as Promise<{ job: AdminJob }>;
+}
 
 export async function updateUserRole(userId: string, role: UserRole): Promise<AdminUser> {
   const res = await api.admin.users[":userId"].role.$patch({ param: { userId }, json: { role } });

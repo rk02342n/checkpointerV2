@@ -2,7 +2,8 @@ import { uuid, pgTable, pgEnum, index, timestamp, text } from "drizzle-orm/pg-co
 import { createSelectSchema } from "drizzle-zod";
 import { usersTable } from "./users";
 
-// "pending" = connected but never synced; "private_profile" = Steam game details are private
+// "pending" = a sync job is queued or running (set on connect and on manual
+// sync); "private_profile" = Steam game details are private
 export const steamSyncStatusEnum = pgEnum("steam_sync_status", [
   "pending", "ok", "private_profile", "error",
 ]);

@@ -13,9 +13,10 @@ import { gamesTable } from "../db/schema/games";
 import {
   buildSteamLoginUrl,
   verifySteamOpenId,
-  syncSteamUser,
   SYNC_COOLDOWN_MS,
 } from "../lib/steam";
+import { enqueue } from "../lib/queue";
+import { kickWorker } from "../lib/kick";
 
 // Steam integration routes. Writes are owner-only; reads of the imported
 // library go through the same profile-visibility seam as the rest of a
@@ -72,6 +73,19 @@ const pendingWishlistJoin = and(
   eq(wantToPlayTable.gameId, userSteamWishlistTable.gameId),
 );
 
+/**
+ * Queue a sync for the worker and poke it. Deduped per user, so a stacked
+ * connect + manual sync collapses into one job.
+ */
+async function enqueueSteamSync(userId: string) {
+  await enqueue({
+    type: "steam-sync",
+    payload: { userId },
+    dedupeKey: `steam-sync:${userId}`,
+  });
+  kickWorker();
+}
+
 export const steamRoute = new Hono()
 
 // GET /connect - Send the user to Steam's OpenID login (authenticated)
@@ -110,13 +124,9 @@ export const steamRoute = new Hono()
       set: { steamId64, syncStatus: "pending", personaName: null, avatarUrl: null, profileUrl: null },
     });
 
-  try {
-    await syncSteamUser(user.id);
-  } catch (err) {
-    // Connection stored; syncStatus already reflects the failure. The profile
-    // surfaces it and the user can retry from there.
-    console.error("Initial Steam sync failed:", err);
-  }
+  // The sync itself runs on the worker; syncStatus is already "pending" from
+  // the upsert above and the profile polls it while the job runs.
+  await enqueueSteamSync(user.id);
 
   return c.redirect("/profile?tab=steam");
 })
@@ -191,8 +201,15 @@ export const steamRoute = new Hono()
     }
   }
 
-  const result = await syncSteamUser(user.id);
-  return c.json(result);
+  // Flip to pending so the profile's status polling kicks in, then hand the
+  // actual work to the worker.
+  await db
+    .update(steamConnectionsTable)
+    .set({ syncStatus: "pending" })
+    .where(eq(steamConnectionsTable.userId, user.id));
+  await enqueueSteamSync(user.id);
+
+  return c.json({ queued: true as const }, 202);
 })
 
 // DELETE /connection - Disconnect: purge the Steam layer (authenticated).

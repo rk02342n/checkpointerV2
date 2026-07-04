@@ -58,12 +58,8 @@ export type SteamUnmatchedItem = {
   playtimeForeverMin: number;
 };
 
-export type SteamSyncResult = {
-  status: "ok" | "private_profile";
-  totalGames: number;
-  matchedGames: number;
-  wishlistCount: number;
-};
+/** POST /sync queues the work on the server; completion arrives via status polling. */
+export type SteamSyncQueued = { queued: true };
 
 export type SteamWishlistPendingItem = {
   steamAppId: number;
@@ -84,9 +80,12 @@ export const steamStatusQueryOptions = queryOptions({
   queryKey: ["steam-status"],
   queryFn: getSteamStatus,
   staleTime: 1000 * 60,
+  // While a sync job is queued/running on the worker, poll until it settles.
+  refetchInterval: (query) =>
+    query.state.data?.connected && query.state.data.syncStatus === "pending" ? 2500 : false,
 });
 
-export async function syncSteam(): Promise<SteamSyncResult> {
+export async function syncSteam(): Promise<SteamSyncQueued> {
   const res = await api.steam.sync.$post();
   if (!res.ok) {
     const error = (await res.json()) as { error?: string; retryAfterMs?: number };
@@ -96,7 +95,7 @@ export async function syncSteam(): Promise<SteamSyncResult> {
     }
     throw new Error(error.error || "Failed to sync with Steam");
   }
-  return res.json() as Promise<SteamSyncResult>;
+  return res.json() as Promise<SteamSyncQueued>;
 }
 
 export async function disconnectSteam(): Promise<{ disconnected: boolean }> {
