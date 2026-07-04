@@ -622,9 +622,9 @@ const TRIGGER_PRESETS: {
 }[] = [
   {
     label: 'IGDB Sync',
-    description: 'Incremental catalog + Steam map sync (same as the weekly run)',
+    description: 'Incremental catalog + Steam map sync (games updated since the last completed run)',
     type: 'igdb-sync',
-    mode: 'auto',
+    mode: 'incremental',
   },
   {
     label: 'Steam Map Only',
