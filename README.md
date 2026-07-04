@@ -240,6 +240,9 @@ All API endpoints are prefixed with `/api`:
 | GET | `/steam/user/:userId/library` | Get a user's public Steam library (paginated) |
 | GET | `/steam/user/:userId/unmatched` | Get a user's Steam entries with no IGDB match |
 | GET | `/insights` | Get aggregated profile insights (gaming, genres, reviews, social, Steam) |
+| GET | `/admin/jobs` | List background jobs, dead-letters included (admin; filterable by status) |
+| GET | `/admin/jobs/overview` | Queue counts by status, sync checkpoint states, worker liveness (admin) |
+| POST | `/admin/jobs/trigger` | Manually enqueue an `igdb-sync` / `prune-jobs` job and kick the worker (admin, audit-logged) |
 
 ## Database Schema
 
@@ -260,7 +263,8 @@ All API endpoints are prefixed with `/api`:
 - `user_steam_games` - Synced Steam library entries with playtime, matched to `games` where possible
 - `user_steam_wishlist` - Staged Steam wishlist entries, confirm-to-import into `want_to_play`
 - `steam_app_map` - Global Steam appid → IGDB id lookup, refreshed weekly alongside the IGDB sync
-- `audit_logs` - Admin action history
+- `jobs` - Background job queue; settled rows double as run history and dead-letter records, and carry handler-reported progress
+- `audit_logs` - Admin action history (role changes, suspensions, deletions, settings, manual job triggers)
 
 `want_to_play` also has a `source` column (`manual` / `steam`) marking rows promoted from a Steam wishlist import.
 
@@ -313,18 +317,32 @@ TWITCH_CLIENT_SECRET=your_twitch_client_secret
 # Auto-detect mode (incremental if last sync succeeded, full otherwise)
 bun run sync:igdb
 
-# Force a full import (~311k games, ~20-30 min)
+# Force a full import (~311k games, takes hours)
 bun run sync:igdb:full
 
 # Steam appid → IGDB id map only (normally rides along after every game sync)
 bun run sync:steam-map
 ```
 
-The sync is resumable — if it crashes or the connection drops, re-running `bun run sync:igdb` picks up from the last checkpoint.
+**Resumability differs by mode.** Full syncs checkpoint their offset after every batch, so a crashed run resumes at the last completed batch. Incremental syncs restart from the top instead: the "updated since" watermark can only advance safely once a whole pass completes (updated games are scattered across the id-ordered pages, so partial progress doesn't correspond to any timestamp cutoff) — a failed incremental redoes its idempotent work rather than risk permanently skipping updates. When the checkpoint state is `failed`, `auto` mode escalates to a full re-import as the guaranteed-correct recovery; the admin panel's trigger buttons pass an explicit mode to override that when you know an incremental retry is enough.
 
 ### Automated Sync (background worker)
 
 The background worker (`server/worker.ts`, the `worker` process group on Fly) schedules an `igdb-sync` job every Sunday at 4:00 AM UTC — no CI cron involved. If the worker was down when a run was due, it catches up on boot. Failures retry with backoff and email an alert when retries are exhausted; job history is visible at `GET /api/admin/jobs`.
+
+Jobs belong to the **database**, not to a machine: any worker pointed at the same `DATABASE_URL` (the Fly worker, or a local `bun run dev:worker`) can claim queued work, and the atomic claim guarantees exactly one runs it. The enqueue-time "kick" only wakes the worker co-located with the API you hit (localhost in dev, the Fly-internal worker in production); a missed kick is covered by the 15-minute fallback poll. A locally claimed job runs in the Bun process on that machine — it needs the machine awake until it finishes. If the machine sleeps or the worker dies mid-job, the lease expires and the next available worker reclaims and retries it.
+
+### Monitoring & manual runs (admin panel)
+
+The admin dashboard's **Jobs tab** (`/admin`) is the operational surface:
+
+- **Worker card** — liveness (probed via the worker's `/health` endpoint) and how many interactive/batch jobs it's running.
+- **Queue counts** by status (queued / running / succeeded / failed); click to filter the table.
+- **Sync state cards** for the IGDB catalog and Steam appid map checkpoints — last run, data watermark, rows processed, resume checkpoint, error text.
+- **Job rows** with attempts, lease health for running jobs, next-retry time for backed-off ones, expandable error stack traces, and a **live progress bar** (`done / total` per phase) — handlers report progress at every batch boundary into the `jobs.progress` column, and the tab auto-refreshes every 10s.
+- **Manual triggers** for incremental sync, Steam-map-only, full resync, and queue pruning. Triggers are audit-logged (`TRIGGER_JOB`) and deduped: a second click while a manual job of the same type is queued/running is rejected.
+
+Fly's log stream (`fly logs`, or Live Logs in the Fly dashboard) shows what the worker is doing *right now*, but it's ephemeral — the durable answer to "did last week's sync succeed" is the jobs table and checkpoint states, both rendered in this tab.
 
 ### How It Works
 

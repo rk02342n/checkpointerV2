@@ -157,6 +157,30 @@ GitHub Actions cron, and catch-up after downtime is automatic. The enqueue-side
 dedupe (partial unique index on active jobs only) is a different mechanism from
 the scheduler's any-status existence check; don't conflate them.
 
+Jobs belong to the database, not to a machine: a local dev worker and the Fly
+worker drain the same queue, and the kick only biases which one wakes first.
+The retry payload carries the job's arguments (e.g. the sync mode), so a
+reclaimed job retries as the same kind of run it started as.
+
+Progress is display-only and separate from resume-correctness: handlers get a
+`reportProgress` callback from the worker and write `{done, total, phase}` to
+`jobs.progress` at batch boundaries (`updateJobProgress` no-ops once the row
+settled, so a late report can't touch a finished job). Resume state still
+lives in the `app_settings` checkpoints. The IGDB sync reports through all
+three phases (catalog full/incremental, steam map) with real denominators from
+upfront count queries. Note the asymmetry: full syncs resume from their offset
+checkpoint; incremental syncs restart from the top because their watermark can
+only advance when a whole pass completes — which is why the scheduled `auto`
+mode escalates a `failed` checkpoint to a full re-import, while the admin
+panel's manual triggers pass explicit modes to override that.
+
+The admin surface is the Jobs tab (`/admin`): `GET /api/admin/jobs/overview`
+aggregates queue counts, both sync checkpoint states, and worker liveness
+(probed via the kick URL's `/health`); `POST /api/admin/jobs/trigger` enqueues
+a manual run (audit-logged as `TRIGGER_JOB`, deduped on `manual:<type>` while
+active) and kicks the worker. `steam-sync` is deliberately not triggerable
+there — it needs a userId and users trigger their own from the profile.
+
 ## Surface (frontend)
 
 The one owner of the neobrutalist card/panel look: the `.surface` class in
