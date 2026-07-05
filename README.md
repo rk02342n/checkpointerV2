@@ -1,6 +1,6 @@
 # Checkpointer (checkpointer.io)
 
-A full-stack web application for gaming enthusiasts to track, log, review, and manage their gaming experiences. Log play sessions, write reviews, track expenses, and discover games—all in one place.
+A full-stack application for gaming enthusiasts to track, log, review, and manage their gaming experiences — a web app plus a native mobile companion (`checkpointer-mobile/`), both talking to the same type-safe API. Log play sessions, write reviews, and discover games—all in one place.
 
 ## Features
 
@@ -9,9 +9,17 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 - **Game Reviews** - Rate games 0-5 stars and write detailed reviews
 - **Review Interactions** - View and like other players' reviews
 - **Wishlist** - Add games to your want-to-play list
-- **Expense Tracking** - Track gaming-related expenses and view total spending
+- **Expense Tracking** - Track gaming-related expenses (deprecated — slated for removal)
 - **Game Discovery** - Browse and search games from IGDB database (~311k games)
-- **Admin Panel** - Manage users, view audit logs, and moderate content
+- **Admin Panel** - Manage users, view audit logs, monitor background jobs, and moderate content
+
+### Mobile App (React Native + Expo)
+- **The core loop on your phone** - Search the catalog, view game pages, start/stop/log play sessions, manage your wishlist, write and like reviews
+- **Library tab** - Playing / Finished / Stashed / Wishlist at a glance
+- **Native Kinde login (PKCE)** - Tokens verified server-side against Kinde's JWKS as `Authorization: Bearer`; the web's cookie sessions are untouched
+- **Same design language** - The neobrutalist Surface system ported natively (hard offset shadows via RN's CSS boxShadow)
+- **End-to-end types** - The app consumes `hc<ApiRoutes>` from the server exactly like the web frontend
+- Setup and architecture: see `checkpointer-mobile/README.md`
 
 ### Steam Integration
 - **Connect Your Steam Account** - Sign in through Steam (OpenID) to link your library
@@ -68,6 +76,14 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 - **Tailwind CSS 4** - Styling
 - **Radix UI** - Accessible components
 - **TypeScript** - Type safety
+
+### Mobile
+- **Expo SDK 57 / React Native** - Managed workflow; Expo Go for development, EAS for builds
+- **Expo Router** - File-based navigation (native tabs + stack)
+- **NativeWind v4** - Tailwind styling on native
+- **TanStack React Query** - Server state, same patterns as web
+- **@kinde/expo** - Authorization Code + PKCE login
+- **Hono RPC client** - Typed API calls via a type-only `ApiRoutes` import
 
 ## Getting Started
 
@@ -152,6 +168,14 @@ A full-stack web application for gaming enthusiasts to track, log, review, and m
 
    The app will be available at `http://localhost:5173`
 
+6. **Mobile app (optional)** — needs its own Kinde *native* application and a
+   `.env`; full instructions in `checkpointer-mobile/README.md`:
+   ```bash
+   cd checkpointer-mobile
+   bun install
+   bun run start   # scan the QR with Expo Go (SDK 57)
+   ```
+
 ## Project Structure
 
 ```
@@ -185,14 +209,27 @@ checkpointerv2/
 │   │   └── main.tsx          # App entry point
 │   └── vite.config.ts        # Vite configuration
 │
+├── checkpointer-mobile/      # React Native + Expo app (own package)
+│   ├── src/
+│   │   ├── app/              # expo-router routes (tabs + game pages)
+│   │   ├── components/       # ui.tsx design system + feature components
+│   │   └── lib/              # hc<ApiRoutes> client + React Query hooks
+│   ├── patches/              # bun-patched deps (see its README)
+│   └── README.md             # Mobile setup, architecture, gotchas
+│
 ├── drizzle/                  # Generated migrations
 ├── drizzle.config.ts         # Drizzle configuration
+├── docs/                     # Plans & audits (mobile-v1-plan, steam, technical-audit)
+├── CONTEXT.md                # Domain & architecture glossary
 └── package.json              # Dependencies
 ```
 
 ## API Routes
 
-All API endpoints are prefixed with `/api`:
+All API endpoints are prefixed with `/api`. Authenticated endpoints accept
+either a Kinde cookie session (web) or a Kinde access token as
+`Authorization: Bearer` (mobile — verified locally against Kinde's JWKS, see
+`server/lib/bearer-auth.ts` and "Bearer auth" in `CONTEXT.md`):
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -286,12 +323,23 @@ The included `Dockerfile` builds the backend and is configured to work with Fly.
 ```bash
 bun test
 ```
+Covers ownership, visibility, images, Steam, the job queue, and bearer auth
+(`server/test/bearer-auth.test.ts` signs real JWTs against a local JWKS — no
+network).
 
 ### Build Frontend
 ```bash
 cd checkpointer-frontend
 bun run build
 ```
+
+### Type-check the Mobile App
+```bash
+cd checkpointer-mobile
+bunx tsc --noEmit
+```
+This transitively type-checks the server's route files too (via the
+`ApiRoutes` import), so it doubles as an API-contract check.
 
 ### Lint Code
 ```bash

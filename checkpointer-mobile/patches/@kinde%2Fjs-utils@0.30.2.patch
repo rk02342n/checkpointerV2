@@ -1,0 +1,18 @@
+diff --git a/dist/js-utils.js b/dist/js-utils.js
+index e11906d203d97317511e6539dafd89b543e3b910..836a637f23d0330d5551b09df94875aff1eb6135 100644
+--- a/dist/js-utils.js
++++ b/dist/js-utils.js
+@@ -390,10 +390,9 @@ var de = class extends D {
+ 	}
+ 	async loadExpoStore() {
+ 		try {
+-			k = await import(
+-				/* webpackIgnore: true */
+-				"expo-secure-store"
+-);
++			// Patched for Hermes: dynamic import() is unsupported and Metro leaves
++			// it untransformed; expo-secure-store is a direct dependency here.
++			k = require("expo-secure-store");
+ 		} catch (e) {
+ 			console.error("Error loading dependency expo storage:", e);
+ 		}

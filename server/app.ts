@@ -35,7 +35,14 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }))
 
-app.use('*', csrf())
+// CSRF only defends cookie-authenticated requests, so bearer-authenticated
+// (native) clients skip it. Necessary, not just principled: hono's csrf()
+// treats a missing Content-Type as text/plain (form-like) and native fetch
+// sends no Origin header, so body-less POST/DELETEs would otherwise 403.
+const csrfMiddleware = csrf()
+app.use('*', (c, next) =>
+  c.req.header('authorization') ? next() : csrfMiddleware(c, next)
+)
 
 const apiRoutes = app
   .basePath("/api")

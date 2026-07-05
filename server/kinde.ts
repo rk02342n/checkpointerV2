@@ -12,6 +12,8 @@ import { usersTable, type UserRole } from "./db/schema/users";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { usersSelectSchema } from "./db/schema/users";
+import { resolveBearerUser, resolveBearerViewer } from "./lib/bearer-auth";
+import { getOrCreateDbUser } from "./lib/provision-user";
 
 // Role hierarchy: admin > pro > free
 const roleHierarchy: Record<UserRole, number> = {
@@ -75,85 +77,36 @@ type Env = {
   };
 };
 
-// Helper function to generate username from Kinde user
-function generateUsername(kindeUser: UserType): string {
-  // Try to use their email username part
-  if (kindeUser.email) {
-    const emailUsername = kindeUser.email.split('@')[0];
-    return emailUsername!.toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-  
-  // Fallback to first name or a random string
-  if (kindeUser.given_name) {
-    return kindeUser.given_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-  
-  // Last resort: random string
-  return `user${Math.random().toString(36).substring(2, 9)}`;
-}
-
-// Helper function to ensure unique username
-async function getUniqueUsername(baseUsername: string): Promise<string> {
-  let username = baseUsername;
-  let counter = 1;
-  
-  while (true) {
-    const existing = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.username, username))
-      .limit(1);
-    
-    if (existing.length === 0) {
-      return username;
-    }
-    
-    username = `${baseUsername}${counter}`;
-    counter++;
-  }
-}
-
+// Native clients authenticate with `Authorization: Bearer <kinde access
+// token>` (verified locally against Kinde's JWKS, see lib/bearer-auth.ts);
+// browsers keep using cookie sessions. The bearer branch never touches
+// cookies and the cookie branch is unchanged.
 export const getAuthUser = createMiddleware<Env>(async (c, next) => {
+  const authHeader = c.req.header("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const resolved = await resolveBearerUser(authHeader);
+    if (!resolved) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    if (resolved.dbUser.suspendedAt !== null) {
+      return c.json({ error: "Account suspended" }, 403);
+    }
+    c.set("user", resolved.user);
+    c.set("dbUser", resolved.dbUser);
+    return next();
+  }
+
   try {
     const manager = sessionManager(c);
     const isAuthenticated = await kindeClient.isAuthenticated(manager);
     if (!isAuthenticated) {
       return c.json({ error: "Unauthorized" }, 401);
     }
-    
+
     const user = await kindeClient.getUserProfile(manager);
     c.set("user", user);
 
-    // Get or create database user
-    let dbUser = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.kindeId, user.id))
-      .limit(1)
-      .then(rows => rows[0]);
-
-    if (!dbUser) {
-      // Generate a unique username
-      const baseUsername = generateUsername(user);
-      const uniqueUsername = await getUniqueUsername(baseUsername);
-      
-      // Create the user
-      const displayName = user.given_name && user.family_name 
-        ? `${user.given_name} ${user.family_name}`.trim()
-        : user.given_name || user.family_name || null;
-
-      const [newUser] = await db
-        .insert(usersTable)
-        .values({
-          kindeId: user.id,
-          username: uniqueUsername,
-          displayName: displayName,
-          avatarUrl: user.picture || null,
-        })
-        .returning();
-      
-      dbUser = newUser!;
-    }
+    const dbUser = await getOrCreateDbUser(user);
 
     // Check if user is suspended
     if (dbUser.suspendedAt !== null) {
@@ -180,6 +133,15 @@ type ViewerEnv = {
 // anonymous. Consumers: draft-image serving, profile visibility.
 export const getOptionalViewer = createMiddleware<ViewerEnv>(async (c, next) => {
   let viewer: z.infer<typeof usersSelectSchema> | null = null;
+
+  // Bearer branch: a valid token resolves to the viewer, anything else reads
+  // as anonymous. Never provisions a user (read-only, like the cookie branch).
+  const authHeader = c.req.header("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    c.set("viewer", await resolveBearerViewer(authHeader));
+    return next();
+  }
+
   try {
     const manager = sessionManager(c);
     if (await kindeClient.isAuthenticated(manager)) {

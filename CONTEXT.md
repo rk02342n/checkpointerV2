@@ -71,6 +71,56 @@ The identity behind *optional* auth on public reads: `getOptionalViewer` in
 Consumers: draft/private image serving, profile visibility, `userLiked` on
 game-page reviews.
 
+## Bearer auth (native clients)
+
+The second way to be authenticated, added for the mobile app. Browsers keep
+cookie sessions (Kinde authorization-code flow, validated via the Kinde SDK);
+native clients do Authorization Code + PKCE **in the app** and send the
+resulting access token as `Authorization: Bearer`. The module is
+`server/lib/bearer-auth.ts`:
+
+- `verifyBearerToken` — local RS256 verification against Kinde's JWKS
+  (`<KINDE_DOMAIN>/.well-known/jwks`, keys cached in-process; no per-request
+  Kinde API call, unlike the cookie path).
+- `resolveBearerUser` — token → `dbUser`, provisioning a first-seen identity
+  through one Kinde userinfo call (the identity in the userinfo response must
+  match the token's `sub`, or the request is rejected).
+- `resolveBearerViewer` — the anonymous-tolerant variant for public reads;
+  never provisions, suspended reads as anonymous.
+
+`getAuthUser` / `getOptionalViewer` in `kinde.ts` branch on the presence of a
+Bearer header and delegate; the cookie branch is unchanged. First-login
+provisioning is shared with the cookie path via
+`server/lib/provision-user.ts` (`getOrCreateDbUser`), so either client kind
+creates the same users row.
+
+Two non-obvious constraints:
+
+- **The logic lives outside `kinde.ts` deliberately** — route test files mock
+  `../kinde` wholesale and bun's module mocks leak across test files, so
+  anything that needs real-implementation tests (`server/test/bearer-auth.test.ts`,
+  which signs JWTs with a locally generated key) must not live in that module.
+- **CSRF is skipped for bearer requests** (`app.ts`). Not just principled
+  (CSRF defends cookie auth only): hono's `csrf()` treats a *missing*
+  Content-Type as `text/plain`, which matches its form-element regex, and
+  native fetch sends no Origin header — so a body-less mobile `DELETE` would
+  otherwise 403.
+
+## Mobile app (checkpointer-mobile)
+
+An Expo (SDK 57) React Native app in `checkpointer-mobile/`, its own package
+in this repo (no formal workspace). It consumes the API through
+`hc<ApiRoutes>` with a **type-only** import of `server/app` — the same
+end-to-end type link the web frontend uses, so server route changes surface
+as mobile type errors. Auth is the bearer seam above (`@kinde/expo`, tokens
+in secure storage). `src/components/ui.tsx` is the mobile owner of the
+Surface look (see Surface below), porting the web tokens as hex.
+
+One hard coupling rule: mobile's `hono` must stay the **exact** version in
+the root lockfile — two different hono copies make `ApiRoutes` fail to unify.
+Setup, structure, and the dependency gotchas (patched `@kinde/js-utils`,
+expo-module overrides) live in `checkpointer-mobile/README.md`.
+
 ## Image-visibility rule
 
 Serving a stored image is gated by the *resource* it belongs to: a blog post's
