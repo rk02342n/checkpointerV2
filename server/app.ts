@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { csrf } from 'hono/csrf'
 import { errorHandler } from './lib/errors'
+import { requestLogger } from './middleware/request-logger'
 import { expensesRoute } from './routes/expenses'
 import { serveStatic } from 'hono/bun'
 import { authRoute } from './routes/auth'
@@ -22,7 +22,7 @@ import { steamRoute } from './routes/steam'
 
 const app = new Hono()
 
-app.use('*', logger())
+app.use('/api/*', requestLogger())
 
 app.use('*', cors({
   origin: [
